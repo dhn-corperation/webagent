@@ -110,7 +110,7 @@ set rmr.result_status = 'success'
 	requestBody := []byte(resultReqJson)
 
 	// 요청 생성
-	req, err := http.NewRequest("POST", config.RCSRESULTURL+"/corp/v1/querymsgstatus", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", config.Config.RCSRESULTURL+"/corp/v1/querymsgstatus", bytes.NewBuffer(requestBody))
 	if err != nil {
 		config.Stdlog.Println("요청 생성 실패:", err)
 		return
@@ -621,7 +621,7 @@ func retryProc(wg *sync.WaitGroup) {
 		requestBody := []byte(resultReqJson)
 
 		// 요청 생성
-		req, err := http.NewRequest("POST", config.RCSRESULTURL+"/corp/v1/querymsgstatus", bytes.NewBuffer(requestBody))
+		req, err := http.NewRequest("POST", config.Config.RCSRESULTURL+"/corp/v1/querymsgstatus", bytes.NewBuffer(requestBody))
 		if err != nil {
 			config.Stdlog.Println("요청 생성 실패:", err)
 			return

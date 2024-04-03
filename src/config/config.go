@@ -12,27 +12,29 @@ import (
 )
 
 type Config struct {
-	DB          string
-	DBURL       string
-	GRS         bool
-	IMC         bool
-	NAS         bool
-	SMTPHN      bool
-	SMT         bool
-	PMS         bool
-	FUN         bool
-	BKG         bool
-	REFUND      bool
-	SMTPHNDB    bool
-	RCS         bool
-	RESULTTABLE string
-	REQTABLE1   string
-	REQTABLE2   string
-	WP1         string
-	WP2         string
-	RCSID       string
-	RCSPW       string
-	PHNURL      string
+	DB           string
+	DBURL        string
+	GRS          bool
+	IMC          bool
+	NAS          bool
+	SMTPHN       bool
+	SMT          bool
+	PMS          bool
+	FUN          bool
+	BKG          bool
+	REFUND       bool
+	SMTPHNDB     bool
+	RCS          bool
+	RESULTTABLE  string
+	REQTABLE1    string
+	REQTABLE2    string
+	WP1          string
+	WP2          string
+	RCSID        string
+	RCSPW        string
+	PHNURL       string
+	RCSSENDURL   string
+	RCSRESULTURL string
 }
 
 var Conf Config
@@ -41,9 +43,6 @@ var Client *resty.Client
 
 var RCSID = ""
 var RCSPW = ""
-
-var RCSSENDURL = "https://agency.hermes.kt.com"; // "https://14.32.71.25"
-var RCSRESULTURL = "https://query.hermes.kt.com"; //"https://14.32.71.25"
 
 func InitConfig() {
 	path := "/root/BizAgent/log/BizAgent"

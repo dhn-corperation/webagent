@@ -360,7 +360,7 @@ func getTokenInfo() string {
 	config.Stdlog.Println("JSON 직렬화 성공:", authBytes)
 
 	// 요청 생성
-	req, err := http.NewRequest("POST", config.RCSSENDURL+"/corp/v1/token", bytes.NewBuffer(authBytes))
+	req, err := http.NewRequest("POST", config.Config.RCSSENDURL+"/corp/v1/token", bytes.NewBuffer(authBytes))
 	if err != nil {
 		config.Stdlog.Println("http.NewRequest 요청 생성 실패:", err)
 		return ""
@@ -415,7 +415,7 @@ func sendRcs(reswg *sync.WaitGroup, c chan<- resultStr, msg MessageInfo, temp re
 	resp, err := config.Client.R().
 		SetHeaders(map[string]string{"Content-Type": "application/json", "Authorization": "Bearer " + Token}).
 		SetBody(msg).
-		Post(config.RCSSENDURL + "/corp/v1/message")
+		Post(config.Config.RCSSENDURL + "/corp/v1/message")
 
 	//fmt.Println("SEND :", resp, err)
 

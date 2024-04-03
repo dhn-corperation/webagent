@@ -8,16 +8,16 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	"config"
-	"databasepool"
-	"nanoit"
-	"phonemsg"
-	"tblreqprocess"
-	"webaproc"
-	"webcmms"
-	"webcsms"
-	"req2ndprocess"
-	"rcs"
+	"webagent/src/config"
+	"webagent/src/databasepool"
+	"webagent/src/nanoit"
+	"webagent/src/phonemsg"
+	"webagent/src/tblreqprocess"
+	"webagent/src/webaproc"
+	"webagent/src/webcmms"
+	"webagent/src/webcsms"
+	"webagent/src/req2ndprocess"
+	"webagent/src/rcs"
 
 	"github.com/takama/daemon"
 )
