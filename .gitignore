@@ -1,0 +1,7 @@
+/pkg
+/mysql
+/src/BizAgent/BizAgent
+/src/BizAgent/GenieAgent
+/src/BizAgent/IBAgent
+/src/BizAgent/*.ini
+/src/BizAgent/log
