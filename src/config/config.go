@@ -7,8 +7,9 @@ import (
 	"time"
 
 	ini "github.com/BurntSushi/toml"
-	rotatelogs "github.com/lestrrat/go-file-rotatelogs"
+
 	"github.com/go-resty/resty/v2"
+	rotatelogs "github.com/lestrrat/go-file-rotatelogs"
 )
 
 type Config struct {
