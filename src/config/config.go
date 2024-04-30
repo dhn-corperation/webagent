@@ -3,7 +3,9 @@ package config
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	ini "github.com/BurntSushi/toml"
@@ -41,18 +43,28 @@ type Config struct {
 var Conf Config
 var Stdlog *log.Logger
 var Client *resty.Client
+var GoClient *http.Client = &http.Client{
+	Timeout: time.Second * 30,
+	Transport: &http.Transport{
+		TLSHandshakeTimeout: 10 * time.Second,
+	},
+}
 
 var RCSID = ""
 var RCSPW = ""
 
 func InitConfig() {
-	path := "/root/BizAgent/log/BizAgent"
-	//path := "./log/BizAgent"
+	realpath, _ := os.Executable()
+	dir := filepath.Dir(realpath)
+	logDir := filepath.Join(dir, "logs")
+	err := createDir(logDir)
+	if err != nil {
+		log.Fatalf("Failed to ensure log directory: %s", err)
+	}
+	path := filepath.Join(logDir, "BizAgent")
 	loc, _ := time.LoadLocation("Asia/Seoul")
 	writer, err := rotatelogs.New(
 		fmt.Sprintf("%s-%s.log", path, "%Y-%m-%d"),
-		//rotatelogs.WithMaxAge(time.Hour*24*7),
-		//rotatelogs.WithRotationTime(time.Hour*24),
 		rotatelogs.WithLocation(loc),
 		rotatelogs.WithMaxAge(-1),
 		rotatelogs.WithRotationCount(7),
@@ -76,10 +88,17 @@ func InitConfig() {
 }
 
 func readConfig() Config {
-	var configfile = "/root/BizAgent/config.ini"
-	//var configfile = "./config.ini"
+	realpath, _ := os.Executable()
+	dir := filepath.Dir(realpath)
+	var configfile = filepath.Join(dir, "config.ini")
 	_, err := os.Stat(configfile)
 	if err != nil {
+		err := createConfig(configfile)
+		if err != nil {
+			Stdlog.Println("Config file create fail")
+		}
+		Stdlog.Println("config.ini 생성완료 작성을 해주세요.")
+
 		fmt.Println("Config file is missing : ", configfile)
 	}
 
@@ -94,12 +113,17 @@ func readConfig() Config {
 }
 
 func InitConfigG() {
-	path := "/root/GenieAgent/log/GenieAgent"
+	realpath, _ := os.Executable()
+	dir := filepath.Dir(realpath)
+	logDir := filepath.Join(dir, "logs")
+	err := createDir(logDir)
+	if err != nil {
+		log.Fatalf("Failed to ensure log directory: %s", err)
+	}
+	path := filepath.Join(logDir, "GenieAgent")
 	loc, _ := time.LoadLocation("Asia/Seoul")
 	writer, err := rotatelogs.New(
 		fmt.Sprintf("%s-%s.log", path, "%Y-%m-%d"),
-		//rotatelogs.WithMaxAge(time.Hour*24*7),
-		//rotatelogs.WithRotationTime(time.Hour*24),
 		rotatelogs.WithLocation(loc),
 		rotatelogs.WithMaxAge(-1),
 		rotatelogs.WithRotationCount(7),
@@ -124,9 +148,18 @@ func InitConfigG() {
 }
 
 func readConfigG() Config {
-	var configfile = "/root/GenieAgent/config.ini"
+	realpath, _ := os.Executable()
+	dir := filepath.Dir(realpath)
+	var configfile = filepath.Join(dir, "config.ini")
 	_, err := os.Stat(configfile)
 	if err != nil {
+
+		err := createConfig(configfile)
+		if err != nil {
+			Stdlog.Println("Config file create fail")
+		}
+		Stdlog.Println("config.ini 생성완료 작성을 해주세요.")
+
 		fmt.Println("Config file is missing : ", configfile)
 	}
 
@@ -140,13 +173,18 @@ func readConfigG() Config {
 	return result
 }
 
-func InitConfigU(_path string) {
-	path := _path + "/log/Agent"
+func InitConfigU() {
+	realpath, _ := os.Executable()
+	dir := filepath.Dir(realpath)
+	logDir := filepath.Join(dir, "logs")
+	err := createDir(logDir)
+	if err != nil {
+		log.Fatalf("Failed to ensure log directory: %s", err)
+	}
+	path := filepath.Join(logDir, "Agent")
 	loc, _ := time.LoadLocation("Asia/Seoul")
 	writer, err := rotatelogs.New(
 		fmt.Sprintf("%s-%s.log", path, "%Y-%m-%d"),
-		//rotatelogs.WithMaxAge(time.Hour*24*7),
-		//rotatelogs.WithRotationTime(time.Hour*24),
 		rotatelogs.WithLocation(loc),
 		rotatelogs.WithMaxAge(-1),
 		rotatelogs.WithRotationCount(7),
@@ -161,14 +199,22 @@ func InitConfigU(_path string) {
 	stdlog.SetOutput(writer)
 	Stdlog = stdlog
 
-	Conf = readConfigU(_path)
+	Conf = readConfigU()
 
 }
 
-func readConfigU(_path string) Config {
-	var configfile = _path + "/config.ini"
+func readConfigU() Config {
+	realpath, _ := os.Executable()
+	dir := filepath.Dir(realpath)
+	var configfile = filepath.Join(dir, "config.ini")
 	_, err := os.Stat(configfile)
 	if err != nil {
+		err := createConfig(configfile)
+		if err != nil {
+			Stdlog.Println("Config file create fail")
+		}
+		Stdlog.Println("config.ini 생성완료 작성을 해주세요.")
+
 		fmt.Println("Config file is missing : ", configfile)
 	}
 
@@ -180,4 +226,89 @@ func readConfigU(_path string) Config {
 	}
 
 	return result
+}
+
+func createDir(dirName string) error {
+	err := os.MkdirAll(dirName, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+	return nil
+}
+
+func createConfig(dirName string) error {
+	fo, err := os.Create(dirName)
+	if err != nil {
+		return fmt.Errorf("Config file create fail: %w", err)
+	}
+
+	configData := []string{
+		`#실행 환경 설정 파일`,
+		``,
+		`# DB`,
+		`DB = "postgres"`,
+		`HOST = "210.114.225.58"`,
+		`PORT = "5432"`,
+		`DBID = "postgres"`,
+		`DBPW = "dhn7985!"`,
+		`DBNAME = "igenie"`,
+		``,
+		`#그린샷 사용 유무`,
+		`GRS = true`,
+		``,
+		`#IMC 사용 유무`,
+		`IMC = false`,
+		``,
+		`#Naself 사용 유무`,
+		`NAS = false`,
+		``,
+		`#스마트미 PHN 사용 유무`,
+		`SMTPHN = false`,
+		``,
+		`#스마트미 사용 유무`,
+		`SMT = true`,
+		``,
+		`#나노 폰문자 사용 유무`,
+		`PMS = false`,
+		``,
+		`#나노 Fun문자 사용 유무`,
+		`FUN = true`,
+		``,
+		`#나노 BKG문자 사용 유무`,
+		`BKG = false`,
+		``,
+		`#2발신 실패시 환불 여부`,
+		`REFUND = true`,
+		``,
+		`#스마트미 DB 직접 연결 사용 유무`,
+		`SMTPHNDB = false`,
+		``,
+		`#RCS 사용 유무`,
+		`RCS = true`,
+		``,
+		`#결과 테이블`,
+		`RESULTTABLE="DHN_REQUEST_RESULT"`,
+		``,
+		`#2차 알림톡 발송을 위한 카카오 발송용 Table1`,
+		`REQTABLE1="DHN_REQUEST"`,
+		``,
+		`#2차 알림톡 발송을 위한 카카오 발송용 Table2`,
+		`REQTABLE2="DHN_REQUEST_2ND"`,
+		``,
+		`#폰문자 정액제 User KEY`,
+		`WP1="FE227003022D124978D41FFA0C3F71CA"`,
+		``,
+		`#폰문자 건당 User KEY`,
+		`WP2="FE227003022D124978D41FFA0C3F71CA"`,
+		``,
+		`#RCS 관련 ID / PW`,
+		`RCSID="dhn7137985"`,
+		`RCSPW="$2a$10$wss410VSvWDh7lABAGdjvu.iJnQ4jziEnzXlDB2./PVBcTrO5L/iK"`,
+	}
+
+	for _, line := range configData {
+		fmt.Fprintln(fo, line)
+	}
+
+	return nil
 }
