@@ -12,11 +12,11 @@ import (
 	"webagent/src/databasepool"
 	"webagent/src/nanoit"
 	"webagent/src/phonemsg"
+	"webagent/src/req2ndprocess"
 	"webagent/src/tblreqprocess"
 	"webagent/src/webaproc"
 	"webagent/src/webcmms"
 	"webagent/src/webcsms"
-	"webagent/src/req2ndprocess"
 
 	"github.com/takama/daemon"
 )
@@ -75,29 +75,29 @@ func (service *Service) Manage() (string, error) {
 
 func main() {
 
-	config.InitConfigU("/root/IBAgent")
+	config.InitConfigU()
 
 	databasepool.InitDatabase()
-	
+
 	var rLimit syscall.Rlimit
-	
+
 	rLimit.Max = 50000
-    rLimit.Cur = 50000
-    
-    err := syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rLimit)
-    
-    if err != nil {
-        config.Stdlog.Println("Error Setting Rlimit ", err)
-    }
-    
-    err = syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
-    
-    if err != nil {
-        config.Stdlog.Println("Error Getting Rlimit ", err)
-    }
-    
-    config.Stdlog.Println("Rlimit Final", rLimit)
-    
+	rLimit.Cur = 50000
+
+	err := syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+
+	if err != nil {
+		config.Stdlog.Println("Error Setting Rlimit ", err)
+	}
+
+	err = syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+
+	if err != nil {
+		config.Stdlog.Println("Error Getting Rlimit ", err)
+	}
+
+	config.Stdlog.Println("Rlimit Final", rLimit)
+
 	srv, err := daemon.New(name, description, daemon.SystemDaemon, dependencies...)
 	if err != nil {
 		config.Stdlog.Println("Error: ", err)
