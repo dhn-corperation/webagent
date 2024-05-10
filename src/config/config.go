@@ -304,6 +304,8 @@ func createConfig(dirName string) error {
 		`#RCS 관련 ID / PW`,
 		`RCSID="dhn7137985"`,
 		`RCSPW="$2a$10$wss410VSvWDh7lABAGdjvu.iJnQ4jziEnzXlDB2./PVBcTrO5L/iK"`,
+		``,
+		`#필요에 따라 추가`,
 	}
 
 	for _, line := range configData {
