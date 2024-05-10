@@ -5,7 +5,9 @@ import (
 	"bytes"
 	"database/sql"
 	"io"
+	"net"
 	"net/http"
+	"webagent/src/common"
 	"webagent/src/config"
 	"webagent/src/databasepool"
 
@@ -20,6 +22,8 @@ import (
 
 	"sync"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 var Token string
@@ -36,7 +40,7 @@ func Process() {
 		var db = databasepool.DB
 		var stdlog = config.Stdlog
 
-		reqsql := "SELECT * FROM RCS_MESSAGE ORDER BY rcs_id LIMIT 0, 500"
+		reqsql := "SELECT * FROM RCS_MESSAGE ORDER BY rcs_id LIMIT 500"
 
 		reqrows, err := db.Query(reqsql)
 		if err != nil {
@@ -56,30 +60,7 @@ func Process() {
 		resultChan := make(chan resultStr, 500)
 		var reswg sync.WaitGroup
 
-		resinsStrs := []string{}
-		resinsValues := []interface{}{}
-		resinsquery := `insert IGNORE into RCS_MESSAGE_RESULT(
-	rcs_id ,
-	msg_id ,
-	user_contact ,
-	schedule_type ,
-	msg_group_id ,
-	msg_service_type ,
-	chatbot_id ,
-	agency_id ,
-	messagebase_id ,
-	service_type ,
-	expiry_option ,
-	header ,
-	footer ,
-	copy_allowed ,
-	body ,
-	buttons ,
-	status ,
-	sentTime ,
-	timestamp ,
-	error,
-	proc  ) values %s`
+		rcsResValues := []common.RcsMsgRes{}
 
 		delrcsids := []interface{}{}
 
@@ -92,7 +73,7 @@ func Process() {
 			}
 
 			if len(Token) < 10 {
-				Token = getTokenInfo()
+				//Token = getTokenInfo()
 			}
 
 			scanArgs := make([]interface{}, count)
@@ -273,49 +254,55 @@ func Process() {
 				status = "fail"
 			}
 
-			resinsStrs = append(resinsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),now(),?,?)")
-			resinsValues = append(resinsValues, result["rcs_id"])
-			resinsValues = append(resinsValues, result["msg_id"])
-			resinsValues = append(resinsValues, result["user_contact"])
-			resinsValues = append(resinsValues, result["schedule_type"])
-			resinsValues = append(resinsValues, result["msg_group_id"])
-			resinsValues = append(resinsValues, result["msg_service_type"])
-			resinsValues = append(resinsValues, result["chatbot_id"])
-			resinsValues = append(resinsValues, result["agency_id"])
-			resinsValues = append(resinsValues, result["messagebase_id"])
-			resinsValues = append(resinsValues, result["service_type"])
-			resinsValues = append(resinsValues, result["expiry_option"])
-			resinsValues = append(resinsValues, result["header"])
-			resinsValues = append(resinsValues, result["footer"])
-			resinsValues = append(resinsValues, result["copy_allowed"])
-			resinsValues = append(resinsValues, result["body"])
-			resinsValues = append(resinsValues, result["buttons"])
-			resinsValues = append(resinsValues, status)
-			resinsValues = append(resinsValues, rcsResp.Error.Message)
-			resinsValues = append(resinsValues, proc)
+			currentTime := time.Now().Format("2006-01-02 15:04:05")
+
+			rcsResValue := common.RcsMsgRes{}
+
+			rcsResValue.Rcs_id = result["rcs_id"]
+			rcsResValue.Msg_id = result["msg_id"]
+			rcsResValue.User_contact = result["user_contact"]
+			rcsResValue.Schedule_type = result["schdule_type"]
+			rcsResValue.Msg_group_id = result["msg_group_id"]
+			rcsResValue.Msg_service_type = result["msg_service_type"]
+			rcsResValue.Chatbot_id = result["chatbot_id"]
+			rcsResValue.Agency_id = result["agency_id"]
+			rcsResValue.Messagebase_id = result["messagebase_id"]
+			rcsResValue.Service_type = result["service_type"]
+			rcsResValue.Expiry_option = result["expiry_option"]
+			rcsResValue.Header = result["header"]
+			rcsResValue.Footer = result["footer"]
+			rcsResValue.Copy_allowed = result["copy_allowed"]
+			rcsResValue.Body = result["body"]
+			rcsResValue.Buttons = result["buttons"]
+			rcsResValue.Status = status
+			rcsResValue.SentTime = currentTime
+			rcsResValue.Timestamp = currentTime
+			rcsResValue.Error = rcsResp.Error.Message
+			rcsResValue.Proc = proc
+
+			rcsResValues = append(rcsResValues, rcsResValue)
 
 			delrcsids = append(delrcsids, result["rcs_id"])
 			procCount++
 		}
 
-		if len(resinsStrs) > 0 {
-			stmt := fmt.Sprintf(resinsquery, s.Join(resinsStrs, ","))
-			_, err := db.Exec(stmt, resinsValues...)
-
-			if err != nil {
-				stdlog.Println("RCS Result Table Insert 처리 중 오류 발생 " + err.Error())
-			}
+		if len(rcsResValues) > 0 {
+			insertRcsMsgRes(rcsResValues)
 		}
 
 		if len(delrcsids) > 0 {
 
 			var commastr = "delete from RCS_MESSAGE where rcs_id in ("
 
-			for i := 1; i < len(delrcsids); i++ {
-				commastr = commastr + "?,"
+			for i := 0; i < len(delrcsids); i++ {
+				if i == 0 {
+					commastr += "$1"
+				} else {
+					commastr += fmt.Sprintf(", $%d", i+1)
+				}
 			}
 
-			commastr = commastr + "?)"
+			commastr += ")"
 
 			_, err1 := db.Exec(commastr, delrcsids...)
 
@@ -342,22 +329,8 @@ func getTokenInfo() string {
 	authStr.RcsId = config.RCSID
 	authStr.RcsSecret = config.RCSPW
 	authStr.GrantType = "clientCredentials"
-	/*
-		resp, err := config.Client.R().
-			SetHeaders(map[string]string{"Content-Type": "application/json"}).
-			SetBody(authStr).
-			Post(config.RCSSENDURL + "/corp/v1/token")
-	*/
 
-	//resultReqJson, _ := json.Marshal(resultReq)
-	//auth := []byte(authStr)
 	authBytes, err := json.Marshal(authStr)
-	if err != nil {
-		config.Stdlog.Println("JSON 직렬화 실패:", err)
-		return ""
-	}
-
-	config.Stdlog.Println("JSON 직렬화 성공:", authBytes)
 
 	// 요청 생성
 	req, err := http.NewRequest("POST", config.Conf.RCSSENDURL+"/corp/v1/token", bytes.NewBuffer(authBytes))
@@ -367,16 +340,8 @@ func getTokenInfo() string {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	config.Stdlog.Println("http.NewRequest 요청 생성 성공:", req)
-
 	// HTTP 클라이언트 생성 및 요청 보내기
-	resp, err2 := RCSClient.Do(req)
-
-	//fmt.Println("SEND :", resp, err)
-	//config.Stdlog.Println("SEND :", resp, err)
-
-	config.Stdlog.Println("http.NewRequest 요청 보내기:", resp)
-
+	resp, err2 := config.GoClient.Do(req)
 	if err2 == nil {
 		var authResp RcsAuthResp
 		// 응답 바디 읽기
@@ -385,7 +350,6 @@ func getTokenInfo() string {
 			config.Stdlog.Println("응답 바디 읽기 실패:", err)
 			return ""
 		}
-		config.Stdlog.Println("응답 바디 읽기 성공:", body)
 
 		// 응답 바디를 맵으로 매핑
 		err = json.Unmarshal(body, &authResp)
@@ -393,10 +357,7 @@ func getTokenInfo() string {
 			config.Stdlog.Println("JSON 매핑 실패:", authResp)
 			return ""
 		}
-		config.Stdlog.Println("JSON 매핑 성공:", err)
-		config.Stdlog.Println("RCS 토큰 가져오기 끝 =============")
-		//var authResp RcsAuthResp
-		//json.Unmarshal(resp.Body(), &authResp)
+
 		return authResp.Data.TokenInfo.AccessToken
 	} else {
 		config.Stdlog.Println("Token receipt fail. - ", resp, err)
@@ -408,26 +369,62 @@ func getTokenInfo() string {
 
 func sendRcs(reswg *sync.WaitGroup, c chan<- resultStr, msg MessageInfo, temp resultStr) {
 	defer reswg.Done()
-
-	//mapB, _ := json.Marshal(msg)
-	//fmt.Println(string(mapB))
-
-	resp, err := config.Client.R().
-		SetHeaders(map[string]string{"Content-Type": "application/json", "Authorization": "Bearer " + Token}).
-		SetBody(msg).
-		Post(config.Conf.RCSSENDURL + "/corp/v1/message")
-
-	//fmt.Println("SEND :", resp, err)
-
+	jsonData, _ := json.Marshal(msg)
+	req, err := http.NewRequest("POST", config.Conf.RCSRESULTURL+"/corp/v1/message", bytes.NewBuffer(jsonData))
 	if err != nil {
-		config.Stdlog.Println("RCS 메시지 서버 호출 오류 : ", err)
-		temp.Statuscode = 499
-		temp.BodyData = []byte("{\"status\": \"499\", \"error\": { \"code\": \"99999\", \"message\": \"Send Server Error\" } }")
-	} else {
-		//config.Stdlog.Println(resp.StatusCode(), resp.Body())
-		temp.Statuscode = resp.StatusCode()
-		temp.BodyData = resp.Body()
+		config.Stdlog.Println("RCS 발송 에러 request 만들기 실패 ", err.Error())
+		return
 	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+Token)
+	resp, err := config.GoClient.Do(req)
+	if err != nil {
+		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+			// 타임아웃 오류 처리
+			config.Stdlog.Println("RCS 발송 타임아웃 error : ", err.Error())
+		} else {
+			// 기타 오류 처리
+			config.Stdlog.Println("RCS 발송 실패 error : ", err.Error())
+		}
+		return
+	} else {
+		bodyData, _ := io.ReadAll(resp.Body)
+		temp.Statuscode = resp.StatusCode
+		temp.BodyData = bodyData
+	}
+
+	resp.Body.Close()
+
 	c <- temp
 
+}
+
+func insertRcsMsgRes(RcsMsgResValue []common.RcsMsgRes) {
+	tx, err := databasepool.DB.Begin()
+	if err != nil {
+		config.Stdlog.Println("rcssend.go / insertRcsMsgRes / rcs_message_result / 트랜잭션 초기화 실패 ", err)
+	}
+	defer tx.Rollback()
+	rcsMsgStmt, err := tx.Prepare(pq.CopyIn("rcs_message_result", common.GetRcsColumnPq(common.RcsMsgRes{})...))
+	if err != nil {
+		config.Stdlog.Println("rcssend.go / insertRcsMsgRes / rcs_message_result / rcsMsgStmt 초기화 실패 ", err)
+		return
+	}
+	for _, data := range RcsMsgResValue {
+		_, err := rcsMsgStmt.Exec(data.Rcs_id, data.Msg_id, data.User_contact, data.Schedule_type, data.Msg_group_id, data.Msg_service_type, data.Chatbot_id, data.Agency_id, data.Messagebase_id, data.Service_type, data.Expiry_option, data.Header, data.Footer, data.Copy_allowed, data.Body, data.Buttons, data.Status, data.SentTime, data.Timestamp, data.Error, data.Proc)
+		if err != nil {
+			config.Stdlog.Println("rcssend.go / insertRcsMsgRes / rcs_message_result / rcsMsgStmt personal Exec ", err)
+		}
+	}
+
+	_, err = rcsMsgStmt.Exec()
+	if err != nil {
+		rcsMsgStmt.Close()
+		config.Stdlog.Println("rcssend.go / insertRcsMsgRes / rcs_message_result / rcsMsgStmt Exec ", err)
+	}
+	rcsMsgStmt.Close()
+	err = tx.Commit()
+	if err != nil {
+		config.Stdlog.Println("rcssend.go / insertRcsMsgRes / rcs_message_result / rcsMsgStmt commit ", err)
+	}
 }
