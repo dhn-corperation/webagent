@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"database/sql"
 	"io"
+	"net"
+	"webagent/src/common"
 	"webagent/src/config"
 	"webagent/src/databasepool"
 
@@ -21,6 +23,8 @@ import (
 
 	"sync"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 var RToken string
@@ -55,23 +59,17 @@ func resultProcess(wg *sync.WaitGroup) {
 
 	resultReq.QueryId = "DHN_" + startTime
 
-	resAfter6 := `update RCS_MESSAGE_RESULT rmr 
-set rmr.result_status = 'success' 
-   ,rmr.status = 'success'
-   ,rmr.proc = 'P'
- where date_add(STR_TO_DATE(rmr.sentTime, '%Y-%m-%d %H:%i:%s'), interval 6 HOUR) < NOW() AND rmr.proc = 'N'`
+	resAfter6 := `UPDATE rcs_message_result 
+		SET result_status = 'success',
+			status = 'success',
+			proc = 'P'
+		WHERE TO_TIMESTAMP(senttime, 'YYYY-MM-DD HH24:MI:SS') + INTERVAL '6 hours' < CURRENT_TIMESTAMP
+		AND proc = 'N'`
 
 	databasepool.DB.Exec(resAfter6)
 
 	RToken = getTokenInfo()
 
-	/*
-		resp, err := config.Client.R().
-			SetHeaders(map[string]string{"Content-Type": "application/json", "Authorization": "Bearer " + RToken}).
-			SetBody(resultReq).
-			Post(config.RCSRESULTURL + "/corp/v1/querymsgstatus")
-		//fmt.Println(resp)
-	*/
 	resultReqJson, _ := json.Marshal(resultReq)
 	requestBody := []byte(resultReqJson)
 
@@ -87,95 +85,70 @@ set rmr.result_status = 'success'
 	// HTTP 클라이언트 생성 및 요청 보내기
 	resp, err := config.GoClient.Do(req)
 	if err != nil {
-		config.Stdlog.Println("POST 요청 실패:", err)
+		// 에러가 발생한 경우 처리
+		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+			// 타임아웃 오류 처리
+			config.Stdlog.Println("RCS querymsgstatus 타임아웃 error : ", err.Error())
+		} else {
+			// 기타 오류 처리
+			config.Stdlog.Println("RCS querymsgstatus 실패 error : ", err.Error())
+		}
 		return
-	}
-	defer resp.Body.Close()
-
-	if err != nil {
-		config.Stdlog.Println("RCS 메시지 결과 서버 호출 오류 : ", err)
-		//	return nil
 	} else {
-		//var resultInfo RcsResultInfo
-		//json.Unmarshal(resp.Body(), &resultInfo)
 
 		var resultInfo RcsResultInfo
 		// 응답 바디 읽기
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			config.Stdlog.Println("응답 바디 읽기 실패:", err)
+			config.Stdlog.Println("rcsresult.go / querymsgstatus 응답 바디 읽기 실패 ", err)
 			return
 		}
 
 		// 응답 바디를 맵으로 매핑
 		err = json.Unmarshal(body, &resultInfo)
 		if err != nil {
-			config.Stdlog.Println("JSON 매핑 실패:", err)
+			config.Stdlog.Println("rcsresult.go / querymsgstatus JSON매핑 실패 ", err)
 			return
 		}
 
-		//fmt.Println(len(resultInfo.StatusInfo), resultInfo.StatusInfo)
-		//if len(resultInfo.StatusInfo) > 0 {
-		resinsStrs := []string{}
-		resinsValues := []interface{}{}
-		resinsquery := `insert IGNORE into RCS_MESSAGE_STATUS(
-rcs_id ,
-msg_id ,
-user_contact ,
-status ,
-service_type ,
-mno_info ,
-sent_time ,
-error ,
-timestamp ) values %s`
+		rcsStatusValues := []common.RcsStatusColumn{}
 
 		for i := 0; i < len(resultInfo.StatusInfo); i++ {
 			si := resultInfo.StatusInfo[i]
 
-			resinsStrs = append(resinsStrs, "(?,?,?,?,?,?,?,?,?)")
-			resinsValues = append(resinsValues, si.RcsId)
-			resinsValues = append(resinsValues, si.MsgId)
-			resinsValues = append(resinsValues, si.UserContact)
-			resinsValues = append(resinsValues, si.Status)
-			resinsValues = append(resinsValues, si.ServiceType)
-			resinsValues = append(resinsValues, si.MnoInfo)
-			resinsValues = append(resinsValues, si.SentTime)
-			resinsValues = append(resinsValues, si.Error.Message)
-			resinsValues = append(resinsValues, si.Timestamp)
+			rcsStatusValue := common.RcsStatusColumn{}
 
-			if len(resinsStrs) >= 500 {
-				stmt := fmt.Sprintf(resinsquery, s.Join(resinsStrs, ","))
+			rcsStatusValue.Rcs_id = si.RcsId
+			rcsStatusValue.Msg_id = si.MsgId
+			rcsStatusValue.User_contact = si.UserContact
+			rcsStatusValue.Status = si.Status
+			rcsStatusValue.Service_type = si.ServiceType
+			rcsStatusValue.Mno_info = si.MnoInfo
+			rcsStatusValue.Sent_time = si.SentTime
+			rcsStatusValue.Error = si.Error.Message
+			rcsStatusValue.Timestamp = si.Timestamp
 
-				_, err := databasepool.DB.Exec(stmt, resinsValues...)
+			rcsStatusValues = append(rcsStatusValues, rcsStatusValue)
 
-				if err != nil {
-					stdlog.Println("RCS_MESSAGE_STATUS Table Insert 처리 중 오류 발생 " + err.Error())
-				}
-
-				resinsStrs = nil
-				resinsValues = nil
+			if len(rcsStatusValues) >= 500 {
+				insertRcsStatus(rcsStatusValues)
+				rcsStatusValues = []common.RcsStatusColumn{}
 			}
-			resUpdatestr := `update RCS_MESSAGE_RESULT rmr 
-set rmr.result_status = '` + si.Status + `' 
-   ,rmr.result_error = '` + si.Error.Message + `'
-   ,rmr.proc = 'P'
- where rmr.proc = 'N' and rmr.msg_id='` + si.MsgId + `' and rmr.user_contact = '` + si.UserContact + `'`
+			resUpdatestr := ` update rcs_message_result
+				set result_status = '` + si.Status + `' 
+				,result_error = '` + si.Error.Message + `'
+				,proc = 'P'
+				where proc = 'N' 
+				and msg_id='` + si.MsgId + `' 
+				and user_contact = '` + si.UserContact + `'`
 
 			//stdlog.Println("RCS_MESSAGE_STATUS Table 수정 Query : " + resUpdatestr)
 			databasepool.DB.Exec(resUpdatestr)
 		}
 
-		if len(resinsStrs) > 0 {
-			stmt := fmt.Sprintf(resinsquery, s.Join(resinsStrs, ","))
-
-			_, err := databasepool.DB.Exec(stmt, resinsValues...)
-
-			if err != nil {
-				stdlog.Println("RCS_MESSAGE_STATUS Table Insert 처리 중 오류 발생 " + err.Error())
-			}
-
-			resinsStrs = nil
-			resinsValues = nil
+		if len(rcsStatusValues) > 0 {
+			insertRcsStatus(rcsStatusValues)
+			rcsStatusValues = []common.RcsStatusColumn{}
 		}
 		/*
 						resUpdatestr := `update RCS_MESSAGE_RESULT rmr
@@ -189,7 +162,17 @@ set rmr.result_status = '` + si.Status + `'
 						db.Exec(resUpdatestr)
 		*/
 
-		groupsql := "select distinct msg_group_id as mst_id, wms.send_mem_id as usermem_id from RCS_MESSAGE_RESULT rmr inner join cb_wt_msg_sent wms on rmr.msg_group_id = wms.mst_id where rmr.proc = 'P'"
+		// postgresql에서는 mariadb와는 달리 자동 형변환이 없다. 기존 mariadb에서 msg_id는 bigint, msg_group_id는 char(20) 타입이다.
+		groupsql := `SELECT DISTINCT
+				rmr.msg_group_id AS mst_id,
+				wms.send_mem_id AS usermem_id
+			FROM
+				RCS_MESSAGE_RESULT rmr
+			INNER JOIN
+				cb_wt_msg_sent wms
+				ON rmr.msg_group_id::BIGINT = wms.mst_id 
+			WHERE
+				rmr.proc = 'P'`
 
 		grows, err := db.Query(groupsql)
 		if err != nil {
@@ -199,19 +182,10 @@ set rmr.result_status = '` + si.Status + `'
 
 			var mst_id, usermem_id sql.NullString
 
-			ossmsStrs := []string{}
-			ossmsValues := []interface{}{}
-
-			osmmsStrs := []string{}
-			osmmsValues := []interface{}{}
-
 			for grows.Next() {
 
-				ossmsStrs = nil //스마트미 SMS Table Insert 용
-				ossmsValues = nil
-
-				osmmsStrs = nil //스마트미 LMS/MMS Table Insert 용
-				osmmsValues = nil
+				oSmsValues := []common.OSmsColumn{}
+				oMmsValues := []common.OMmsColumn{}
 
 				var scnt int = 0
 				var ecnt int = 0
@@ -219,29 +193,31 @@ set rmr.result_status = '` + si.Status + `'
 				grows.Scan(&mst_id, &usermem_id)
 
 				ressql := `SELECT rmr.msg_id as msgid
-,rmr.user_contact as phnstr
-,rmr.chatbot_id as  sms_sender
-,rmr.body
-,rmr.msg_group_id as remark4
-,'00000000000000' as reserve_dt
-,(select mem_userid from cb_member cm where cm.mem_id = wms.mst_mem_id) as userid
-,ifnull(rmr.result_status, rmr.status)  as res_status
-,ifnull(rmr.result_error,rmr.error) as res_error
-,rmr.service_type
-,(SELECT mi.origin1_path FROM cb_mms_images mi where wms.mst_mms_content = mi.mms_id and length(mst_mms_content ) > 5 ) as mms_file1
-,(SELECT mi.origin2_path FROM cb_mms_images mi where wms.mst_mms_content = mi.mms_id and length(mst_mms_content ) > 5 ) as mms_file2
-,(SELECT mi.origin3_path FROM cb_mms_images mi where wms.mst_mms_content = mi.mms_id and length(mst_mms_content ) > 5 ) as mms_file3
-,wms.mst_sent_voucher  
-,wms.mst_mem_id as send_mem_id
-,wms.mst_type2
-,wms.mst_type3
-,(select ( case when rcs.msr_exptime < NOW() then 'N' WHEn rcs.msr_exptime IS NULL then 'N' else 'Y' END) from cb_wt_msg_rcs rcs where rcs.msr_mst_id = rmr.msg_group_id) as msr_exptime
-,wms.mst_lms_content 
-FROM RCS_MESSAGE_RESULT rmr 
-     inner join cb_wt_msg_sent wms on rmr.msg_group_id = wms.mst_id 
-where rmr.proc = 'P'
-and rmr.msg_group_id = ?
-`
+					,rmr.user_contact as phnstr
+					,rmr.chatbot_id as  sms_sender
+					,rmr.body
+					,rmr.msg_group_id as remark4
+					,'00000000000000' as reserve_dt
+					,(select mem_userid from cb_member cm where cm.mem_id = wms.mst_mem_id) as userid
+					,COALESCE(rmr.result_status, rmr.status)  as res_status
+					,COALESCE(rmr.result_error,rmr.error) as res_error
+					,rmr.service_type
+					,(SELECT mi.origin1_path FROM cb_mms_images mi where wms.mst_mms_content = mi.mms_id and length(mst_mms_content ) > 5 ) as mms_file1
+					,(SELECT mi.origin2_path FROM cb_mms_images mi where wms.mst_mms_content = mi.mms_id and length(mst_mms_content ) > 5 ) as mms_file2
+					,(SELECT mi.origin3_path FROM cb_mms_images mi where wms.mst_mms_content = mi.mms_id and length(mst_mms_content ) > 5 ) as mms_file3
+					,wms.mst_sent_voucher  
+					,wms.mst_mem_id as send_mem_id
+					,wms.mst_type2
+					,wms.mst_type3
+					,(select ( case when rcs.msr_exptime < NOW() then 'N' WHEn rcs.msr_exptime IS NULL then 'N' else 'Y' END) 
+						from cb_wt_msg_rcs rcs 
+						where rmr.msg_group_id::BIGINT =rcs.msr_mst_id) as msr_exptime
+					,wms.mst_lms_content 
+				FROM RCS_MESSAGE_RESULT rmr 
+					 inner join cb_wt_msg_sent wms on rmr.msg_group_id::BIGINT = wms.mst_id 
+				where rmr.proc = 'P'
+					and rmr.msg_group_id = $1
+				`
 
 				resrows, err := db.Query(ressql, mst_id.String)
 				if err != nil {
@@ -251,13 +227,7 @@ and rmr.msg_group_id = ?
 
 					var msgid, phnstr, sms_sender, body, remark4, reserve_dt, userid, res_status, res_error, service_type, mms_file1, mms_file2, mms_file3, mst_sent_voucher, send_mem_id, mst_type2, mst_type3, msr_exptime, mst_lms_content sql.NullString
 
-					amtsStrs := []string{}
-					amtsValues := []interface{}{}
-
-					var amtinsstr = ""
-
-					amtsStrs = nil
-					amtsValues = nil
+					amtValues := []common.AmtColumn{}
 
 					for resrows.Next() {
 
@@ -270,22 +240,17 @@ and rmr.msg_group_id = ?
 
 						cprice := baseprice.GetPrice(db, send_mem_id.String, stdlog)
 
-						amtinsstr = "insert into cb_amt_" + userid.String + "(amt_datetime," +
-							"amt_kind," +
-							"amt_amount," +
-							"amt_memo," +
-							"amt_reason," +
-							"amt_payback," +
-							"amt_admin)" +
-							" values %s"
-
 						switch s.ToLower(res_status.String) {
 						case "success":
-							db.Exec("update cb_msg_"+userid.String+" set CODE = 'RCS', MESSAGE_TYPE='rc', MESSAGE = ?, RESULT = ? where remark4=? and msgid = ?", "RCS 성공", "Y", remark4.String, msgid.String)
+							db.Exec("update cb_msg_"+userid.String+" set CODE = 'RCS', MESSAGE_TYPE='rc', MESSAGE = $1, RESULT = $2 where remark4=$3 and msgid = $4", "RCS 성공", "Y", remark4.String, msgid.String)
 							scnt++
 						case "fail":
-							amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
-							amtsValues = append(amtsValues, "3")
+							amtValue := common.AmtColumn{}
+							oSmsValue := common.OSmsColumn{}
+							oMmsValue := common.OMmsColumn{}
+							amtValue.Amt_datetime = "now()"
+							amtValue.Amt_kind = "3"
+
 							if s.EqualFold(mst_sent_voucher.String, "V") {
 								switch service_type.String {
 								case "RCSSMS":
@@ -351,12 +316,13 @@ and rmr.msg_group_id = ?
 								}
 							}
 
-							amtsValues = append(amtsValues, amount)
+							amtValue.Amt_amount = amount
+							amtValue.Amt_memo = memo
+							amtValue.Amt_reason = msgid.String + "/" + phnstr.String
+							amtValue.Amt_payback = payback * -1
+							amtValue.Amt_admin = admin_amt * -1
 
-							amtsValues = append(amtsValues, memo)
-							amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
-							amtsValues = append(amtsValues, payback*-1)
-							amtsValues = append(amtsValues, admin_amt*-1)
+							amtValues = append(amtValues, amtValue)
 
 							var rcsBody RcsBody
 							json.Unmarshal([]byte(body.String), &rcsBody)
@@ -364,22 +330,25 @@ and rmr.msg_group_id = ?
 
 								stdlog.Println("RCS 실패 -> WEB(C) 발송 처리 ", mst_type3.String, msr_exptime.String, msgid.String)
 
-								db.Exec("update cb_msg_"+userid.String+" set CODE = 'SMT', MESSAGE_TYPE='sm' where remark4=? and msgid = ?", remark4.String, msgid.String)
+								db.Exec("update cb_msg_"+userid.String+" set CODE = 'SMT', MESSAGE_TYPE='sm' where remark4 = $1  and msgid = $2", remark4.String, msgid.String)
 
 								if s.EqualFold(mst_type3.String, "wcs") {
-									ossmsStrs = append(ossmsStrs, "(?,?,?,?,?,null,?,?,?)")
-									ossmsValues = append(ossmsValues, sms_sender.String)
-									ossmsValues = append(ossmsValues, phnstr.String)
-									ossmsValues = append(ossmsValues, mst_lms_content.String)
-									ossmsValues = append(ossmsValues, "")
+
+									oSmsValue.Sender = sms_sender.String
+									oSmsValue.Receiver = phnstr.String
+									oSmsValue.Msg = mst_lms_content.String
+									oSmsValue.URL = ""
 									if s.EqualFold(reserve_dt.String, "00000000000000") {
-										ossmsValues = append(ossmsValues, sql.NullString{})
+										oSmsValue.ReserveDT = sql.NullString{}
 									} else {
-										ossmsValues = append(ossmsValues, reserve_dt.String)
+										oSmsValue.ReserveDT = reserve_dt.String
 									}
-									ossmsValues = append(ossmsValues, "0")
-									ossmsValues = append(ossmsValues, remark4.String)
-									ossmsValues = append(ossmsValues, msgid.String)
+									oSmsValue.TimeoutDT = "null"
+									oSmsValue.SendResult = "0"
+									oSmsValue.Mst_id = remark4.String
+									oSmsValue.Cb_msg_id = msgid.String
+
+									oSmsValues = append(oSmsValues, oSmsValue)
 
 									if s.EqualFold(mst_sent_voucher.String, "V") {
 										amount = cprice.V_price_smt_sms.Float64
@@ -397,33 +366,37 @@ and rmr.msg_group_id = ?
 										}
 									}
 
-									amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
-									amtsValues = append(amtsValues, "P")
-									amtsValues = append(amtsValues, amount)
-									amtsValues = append(amtsValues, memo)
-									amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
-									amtsValues = append(amtsValues, payback)
-									amtsValues = append(amtsValues, admin_amt)
+									amtValue.Amt_datetime = "now()"
+									amtValue.Amt_kind = "P"
+									amtValue.Amt_amount = amount
+									amtValue.Amt_memo = memo
+									amtValue.Amt_reason = msgid.String + "/" + phnstr.String
+									amtValue.Amt_payback = payback
+									amtValue.Amt_admin = admin_amt
+
+									amtValues = append(amtValues, amtValue)
 
 								} else if s.EqualFold(mst_type3.String, "wc") {
-									osmmsStrs = append(osmmsStrs, "(?,?,?,?,?,?,null,?,?,?,?,?,?)")
-									osmmsValues = append(osmmsValues, remark4.String)
-									osmmsValues = append(osmmsValues, sms_sender.String)
-									osmmsValues = append(osmmsValues, phnstr.String)
-									osmmsValues = append(osmmsValues, rcsBody.Title)
-									osmmsValues = append(osmmsValues, mst_lms_content.String)
-									if s.EqualFold(reserve_dt.String, "00000000000000") {
-										osmmsValues = append(osmmsValues, sql.NullString{})
-									} else {
-										osmmsValues = append(osmmsValues, reserve_dt.String)
-									}
-									osmmsValues = append(osmmsValues, "0")
 
-									osmmsValues = append(osmmsValues, sql.NullString{})
-									osmmsValues = append(osmmsValues, sql.NullString{})
-									osmmsValues = append(osmmsValues, sql.NullString{})
-									osmmsValues = append(osmmsValues, remark4.String)
-									osmmsValues = append(osmmsValues, msgid.String)
+									oMmsValue.MsgGroupID = remark4.String
+									oMmsValue.Sender = sms_sender.String
+									oMmsValue.Receiver = phnstr.String
+									oMmsValue.Subject = rcsBody.Title
+									oMmsValue.Msg = mst_lms_content.String
+									if s.EqualFold(reserve_dt.String, "00000000000000") {
+										oMmsValue.ReserveDT = sql.NullString{}
+									} else {
+										oMmsValue.ReserveDT = reserve_dt.String
+									}
+									oMmsValue.TimeoutDT = "null"
+									oMmsValue.SendResult = "0"
+									oMmsValue.File_Path1 = sql.NullString{}
+									oMmsValue.File_Path2 = sql.NullString{}
+									oMmsValue.File_Path3 = sql.NullString{}
+									oMmsValue.Mst_id = remark4.String
+									oMmsValue.Cb_msg_id = msgid.String
+
+									oMmsValues = append(oMmsValues, oMmsValue)
 
 									if len(mms_file1.String) <= 0 {
 										if s.EqualFold(mst_sent_voucher.String, "V") {
@@ -460,61 +433,42 @@ and rmr.msg_group_id = ?
 
 									}
 
-									amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
-									amtsValues = append(amtsValues, "P")
-									amtsValues = append(amtsValues, amount)
-									amtsValues = append(amtsValues, memo)
-									amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
-									amtsValues = append(amtsValues, payback)
-									amtsValues = append(amtsValues, admin_amt)
+									amtValue.Amt_datetime = "now()"
+									amtValue.Amt_kind = "P"
+									amtValue.Amt_amount = amount
+									amtValue.Amt_memo = memo
+									amtValue.Amt_reason = msgid.String + "/" + phnstr.String
+									amtValue.Amt_payback = payback
+									amtValue.Amt_admin = admin_amt
+
+									amtValues = append(amtValues, amtValue)
 								}
 							} else {
 								ecnt++
-								db.Exec("update cb_msg_"+userid.String+" set CODE = 'RCS', MESSAGE_TYPE='rc', MESSAGE = ?, RESULT = ? where remark4=? and msgid = ?", res_error.String, "N", remark4.String, msgid.String)
+								db.Exec("update cb_msg_"+userid.String+" set CODE = 'RCS', MESSAGE_TYPE='rc', MESSAGE = $1, RESULT = $2 where remark4 = $3 and msgid = $4", res_error.String, "N", remark4.String, msgid.String)
 							}
 						}
 
-						db.Exec("update RCS_MESSAGE_RESULT set proc='Y' where msg_group_id = ? and proc='P' and msg_id = ?", mst_id.String, msgid.String)
+						db.Exec("update RCS_MESSAGE_RESULT set proc='Y' where msg_group_id = $1 and proc='P' and msg_id = $2", mst_id.String, msgid.String)
 
 					}
 
-					if len(ossmsStrs) > 0 {
-						stmt := fmt.Sprintf("insert into OShotSMS(Sender,Receiver,Msg,URL,ReserveDT,TimeoutDT,SendResult,mst_id,cb_msg_id ) values %s", s.Join(ossmsStrs, ","))
-						_, err := db.Exec(stmt, ossmsValues...)
-
-						if err != nil {
-							stdlog.Println("스마트미 SMS Table Insert 처리 중 오류 발생 " + err.Error())
-						}
-
-						ossmsStrs = nil
-						ossmsValues = nil
+					if len(oSmsValues) > 0 {
+						insertOSms(oSmsValues)
+						oSmsValues = []common.OSmsColumn{}
 					}
 
-					if len(osmmsStrs) > 0 {
-						stmt := fmt.Sprintf("insert into OShotMMS(MsgGroupID,Sender,Receiver,Subject,Msg,ReserveDT,TimeoutDT,SendResult,File_Path1,File_Path2,File_Path3,mst_id,cb_msg_id ) values %s", s.Join(osmmsStrs, ","))
-						_, err := db.Exec(stmt, osmmsValues...)
-
-						if err != nil {
-							stdlog.Println("스마트미 LMS Table Insert 처리 중 오류 발생 " + err.Error())
-						}
-
-						osmmsStrs = nil
-						osmmsValues = nil
+					if len(oMmsValues) > 0 {
+						insertOMms(oMmsValues)
+						oMmsValues = []common.OMmsColumn{}
 					}
 
-					if len(amtsStrs) > 0 {
-						stmt := fmt.Sprintf(amtinsstr, s.Join(amtsStrs, ","))
-						_, err := db.Exec(stmt, amtsValues...)
-
-						if err != nil {
-							stdlog.Println("AMT Table Insert 처리 중 오류 발생 " + err.Error())
-						}
-
-						amtsStrs = nil
-						amtsValues = nil
+					if len(amtValues) > 0 {
+						insertAmt(amtValues, userid.String)
+						amtValues = []common.AmtColumn{}
 					}
 
-					db.Exec("update cb_wt_msg_sent set mst_rcs = ifnull(mst_rcs,0) + ?,mst_err_rcs = ifnull(mst_err_rcs,0) + ?, mst_wait = mst_wait - ?  where mst_id=?", scnt, ecnt, (ecnt + scnt), mst_id.String)
+					db.Exec("update cb_wt_msg_sent set mst_rcs = COALESCE(mst_rcs,0) + $1,mst_err_rcs = COALESCE(mst_err_rcs,0) + $2, mst_wait = mst_wait - $3  where mst_id=$4", scnt, ecnt, (ecnt + scnt), mst_id.String)
 
 					stdlog.Println("RCS 처리 : (", mst_id.String, " ) 성공 : ", scnt, " / 실패 : ", ecnt)
 				}
@@ -530,6 +484,9 @@ and rmr.msg_group_id = ?
 		//	Interval = 1000
 		//}
 	}
+
+	defer resp.Body.Close()
+
 	time.Sleep(time.Millisecond * time.Duration(Interval))
 
 }
@@ -647,5 +604,133 @@ func retryProc(wg *sync.WaitGroup) {
 		}
 	}
 	time.Sleep(time.Millisecond * time.Duration(Interval2))
+
+}
+
+func insertRcsStatus(rcsStatusValues []common.RcsStatusColumn) {
+
+	tx, err := databasepool.DB.Begin()
+	if err != nil {
+		config.Stdlog.Println("rcsresult.go / insertRcsStatus / rcs_message_status / 트랜잭션 초기화 실패 ", err)
+	}
+	defer tx.Rollback()
+	rcsStmt, err := tx.Prepare(pq.CopyIn("rcs_message_status", common.GetRcsColumnPq(common.RcsStatusColumn{})...))
+	if err != nil {
+		config.Stdlog.Println("rcsresult.go / insertRcsStatus / rcs_message_status / rcsStmt 초기화 실패 ", err)
+		return
+	}
+	for _, data := range rcsStatusValues {
+		_, err := rcsStmt.Exec(data.Rcs_id, data.Msg_id, data.User_contact, data.Status, data.Service_type, data.Mno_info, data.Sent_time, data.Error, data.Timestamp)
+		if err != nil {
+			config.Stdlog.Println("rcsresult.go / insertRcsStatus / rcs_message_status / rcsStmt personal Exec ", err)
+		}
+	}
+
+	_, err = rcsStmt.Exec()
+	if err != nil {
+		rcsStmt.Close()
+		config.Stdlog.Println("rcsresult.go / insertRcsStatus / rcs_message_status / rcsStmt Exec ", err)
+	}
+	rcsStmt.Close()
+	err = tx.Commit()
+	if err != nil {
+		config.Stdlog.Println("rcsresult.go / insertRcsStatus / rcs_message_status / rcsStmt commit ", err)
+	}
+
+}
+
+func insertAmt(rcsAmtValue []common.AmtColumn, userid string) {
+
+	tx, err := databasepool.DB.Begin()
+	if err != nil {
+		config.Stdlog.Println("rcsresult.go / insertAmt / cb_amt_"+userid+" / 트랜잭션 초기화 실패 ", err)
+	}
+	defer tx.Rollback()
+	amtStmt, err := tx.Prepare(pq.CopyIn("cb_amt_"+userid, common.GetRcsColumnPq(common.AmtColumn{})...))
+	if err != nil {
+		config.Stdlog.Println("rcsresult.go / insertAmt / cb_amt_"+userid+" / amtStmt 초기화 실패 ", err)
+		return
+	}
+	for _, data := range rcsAmtValue {
+		_, err := amtStmt.Exec(data.Amt_datetime, data.Amt_kind, data.Amt_amount, data.Amt_memo, data.Amt_reason, data.Amt_payback, data.Amt_admin)
+		if err != nil {
+			config.Stdlog.Println("rcsresult.go / insertAmt / cb_amt_"+userid+" / amtStmt personal Exec ", err)
+		}
+	}
+
+	_, err = amtStmt.Exec()
+	if err != nil {
+		amtStmt.Close()
+		config.Stdlog.Println("rcsresult.go / insertAmt / cb_amt_"+userid+" / amtStmt Exec ", err)
+	}
+	amtStmt.Close()
+	err = tx.Commit()
+	if err != nil {
+		config.Stdlog.Println("rcsresult.go / insertAmt / cb_amt_"+userid+" / amtStmt commit ", err)
+	}
+
+}
+
+func insertOSms(oSmsValue []common.OSmsColumn) {
+
+	tx, err := databasepool.DB.Begin()
+	if err != nil {
+		config.Stdlog.Println("rcsresult.go / insertOSms / OShotSMS / 트랜잭션 초기화 실패 ", err)
+	}
+	defer tx.Rollback()
+	oSmsStmt, err := tx.Prepare(pq.CopyIn("OShotSMS", common.GetRcsColumnPq(common.OSmsColumn{})...))
+	if err != nil {
+		config.Stdlog.Println("rcsresult.go / insertOSms / OShotSMS / oSmsStmt 초기화 실패 ", err)
+		return
+	}
+	for _, data := range oSmsValue {
+		_, err := oSmsStmt.Exec(data.Sender, data.Receiver, data.Msg, data.URL, data.ReserveDT, data.TimeoutDT, data.SendResult, data.Mst_id, data.Cb_msg_id)
+		if err != nil {
+			config.Stdlog.Println("rcsresult.go / insertOSms / OShotSMS / oSmsStmt personal Exec ", err)
+		}
+	}
+
+	_, err = oSmsStmt.Exec()
+	if err != nil {
+		oSmsStmt.Close()
+		config.Stdlog.Println("rcsresult.go / insertOSms / OShotSMS / oSmsStmt Exec ", err)
+	}
+	oSmsStmt.Close()
+	err = tx.Commit()
+	if err != nil {
+		config.Stdlog.Println("rcsresult.go / insertOSms / OShotSMS / oSmsStmt commit ", err)
+	}
+
+}
+
+func insertOMms(oMmsValue []common.OMmsColumn) {
+
+	tx, err := databasepool.DB.Begin()
+	if err != nil {
+		config.Stdlog.Println("rcsresult.go / insertOMms / OShotMMS / 트랜잭션 초기화 실패 ", err)
+	}
+	defer tx.Rollback()
+	oMmsStmt, err := tx.Prepare(pq.CopyIn("OShotMMS", common.GetRcsColumnPq(common.OMmsColumn{})...))
+	if err != nil {
+		config.Stdlog.Println("rcsresult.go / insertOMms / OShotMMS / oMmsStmt 초기화 실패 ", err)
+		return
+	}
+	for _, data := range oMmsValue {
+		_, err := oMmsStmt.Exec(data.MsgGroupID, data.Sender, data.Receiver, data.Subject, data.Msg, data.ReserveDT, data.TimeoutDT, data.SendResult, data.File_Path1, data.File_Path2, data.File_Path3, data.Mst_id, data.Cb_msg_id)
+		if err != nil {
+			config.Stdlog.Println("rcsresult.go / insertOMms / OShotMMS / oMmsStmt personal Exec ", err)
+		}
+	}
+
+	_, err = oMmsStmt.Exec()
+	if err != nil {
+		oMmsStmt.Close()
+		config.Stdlog.Println("rcsresult.go / insertOMms / OShotMMS / oMmsStmt Exec ", err)
+	}
+	oMmsStmt.Close()
+	err = tx.Commit()
+	if err != nil {
+		config.Stdlog.Println("rcsresult.go / insertOSms / OShotSMS / oMmsStmt commit ", err)
+	}
 
 }
