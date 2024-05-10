@@ -16,7 +16,11 @@ import (
 
 type Config struct {
 	DB           string
-	DBURL        string
+	HOST         string
+	PORT         string
+	DBID         string
+	DBPW         string
+	DBNAME       string
 	GRS          bool
 	IMC          bool
 	NAS          bool
@@ -251,7 +255,7 @@ func createConfig(dirName string) error {
 		`PORT = "5432"`,
 		`DBID = "postgres"`,
 		`DBPW = "dhn7985!"`,
-		`DBNAME = "igenie"`,
+		`DBNAME = "test"`,
 		``,
 		`#그린샷 사용 유무`,
 		`GRS = true`,

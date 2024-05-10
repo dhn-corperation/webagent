@@ -10,14 +10,6 @@ import (
 
 	"webagent/src/config"
 	"webagent/src/databasepool"
-	"webagent/src/nanoit"
-	"webagent/src/phonemsg"
-	"webagent/src/tblreqprocess"
-	"webagent/src/webaproc"
-	"webagent/src/webcmms"
-	"webagent/src/webcsms"
-	"webagent/src/req2ndprocess"
-	"webagent/src/rcs"
 
 	"github.com/takama/daemon"
 )
@@ -98,38 +90,40 @@ func resultProc() {
 	config.Stdlog.Println("BizAgent 시작")
 	var conf = config.Conf
 
+	config.Stdlog.Println("테스트 : ", conf.RCSID)
+
 	if conf.RCS {
 		config.Stdlog.Println("RCS 사용 - 시작")
-		config.Stdlog.Println("RCS ID :",config.RCSID)
-		config.Stdlog.Println("RCS PW :",config.RCSPW)
-		
-		go rcs.ResultProcess()
-		
-		go rcs.RetryProcess()
-		
-		go rcs.Process()
+		config.Stdlog.Println("RCS ID :", config.RCSID)
+		config.Stdlog.Println("RCS PW :", config.RCSPW)
+
+		//go rcs.ResultProcess()
+
+		//go rcs.RetryProcess()
+
+		//go rcs.Process()
 	}
 
-	go tblreqprocess.Process()
-	
-	go req2ndprocess.Process()
+	//go tblreqprocess.Process()
+
+	//go req2ndprocess.Process()
 
 	if conf.SMT {
 		config.Stdlog.Println("SMT 사용 - 시작")
-		go webcsms.Process()
+		//go webcsms.Process()
 
-		go webcmms.Process()
+		//go webcmms.Process()
 	}
 
 	if conf.GRS {
 		config.Stdlog.Println("GRS 사용 - 시작")
-		go nanoit.Process()
-		go webaproc.Process()
+		//go nanoit.Process()
+		//go webaproc.Process()
 	}
 
 	if conf.SMTPHN {
 		config.Stdlog.Println("Phon 사용 - 시작")
-		go phonemsg.Process()
+		//go phonemsg.Process()
 	}
 
 }

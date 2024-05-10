@@ -3,10 +3,8 @@ package rcs
 import (
 	//"bytes"
 	"bytes"
-	"crypto/tls"
 	"database/sql"
 	"io"
-	"net"
 	"webagent/src/config"
 	"webagent/src/databasepool"
 
@@ -29,38 +27,6 @@ var RToken string
 var RToken2 string
 var Interval int32 = 1000
 var Interval2 int32 = 60000
-
-/*
-var RCSClient *http.Client = &http.Client{
-	Timeout: time.Second * 30,
-	Transport: &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		TLSHandshakeTimeout: 10 * time.Second,
-		TLSClientConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12, // TLS 1.2 사용
-			MaxVersion: tls.VersionTLS12, // TLS 1.2 사용
-		},
-	},
-}
-*/
-
-var RCSClient *http.Client = &http.Client{
-	Timeout: time.Second * 30,
-	Transport: &http.Transport{
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext,
-		TLSHandshakeTimeout: 10 * time.Second,
-		TLSClientConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12, // TLS 1.2 사용
-			MaxVersion: tls.VersionTLS12, // TLS 1.2 사용
-		},
-	},
-}
 
 func ResultProcess() {
 	var wg sync.WaitGroup
@@ -119,7 +85,7 @@ set rmr.result_status = 'success'
 	req.Header.Set("Authorization", "Bearer "+RToken)
 
 	// HTTP 클라이언트 생성 및 요청 보내기
-	resp, err := RCSClient.Do(req)
+	resp, err := config.GoClient.Do(req)
 	if err != nil {
 		config.Stdlog.Println("POST 요청 실패:", err)
 		return
@@ -630,7 +596,7 @@ func retryProc(wg *sync.WaitGroup) {
 		req.Header.Set("Authorization", "Bearer "+RToken2)
 
 		// HTTP 클라이언트 생성 및 요청 보내기
-		resp, err := RCSClient.Do(req)
+		resp, err := config.GoClient.Do(req)
 		if err != nil {
 			config.Stdlog.Println("POST 요청 실패:", err)
 			return
