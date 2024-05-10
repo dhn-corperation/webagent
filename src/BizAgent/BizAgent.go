@@ -10,6 +10,7 @@ import (
 
 	"webagent/src/config"
 	"webagent/src/databasepool"
+	"webagent/src/rcs"
 
 	"github.com/takama/daemon"
 )
@@ -101,7 +102,7 @@ func resultProc() {
 
 		//go rcs.RetryProcess()
 
-		//go rcs.Process()
+		go rcs.Process()
 	}
 
 	//go tblreqprocess.Process()
