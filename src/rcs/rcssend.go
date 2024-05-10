@@ -2,10 +2,7 @@ package rcs
 
 import (
 	//"bytes"
-	"bytes"
 	"database/sql"
-	"io"
-	"net/http"
 	"webagent/src/config"
 	"webagent/src/databasepool"
 
@@ -335,73 +332,28 @@ func Process() {
 }
 
 func getTokenInfo() string {
-	config.Stdlog.Println("RCS 토큰 가져오기 시작 =============")
 
 	var authStr RcsAuth
 
 	authStr.RcsId = config.RCSID
 	authStr.RcsSecret = config.RCSPW
 	authStr.GrantType = "clientCredentials"
-	/*
-		resp, err := config.Client.R().
-			SetHeaders(map[string]string{"Content-Type": "application/json"}).
-			SetBody(authStr).
-			Post(config.RCSSENDURL + "/corp/v1/token")
-	*/
 
-	//resultReqJson, _ := json.Marshal(resultReq)
-	//auth := []byte(authStr)
-	authBytes, err := json.Marshal(authStr)
-	if err != nil {
-		config.Stdlog.Println("JSON 직렬화 실패:", err)
-		return ""
-	}
-
-	config.Stdlog.Println("JSON 직렬화 성공:", authBytes)
-
-	// 요청 생성
-	req, err := http.NewRequest("POST", config.Conf.RCSSENDURL+"/corp/v1/token", bytes.NewBuffer(authBytes))
-	if err != nil {
-		config.Stdlog.Println("http.NewRequest 요청 생성 실패:", err)
-		return ""
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	config.Stdlog.Println("http.NewRequest 요청 생성 성공:", req)
-
-	// HTTP 클라이언트 생성 및 요청 보내기
-	resp, err2 := RCSClient.Do(req)
+	resp, err := config.Client.R().
+		SetHeaders(map[string]string{"Content-Type": "application/json"}).
+		SetBody(authStr).
+		Post(config.Conf.RCSSENDURL + "/corp/v1/token")
 
 	//fmt.Println("SEND :", resp, err)
 	//config.Stdlog.Println("SEND :", resp, err)
 
-	config.Stdlog.Println("http.NewRequest 요청 보내기:", resp)
-
-	if err2 == nil {
+	if err == nil {
 		var authResp RcsAuthResp
-		// 응답 바디 읽기
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			config.Stdlog.Println("응답 바디 읽기 실패:", err)
-			return ""
-		}
-		config.Stdlog.Println("응답 바디 읽기 성공:", body)
-
-		// 응답 바디를 맵으로 매핑
-		err = json.Unmarshal(body, &authResp)
-		if err != nil {
-			config.Stdlog.Println("JSON 매핑 실패:", authResp)
-			return ""
-		}
-		config.Stdlog.Println("JSON 매핑 성공:", err)
-		config.Stdlog.Println("RCS 토큰 가져오기 끝 =============")
-		//var authResp RcsAuthResp
-		//json.Unmarshal(resp.Body(), &authResp)
+		json.Unmarshal(resp.Body(), &authResp)
 		return authResp.Data.TokenInfo.AccessToken
 	} else {
-		config.Stdlog.Println("Token receipt fail. - ", resp, err)
+		config.Stdlog.Println("Teken receipt fail. - ", resp, err)
 	}
-	defer resp.Body.Close()
 
 	return ""
 }

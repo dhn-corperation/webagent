@@ -2,11 +2,7 @@ package rcs
 
 import (
 	//"bytes"
-	"bytes"
-	"crypto/tls"
 	"database/sql"
-	"io"
-	"net"
 	"webagent/src/config"
 	"webagent/src/databasepool"
 
@@ -16,9 +12,8 @@ import (
 
 	//"io/ioutil"
 
-	"net/http"
+	//"net/http"
 	s "strings"
-
 	//c "strconv"
 
 	"sync"
@@ -29,38 +24,6 @@ var RToken string
 var RToken2 string
 var Interval int32 = 1000
 var Interval2 int32 = 60000
-
-/*
-var RCSClient *http.Client = &http.Client{
-	Timeout: time.Second * 30,
-	Transport: &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		TLSHandshakeTimeout: 10 * time.Second,
-		TLSClientConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12, // TLS 1.2 사용
-			MaxVersion: tls.VersionTLS12, // TLS 1.2 사용
-		},
-	},
-}
-*/
-
-var RCSClient *http.Client = &http.Client{
-	Timeout: time.Second * 30,
-	Transport: &http.Transport{
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext,
-		TLSHandshakeTimeout: 10 * time.Second,
-		TLSClientConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12, // TLS 1.2 사용
-			MaxVersion: tls.VersionTLS12, // TLS 1.2 사용
-		},
-	},
-}
 
 func ResultProcess() {
 	var wg sync.WaitGroup
@@ -99,54 +62,19 @@ set rmr.result_status = 'success'
 
 	RToken = getTokenInfo()
 
-	/*
-		resp, err := config.Client.R().
-			SetHeaders(map[string]string{"Content-Type": "application/json", "Authorization": "Bearer " + RToken}).
-			SetBody(resultReq).
-			Post(config.RCSRESULTURL + "/corp/v1/querymsgstatus")
-		//fmt.Println(resp)
-	*/
-	resultReqJson, _ := json.Marshal(resultReq)
-	requestBody := []byte(resultReqJson)
+	resp, err := config.Client.R().
+		SetHeaders(map[string]string{"Content-Type": "application/json", "Authorization": "Bearer " + RToken}).
+		SetBody(resultReq).
+		Post(config.Conf.RCSRESULTURL + "/corp/v1/querymsgstatus")
 
-	// 요청 생성
-	req, err := http.NewRequest("POST", config.Conf.RCSRESULTURL+"/corp/v1/querymsgstatus", bytes.NewBuffer(requestBody))
-	if err != nil {
-		config.Stdlog.Println("요청 생성 실패:", err)
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+RToken)
-
-	// HTTP 클라이언트 생성 및 요청 보내기
-	resp, err := RCSClient.Do(req)
-	if err != nil {
-		config.Stdlog.Println("POST 요청 실패:", err)
-		return
-	}
-	defer resp.Body.Close()
+	//fmt.Println(resp)
 
 	if err != nil {
 		config.Stdlog.Println("RCS 메시지 결과 서버 호출 오류 : ", err)
 		//	return nil
 	} else {
-		//var resultInfo RcsResultInfo
-		//json.Unmarshal(resp.Body(), &resultInfo)
-
 		var resultInfo RcsResultInfo
-		// 응답 바디 읽기
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			config.Stdlog.Println("응답 바디 읽기 실패:", err)
-			return
-		}
-
-		// 응답 바디를 맵으로 매핑
-		err = json.Unmarshal(body, &resultInfo)
-		if err != nil {
-			config.Stdlog.Println("JSON 매핑 실패:", err)
-			return
-		}
+		json.Unmarshal(resp.Body(), &resultInfo)
 
 		//fmt.Println(len(resultInfo.StatusInfo), resultInfo.StatusInfo)
 		//if len(resultInfo.StatusInfo) > 0 {
@@ -611,31 +539,10 @@ func retryProc(wg *sync.WaitGroup) {
 
 		RToken2 = getTokenInfo()
 
-		/*
-			resp, err := config.Client.R().
-				SetHeaders(map[string]string{"Content-Type": "application/json", "Authorization": "Bearer " + RToken2}).
-				SetBody(resultReq).
-				Post(config.RCSRESULTURL + "/corp/v1/querymsgstatus")
-		*/
-		resultReqJson, _ := json.Marshal(resultReq)
-		requestBody := []byte(resultReqJson)
-
-		// 요청 생성
-		req, err := http.NewRequest("POST", config.Conf.RCSRESULTURL+"/corp/v1/querymsgstatus", bytes.NewBuffer(requestBody))
-		if err != nil {
-			config.Stdlog.Println("요청 생성 실패:", err)
-			return
-		}
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+RToken2)
-
-		// HTTP 클라이언트 생성 및 요청 보내기
-		resp, err := RCSClient.Do(req)
-		if err != nil {
-			config.Stdlog.Println("POST 요청 실패:", err)
-			return
-		}
-		defer resp.Body.Close()
+		resp, err := config.Client.R().
+			SetHeaders(map[string]string{"Content-Type": "application/json", "Authorization": "Bearer " + RToken2}).
+			SetBody(resultReq).
+			Post(config.Conf.RCSRESULTURL + "/corp/v1/querymsgstatus")
 
 		//fmt.Println(resp, resultReq)
 
@@ -643,26 +550,8 @@ func retryProc(wg *sync.WaitGroup) {
 			config.Stdlog.Println("RCS 메시지 결과 서버 호출 오류 : ", err)
 			//	return nil
 		} else {
-
 			var resultInfo RcsResultInfo
-			// 응답 바디 읽기
-			body, err := io.ReadAll(resp.Body)
-			if err != nil {
-				config.Stdlog.Println("응답 바디 읽기 실패:", err)
-				return
-			}
-
-			// 응답 바디를 맵으로 매핑
-			err = json.Unmarshal(body, &resultInfo)
-			if err != nil {
-				config.Stdlog.Println("JSON 매핑 실패:", err)
-				return
-			}
-
-			// 매핑된 데이터 출력
-			//fmt.Println("매핑된 데이터:", resultInfo)
-
-			//json.Unmarshal(resp.Body(), &resultInfo)
+			json.Unmarshal(resp.Body(), &resultInfo)
 
 			//fmt.Println(len(resultInfo.StatusInfo), resultInfo.StatusInfo)
 			//if len(resultInfo.StatusInfo) > 0 {
