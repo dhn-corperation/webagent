@@ -73,7 +73,7 @@ func Process() {
 			}
 
 			if len(Token) < 10 {
-				//Token = getTokenInfo()
+				Token = getTokenInfo()
 			}
 
 			scanArgs := make([]interface{}, count)
@@ -283,6 +283,7 @@ func Process() {
 			rcsResValues = append(rcsResValues, rcsResValue)
 
 			delrcsids = append(delrcsids, result["rcs_id"])
+
 			procCount++
 		}
 
@@ -322,49 +323,43 @@ func Process() {
 }
 
 func getTokenInfo() string {
-	config.Stdlog.Println("RCS 토큰 가져오기 시작 =============")
-
 	var authStr RcsAuth
 
 	authStr.RcsId = config.RCSID
 	authStr.RcsSecret = config.RCSPW
 	authStr.GrantType = "clientCredentials"
 
-	authBytes, err := json.Marshal(authStr)
-
-	// 요청 생성
+	authBytes, _ := json.Marshal(authStr)
 	req, err := http.NewRequest("POST", config.Conf.RCSSENDURL+"/corp/v1/token", bytes.NewBuffer(authBytes))
 	if err != nil {
-		config.Stdlog.Println("http.NewRequest 요청 생성 실패:", err)
+		config.Stdlog.Println("RCS Token Request 생성 실패:", err)
 		return ""
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	// HTTP 클라이언트 생성 및 요청 보내기
-	resp, err2 := config.GoClient.Do(req)
-	if err2 == nil {
+	resp, err := config.GoClient.Do(req)
+	if err != nil {
+		// 에러가 발생한 경우 처리
+		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+			// 타임아웃 오류 처리
+			config.Stdlog.Println("RCS Token 발급 타임아웃 response : ", resp, " / error : ", err.Error())
+		} else {
+			// 기타 오류 처리
+			config.Stdlog.Println("RCS Token 발급 실패 response : ", resp, " / error : ", err.Error())
+		}
+		return ""
+	} else {
 		var authResp RcsAuthResp
-		// 응답 바디 읽기
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			config.Stdlog.Println("응답 바디 읽기 실패:", err)
-			return ""
-		}
+		bodyData, _ := io.ReadAll(resp.Body)
+		json.Unmarshal(bodyData, &authResp)
 
-		// 응답 바디를 맵으로 매핑
-		err = json.Unmarshal(body, &authResp)
-		if err != nil {
-			config.Stdlog.Println("JSON 매핑 실패:", authResp)
-			return ""
-		}
+		defer resp.Body.Close()
 
 		return authResp.Data.TokenInfo.AccessToken
-	} else {
-		config.Stdlog.Println("Token receipt fail. - ", resp, err)
 	}
-	defer resp.Body.Close()
 
 	return ""
+
 }
 
 func sendRcs(reswg *sync.WaitGroup, c chan<- resultStr, msg MessageInfo, temp resultStr) {
