@@ -348,17 +348,15 @@ func getTokenInfo() string {
 			config.Stdlog.Println("RCS Token 발급 실패 response : ", resp, " / error : ", err.Error())
 		}
 		return ""
-	} else {
-		var authResp RcsAuthResp
-		bodyData, _ := io.ReadAll(resp.Body)
-		json.Unmarshal(bodyData, &authResp)
-
-		defer resp.Body.Close()
-
-		return authResp.Data.TokenInfo.AccessToken
 	}
 
-	return ""
+	var authResp RcsAuthResp
+	bodyData, _ := io.ReadAll(resp.Body)
+	json.Unmarshal(bodyData, &authResp)
+
+	defer resp.Body.Close()
+
+	return authResp.Data.TokenInfo.AccessToken
 
 }
 
