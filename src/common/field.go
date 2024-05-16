@@ -73,3 +73,13 @@ type OMmsColumn struct {
 	Mst_id     interface{} `db:"mst_id"`
 	Cb_msg_id  interface{} `db:"cb_msg_id"`
 }
+
+type AmtSmsColumn struct {
+	Amt_datetime interface{} `db:"amt_datetime"`
+	Amt_kind     interface{} `db:"amt_kind"`
+	Amt_amount   interface{} `db:"amt_amount"`
+	Amt_memo     interface{} `db:"amt_memo"`
+	Amt_reason   interface{} `db:"amt_reason"`
+	Amt_payback  interface{} `db:"amt_payback"`
+	Amt_admin    interface{} `db:"amt_admin"`
+}
