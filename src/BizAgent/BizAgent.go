@@ -10,7 +10,7 @@ import (
 
 	"webagent/src/config"
 	"webagent/src/databasepool"
-	"webagent/src/rcs"
+	"webagent/src/webcsms"
 
 	"github.com/takama/daemon"
 )
@@ -102,7 +102,7 @@ func resultProc() {
 
 		//go rcs.RetryProcess()
 
-		go rcs.Process()
+		//go rcs.Process()
 	}
 
 	//go tblreqprocess.Process()
@@ -111,7 +111,7 @@ func resultProc() {
 
 	if conf.SMT {
 		config.Stdlog.Println("SMT 사용 - 시작")
-		//go webcsms.Process()
+		go webcsms.Process()
 
 		//go webcmms.Process()
 	}
