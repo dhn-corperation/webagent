@@ -31,7 +31,7 @@ type BasePrice struct {
 	B_price_rcs_mms  sql.NullFloat64
 	B_price_rcs_tem  sql.NullFloat64
 	B_price_ft_cs    sql.NullFloat64
-	B_price_ft_il	 sql.NullFloat64
+	B_price_ft_il    sql.NullFloat64
 
 	C_price_ft       sql.NullFloat64
 	C_price_ft_img   sql.NullFloat64
@@ -58,7 +58,7 @@ type BasePrice struct {
 	C_price_rcs_mms  sql.NullFloat64
 	C_price_rcs_tem  sql.NullFloat64
 	C_price_ft_cs    sql.NullFloat64
-	C_price_ft_il	 sql.NullFloat64
+	C_price_ft_il    sql.NullFloat64
 
 	P_price_ft       sql.NullFloat64
 	P_price_ft_img   sql.NullFloat64
@@ -85,7 +85,7 @@ type BasePrice struct {
 	P_price_rcs_mms  sql.NullFloat64
 	P_price_rcs_tem  sql.NullFloat64
 	P_price_ft_cs    sql.NullFloat64
-	P_price_ft_il	 sql.NullFloat64
+	P_price_ft_il    sql.NullFloat64
 
 	V_price_ft       sql.NullFloat64
 	V_price_ft_img   sql.NullFloat64
@@ -100,84 +100,97 @@ type BasePrice struct {
 	V_price_rcs_mms  sql.NullFloat64
 	V_price_rcs_tem  sql.NullFloat64
 	V_price_ft_cs    sql.NullFloat64
-	V_price_ft_il	 sql.NullFloat64
-	
+	V_price_ft_il    sql.NullFloat64
 }
 
 func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 	price := BasePrice{}
 
 	var priceSQL string
-	priceSQL = "select SQL_NO_CACHE i.mad_price_at     as c_mad_price_at    " +
-		"				,i.mad_price_ft     as c_mad_price_ft    " +
-		"				,i.mad_price_ft_img as c_mad_price_ft_img" +
-		"				,i.mad_price_ft_w_img as c_mad_price_ft_w_img" +
-		"				,i.mad_price_grs    as c_mad_price_grs   " +
-		"				,i.mad_price_nas    as c_mad_price_nas   " +
-		"				,i.mad_price_grs_sms as c_mad_price_grs_sms   " +
-		"				,i.mad_price_nas_sms as c_mad_price_nas_sms   " +
-		"				,i.mad_price_015    as c_mad_price_015   " +
-		"				,i.mad_price_phn    as c_mad_price_phn   " +
-		"				,i.mad_price_sms    as c_mad_price_sms   " +
-		"				,i.mad_price_lms    as c_mad_price_lms   " +
-		"				,i.mad_price_mms    as c_mad_price_mms   " +
-		"				,i.mad_price_grs_mms    as c_mad_price_grs_mms   " +
-		"				,i.mad_price_nas_mms    as c_mad_price_nas_mms   " +
-		"				,i.mad_price_smt    as c_mad_price_smt   " +
-		"				,i.mad_price_smt_sms    as c_mad_price_smt_sms   " +
-		"				,i.mad_price_smt_mms    as c_mad_price_smt_mms   " +
-		"				,i.mad_price_imc    as c_mad_price_imc   " +
-		"				,i.mad_price_rcs    as c_mad_price_rcs   " +
-		"				,i.mad_price_rcs_sms    as c_mad_price_rcs_sms   " +
-		"				,i.mad_price_rcs_mms    as c_mad_price_rcs_mms   " +
-		"				,i.mad_price_rcs_tem    as c_mad_price_rcs_tem   " +
-		"				,i.mad_price_cs    as c_mad_price_cs   " +
-		"				,i.mad_price_il    as c_mad_price_il   " +
-		"				,a.mad_price_at     as p_mad_price_at    " +
-		"				,a.mad_price_ft     as p_mad_price_ft    " +
-		"				,a.mad_price_ft_img as p_mad_price_ft_img" +
-		"				,a.mad_price_ft_w_img as p_mad_price_ft_w_img" +
-		"				,a.mad_price_grs    as p_mad_price_grs   " +
-		"				,a.mad_price_nas    as p_mad_price_nas   " +
-		"				,a.mad_price_grs_sms as p_mad_price_grs_sms   " +
-		"				,a.mad_price_nas_sms as p_mad_price_nas_sms   " +
-		"				,a.mad_price_015    as p_mad_price_015   " +
-		"				,a.mad_price_phn    as p_mad_price_phn   " +
-		"				,a.mad_price_sms    as p_mad_price_sms   " +
-		"				,a.mad_price_lms    as p_mad_price_lms   " +
-		"				,a.mad_price_mms    as p_mad_price_mms   " +
-		"				,a.mad_price_grs_mms    as p_mad_price_grs_mms   " +
-		"				,a.mad_price_nas_mms    as p_mad_price_nas_mms   " +
-		"				,a.mad_price_smt    as p_mad_price_smt   " +
-		"				,a.mad_price_smt_sms    as p_mad_price_smt_sms   " +
-		"				,a.mad_price_smt_mms    as p_mad_price_smt_mms   " +
-		"				,a.mad_price_imc    as p_mad_price_imc   " +
-		"				,a.mad_price_rcs    as p_mad_price_rcs   " +
-		"				,a.mad_price_rcs_sms    as p_mad_price_rcs_sms   " +
-		"				,a.mad_price_rcs_mms    as p_mad_price_rcs_mms   " +
-		"				,a.mad_price_rcs_tem    as p_mad_price_rcs_tem   " +
-		"				,a.mad_price_cs    as p_mad_price_cs   " +
-		"				,a.mad_price_il    as p_mad_price_il   " +
-		"			from" +
-		"				cb_wt_member_addon i left join" +
-		"				cb_wt_member_addon a on 1=1 inner join" +
-		"				cb_member b on a.mad_mem_id=b.mem_id inner join" +
-		"				(" +
-		"					SELECT distinct @r AS _id, (SELECT  @r := mrg_recommend_mem_id FROM cb_member_register WHERE mem_id = _id ) AS mrg_recommend_mem_id" +
-		"					FROM" +
-		"						(SELECT  @r := " + mem_id + ", @cl := 0) vars,	cb_member_register h" +
-		"					WHERE    @r <> 0" +
-		"				) c on a.mad_mem_id=c.mrg_recommend_mem_id" +
-		"			where i.mad_mem_id=" + mem_id +
-		"			order by b.mem_level desc"
-	//stdlog.Println(priceSQL)
-	rows, err := db.Query(priceSQL)
 
+	priceSQL = `
+	WITH RECURSIVE cte AS (
+	  SELECT
+	    mem_id AS _id,
+	    mrg_recommend_mem_id
+	  FROM
+	    cb_member_register
+	  WHERE
+	    mem_id = $1
+	  UNION ALL
+	  SELECT
+	    r.mem_id AS _id,
+	    r.mrg_recommend_mem_id
+	  FROM
+	    cb_member_register r
+	  INNER JOIN cte ON r.mrg_recommend_mem_id = cte._id
+	)
+	SELECT 
+	  i.mad_price_at AS c_mad_price_at,
+	  i.mad_price_ft AS c_mad_price_ft,
+	  i.mad_price_ft_img AS c_mad_price_ft_img,
+	  i.mad_price_ft_w_img AS c_mad_price_ft_w_img,
+	  i.mad_price_grs AS c_mad_price_grs,
+	  i.mad_price_nas AS c_mad_price_nas,
+	  i.mad_price_grs_sms AS c_mad_price_grs_sms,
+	  i.mad_price_nas_sms AS c_mad_price_nas_sms,
+	  i.mad_price_015 AS c_mad_price_015,
+	  i.mad_price_phn AS c_mad_price_phn,
+	  i.mad_price_sms AS c_mad_price_sms,
+	  i.mad_price_lms AS c_mad_price_lms,
+	  i.mad_price_mms AS c_mad_price_mms,
+	  i.mad_price_grs_mms AS c_mad_price_grs_mms,
+	  i.mad_price_nas_mms AS c_mad_price_nas_mms,
+	  i.mad_price_smt AS c_mad_price_smt,
+	  i.mad_price_smt_sms AS c_mad_price_smt_sms,
+	  i.mad_price_smt_mms AS c_mad_price_smt_mms,
+	  i.mad_price_imc AS c_mad_price_imc,
+	  i.mad_price_rcs AS c_mad_price_rcs,
+	  i.mad_price_rcs_sms AS c_mad_price_rcs_sms,
+	  i.mad_price_rcs_mms AS c_mad_price_rcs_mms,
+	  i.mad_price_rcs_tem AS c_mad_price_rcs_tem,
+	  i.mad_price_cs AS c_mad_price_cs,
+	  i.mad_price_il AS c_mad_price_il,
+	  a.mad_price_at AS p_mad_price_at,
+	  a.mad_price_ft AS p_mad_price_ft,
+	  a.mad_price_ft_img AS p_mad_price_ft_img,
+	  a.mad_price_ft_w_img AS p_mad_price_ft_w_img,
+	  a.mad_price_grs AS p_mad_price_grs,
+	  a.mad_price_nas AS p_mad_price_nas,
+	  a.mad_price_grs_sms AS p_mad_price_grs_sms,
+	  a.mad_price_nas_sms AS p_mad_price_nas_sms,
+	  a.mad_price_015 AS p_mad_price_015,
+	  a.mad_price_phn AS p_mad_price_phn,
+	  a.mad_price_sms AS p_mad_price_sms,
+	  a.mad_price_lms AS p_mad_price_lms,
+	  a.mad_price_mms AS p_mad_price_mms,
+	  a.mad_price_grs_mms AS p_mad_price_grs_mms,
+	  a.mad_price_nas_mms AS p_mad_price_nas_mms,
+	  a.mad_price_smt AS p_mad_price_smt,
+	  a.mad_price_smt_sms AS p_mad_price_smt_sms,
+	  a.mad_price_smt_mms AS p_mad_price_smt_mms,
+	  a.mad_price_imc AS p_mad_price_imc,
+	  a.mad_price_rcs AS p_mad_price_rcs,
+	  a.mad_price_rcs_sms AS p_mad_price_rcs_sms,
+	  a.mad_price_rcs_mms AS p_mad_price_rcs_mms,
+	  a.mad_price_rcs_tem AS p_mad_price_rcs_tem,
+	  a.mad_price_cs AS p_mad_price_cs,
+	  a.mad_price_il AS p_mad_price_il
+	FROM 
+	  cb_wt_member_addon i 
+	  LEFT JOIN cb_wt_member_addon a ON 1=1 
+	  INNER JOIN cb_member b ON a.mad_mem_id = b.mem_id 
+	  INNER JOIN cte ON a.mad_mem_id = cte.mrg_recommend_mem_id 
+	WHERE 
+	  i.mad_mem_id = $2
+	ORDER BY 
+	  b.mem_level DESC
+	`
+	rows, err := db.Query(priceSQL, mem_id, mem_id)
 	if err != nil {
-		errlog.Println("Price 조회 중 오류 발생")
+		errlog.Println("Price 조회 중 오류 발생 sql : ", priceSQL)
 		errlog.Fatal(err)
 	}
-
 	defer rows.Close()
 
 	for rows.Next() {
@@ -228,10 +241,10 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.P_price_rcs,
 			&price.P_price_rcs_sms,
 			&price.P_price_rcs_mms,
-			&price.P_price_rcs_tem,			
+			&price.P_price_rcs_tem,
 			&price.P_price_ft_cs,
 			&price.P_price_ft_il,
-			)
+		)
 
 		if err != nil {
 			errlog.Println(err)
@@ -239,7 +252,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 
 	}
 
-	priceSQL = `select SQL_NO_CACHE c.wst_price_at
+	priceSQL = `select c.wst_price_at
 	,c.wst_price_ft
 	,c.wst_price_ft_img
 	,c.wst_price_ft_w_img
@@ -265,12 +278,10 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 	, wst_price_cs
 	, wst_price_il 
 	from cb_wt_setting c limit 1`
-
-
 	rows, err = db.Query(priceSQL)
 
 	if err != nil {
-		errlog.Println("Price 조회 중 오류 발생")
+		errlog.Println("Price 조회 중 오류 발생 sql : ", priceSQL)
 		errlog.Fatal(err)
 	}
 
@@ -326,7 +337,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 	rows, err = db.Query(priceSQL)
 
 	if err != nil {
-		errlog.Println("Price 조회 중 오류 발생")
+		errlog.Println("Price 조회 중 오류 발생 sql : ", priceSQL)
 		errlog.Fatal(err)
 	}
 
