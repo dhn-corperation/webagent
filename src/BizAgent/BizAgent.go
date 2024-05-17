@@ -10,7 +10,7 @@ import (
 
 	"webagent/src/config"
 	"webagent/src/databasepool"
-	"webagent/src/webcsms"
+	"webagent/src/webcmms"
 
 	"github.com/takama/daemon"
 )
@@ -111,9 +111,9 @@ func resultProc() {
 
 	if conf.SMT {
 		config.Stdlog.Println("SMT 사용 - 시작")
-		go webcsms.Process()
+		//go webcsms.Process()
 
-		//go webcmms.Process()
+		go webcmms.Process()
 	}
 
 	if conf.GRS {
