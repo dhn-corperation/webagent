@@ -132,7 +132,7 @@ func smsProcess(wg *sync.WaitGroup) {
 			var smserrcnt = 0
 			var smscnt = 0
 
-			AmtSmsValues := []common.AmtSmsColumn{}
+			AmtSmsValues := []common.AmtSmsMmsColumn{}
 
 			upmsgids := []interface{}{}
 
@@ -143,7 +143,7 @@ func smsProcess(wg *sync.WaitGroup) {
 			for rows.Next() {
 				var message = ""
 				var result = ""
-				AmtSmsValue := common.AmtSmsColumn{}
+				AmtSmsValue := common.AmtSmsMmsColumn{}
 
 				rows.Scan(&msgid, &sendresult, &phn, &sent_key, &userid, &mem_id, &cb_msg_id)
 				smscnt++
@@ -191,7 +191,7 @@ func smsProcess(wg *sync.WaitGroup) {
 
 				if len(upmsgids) >= 1000 {
 
-					err := updateProcFlag(tx, SMSTable, upmsgids)
+					err := common.UpdateProcFlag(tx, SMSTable, upmsgids)
 					if err != nil {
 						errlog.Println(SMSTable+" Table Update 중 오류 발생", err)
 						tx.Rollback()
@@ -202,13 +202,13 @@ func smsProcess(wg *sync.WaitGroup) {
 
 				if len(AmtSmsValues) >= 1000 {
 					insertAmtSms(tx, AmtSmsValues, mem_userid.String)
-					AmtSmsValues = []common.AmtSmsColumn{}
+					AmtSmsValues = []common.AmtSmsMmsColumn{}
 				}
 
 			}
 
 			if len(upmsgids) > 0 {
-				err := updateProcFlag(tx, SMSTable, upmsgids)
+				err := common.UpdateProcFlag(tx, SMSTable, upmsgids)
 				if err != nil {
 					errlog.Println(SMSTable+" Table Update 중 오류 발생", err)
 					tx.Rollback()
@@ -230,23 +230,8 @@ func smsProcess(wg *sync.WaitGroup) {
 
 }
 
-func updateProcFlag(tx *sql.Tx, tableName string, ids []interface{}) error {
-	commastr := fmt.Sprintf("update %s set proc_flag='N' where msgid in (", tableName)
-	for i := range ids {
-		if i == 0 {
-			commastr += fmt.Sprintf("$%d", i+1)
-		} else {
-			commastr += fmt.Sprintf(", $%d", i+1)
-		}
-	}
-	commastr += ")"
-
-	_, err := tx.Exec(commastr, ids...)
-	return err
-}
-
-func insertAmtSms(tx *sql.Tx, RcsMsgResValue []common.AmtSmsColumn, userid string) {
-	webcSStmt, err := tx.Prepare(pq.CopyIn("cb_amt_"+userid, common.GetRcsColumnPq(common.AmtSmsColumn{})...))
+func insertAmtSms(tx *sql.Tx, RcsMsgResValue []common.AmtSmsMmsColumn, userid string) {
+	webcSStmt, err := tx.Prepare(pq.CopyIn("cb_amt_"+userid, common.GetRcsColumnPq(common.AmtSmsMmsColumn{})...))
 	if err != nil {
 		config.Stdlog.Println("webcsms.go / insertAmtSms / cb_amt_"+userid+" / webcSStmt 초기화 실패 ", err)
 		return
