@@ -74,7 +74,7 @@ type OMmsColumn struct {
 	Cb_msg_id  interface{} `db:"cb_msg_id"`
 }
 
-type AmtSmsColumn struct {
+type AmtSmsMmsColumn struct {
 	Amt_datetime interface{} `db:"amt_datetime"`
 	Amt_kind     interface{} `db:"amt_kind"`
 	Amt_amount   interface{} `db:"amt_amount"`
