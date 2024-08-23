@@ -70,6 +70,12 @@ func resProcess(wg *sync.WaitGroup) {
 
 	osmmsStrs := []string{}
 	osmmsValues := []interface{}{}
+
+	nnsmsStrs := []string{}
+	nnsmsValues := []interface{}{}
+
+	nnmmsStrs := []string{}
+	nnmmsValues := []interface{}{}
 	
 	rcsStrs := []string{}
 	rcsValues := []interface{}{}
@@ -713,18 +719,18 @@ func resProcess(wg *sync.WaitGroup) {
 									}
 								case "GREEN_SHOT":
 									if s.EqualFold(msgtype, "SMS") {
-										err_smtcnt++
-										cb_msg_message_type = "SM"
-										cb_msg_code = "SMT"
+										err_grscnt++
+										cb_msg_message_type = "gs"
+										cb_msg_code = "GRS"
 									} else if s.EqualFold(msgtype, "LMS") {
 										if len(mms_file1.String) <= 0 {
 											err_grscnt++
 											cb_msg_message_type = "gs"
 											cb_msg_code = "GRS"
 										} else {
-											err_smtcnt++
-											cb_msg_message_type = "SM"
-											cb_msg_code = "SMT"
+											err_grscnt++
+											cb_msg_message_type = "gs"
+											cb_msg_code = "GRS"
 										}
 									}
 								case "IMC":
@@ -1068,105 +1074,108 @@ func resProcess(wg *sync.WaitGroup) {
 										}
 									}
 								case "GREEN_SHOT":
+									cb_msg_message_type = "gs"
+									cb_msg_code = "GRS"
+									//lms_smtcnt++
+
 									if s.EqualFold(msgtype, "SMS") {
-										cb_msg_message_type = "sm"
-										cb_msg_code = "SMT"
-										//lms_smtcnt++
-
-										ossmsStrs = append(ossmsStrs, "(?,?,?,?,?,null,?,?,?)")
-										ossmsValues = append(ossmsValues, sms_sender)
-										ossmsValues = append(ossmsValues, phnstr)
-										ossmsValues = append(ossmsValues, msg_sms)
-										ossmsValues = append(ossmsValues, "")
-										if s.EqualFold(reserve_dt.String, "00000000000000") {
-											ossmsValues = append(ossmsValues, sql.NullString{})
-										} else {
-											ossmsValues = append(ossmsValues, reserve_dt)
-										}
-
-										ossmsValues = append(ossmsValues, "0")
-										ossmsValues = append(ossmsValues, remark4)
-										ossmsValues = append(ossmsValues, msgid)
+										nnsmsStrs = append(nnsmsStrs, "(?,?,?,?,?,?,?,?,?,'Y')")
+										nnsmsValues = append(nnsmsValues, sms_sender)
+										nnsmsValues = append(nnsmsValues, phnstr)
+										nnsmsValues = append(nnsmsValues, msg_sms)
+										nnsmsValues = append(nnsmsValues, time.Now().Format("2006-01-02 15:04:05"))
+										nnsmsValues = append(nnsmsValues, "0")
+										nnsmsValues = append(nnsmsValues, "0")
+										nnsmsValues = append(nnsmsValues, msgid)
+										nnsmsValues = append(nnsmsValues, remark4)
+										nnsmsValues = append(nnsmsValues, "302190001")
 
 										kko_kind = "P"
 										if s.EqualFold(mst_sent_voucher.String, "V") {
 											amount = cprice.V_price_smt_sms.Float64
 											payback = cprice.V_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
 											admin_amt = cprice.B_price_smt_sms.Float64
-											memo = "웹(C) SMS,바우처"
+											memo = "웹(A) SMS,바우처"
 										} else {
 											amount = cprice.C_price_smt_sms.Float64
 											payback = cprice.C_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
 											admin_amt = cprice.B_price_smt_sms.Float64
 											if s.EqualFold(mst_sent_voucher.String, "B") {
-												memo = "웹(C) SMS,보너스"
+												memo = "웹(A) SMS,보너스"
 											} else {
-												memo = "웹(C) SMS"
+												memo = "웹(A) SMS"
 											}										
 											
 										}
-
 									} else if s.EqualFold(msgtype, "LMS") {
+										filecnt := 0
+
 										if len(mms_file1.String) > 0 {
+											filecnt = filecnt + 1
+										}
 
-											cb_msg_message_type = "sm"
-											cb_msg_code = "SMT"
-											//lms_smtcnt++
-											osmmsStrs = append(osmmsStrs, "(?,?,?,?,?,?,null,?,?,?,?,?,?)")
-											osmmsValues = append(osmmsValues, remark4)
-											osmmsValues = append(osmmsValues, sms_sender)
-											osmmsValues = append(osmmsValues, phnstr)
-											osmmsValues = append(osmmsValues, sms_lms_tit)
-											osmmsValues = append(osmmsValues, msg_sms)
-											if s.EqualFold(reserve_dt.String, "00000000000000") {
-												osmmsValues = append(osmmsValues, sql.NullString{})
+										if len(mms_file2.String) > 0 {
+											filecnt = filecnt + 1
+										}
+
+										if len(mms_file3.String) > 0 {
+											filecnt = filecnt + 1
+										}
+
+										nnmmsStrs = append(nnmmsStrs, "( ?,?,?,?,?,?,?,?,?,?,?,?,?,'Y')")
+
+										nnmmsValues = append(nnmmsValues, sms_sender)
+										nnmmsValues = append(nnmmsValues, phnstr)
+										nnmmsValues = append(nnmmsValues, sms_lms_tit)
+										nnmmsValues = append(nnmmsValues, msg_sms)
+										nnmmsValues = append(nnmmsValues, time.Now().Format("2006-01-02 15:04:05"))
+										nnmmsValues = append(nnmmsValues, "0")
+										nnmmsValues = append(nnmmsValues, filecnt)
+										nnmmsValues = append(nnmmsValues, mms_file1)
+										nnmmsValues = append(nnmmsValues, mms_file2)
+										nnmmsValues = append(nnmmsValues, mms_file3)
+										nnmmsValues = append(nnmmsValues, msgid)
+										nnmmsValues = append(nnmmsValues, remark4)
+										nnmmsValues = append(nnmmsValues, "302190001")
+
+										if len(mms_file1.String) <= 0 {
+											kko_kind = "P"
+											if s.EqualFold(mst_sent_voucher.String, "V") {
+												amount = cprice.V_price_smt.Float64
+												payback = cprice.V_price_smt.Float64 - cprice.P_price_smt.Float64
+												admin_amt = cprice.B_price_smt.Float64
+												memo = "웹(A) LMS,바우처"
 											} else {
-												osmmsValues = append(osmmsValues, reserve_dt)
+												amount = cprice.C_price_smt.Float64
+												payback = cprice.C_price_smt.Float64 - cprice.P_price_smt.Float64
+												admin_amt = cprice.B_price_smt.Float64
+												if s.EqualFold(mst_sent_voucher.String, "B") {
+													memo = "웹(A) LMS,보너스"
+												} else {
+													memo = "웹(A) LMS"
+												}										
+												
 											}
-
-											osmmsValues = append(osmmsValues, "0")
-											osmmsValues = append(osmmsValues, mms_file1)
-											osmmsValues = append(osmmsValues, mms_file2)
-											osmmsValues = append(osmmsValues, mms_file3)
-											osmmsValues = append(osmmsValues, remark4)
-											osmmsValues = append(osmmsValues, msgid)
-
+										} else {
 											kko_kind = "P"
 											if s.EqualFold(mst_sent_voucher.String, "V") {
 												amount = cprice.V_price_smt_mms.Float64
 												payback = cprice.V_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
 												admin_amt = cprice.B_price_smt_mms.Float64
-												memo = "웹(C) MMS,바우처"
+												memo = "웹(A) MMS,바우처"
 											} else {
 												amount = cprice.C_price_smt_mms.Float64
 												payback = cprice.C_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
 												admin_amt = cprice.B_price_smt_mms.Float64
 												if s.EqualFold(mst_sent_voucher.String, "B") {
-													memo = "웹(C) MMS,보너스"
+													memo = "웹(A) MMS,보너스"
 												} else {
-													memo = "웹(C) MMS"
+													memo = "웹(A) MMS"
 												}										
-												
 											}
-										} else {
-											cb_msg_message_type = "gs"
-											cb_msg_code = "GRS"
-											//lms_grscnt++
 
-											nanoitStrs = append(nanoitStrs, "(?,?,?,?)")
-											nanoitValues = append(nanoitValues, "GRS")
-											nanoitValues = append(nanoitValues, remark4.String)
-											nanoitValues = append(nanoitValues, phnstr)
-											nanoitValues = append(nanoitValues, msgid.String)
-
-											kko_kind = "P"
-											amount = cprice.C_price_grs.Float64
-											payback = cprice.C_price_grs.Float64 - cprice.P_price_grs.Float64
-											admin_amt = cprice.B_price_grs.Float64
-											memo = "웹(A)"
 										}
 									}
-
 								case "SMT_PHN":
 									cb_msg_message_type = "sm"
 									cb_msg_code = "SMT"
@@ -1400,6 +1409,30 @@ func resProcess(wg *sync.WaitGroup) {
 				osmmsValues = nil
 			}
 
+			if len(nnsmsStrs) >= 1000 {
+				stmt := fmt.Sprintf("insert into SMS_MSG(TR_CALLBACK,TR_PHONE,TR_MSG,TR_SENDDATE,TR_SENDSTAT,TR_MSGTYPE,TR_ETC9,TR_ETC10,TR_IDENTIFICATION_CODE,TR_ETC8) values %s", s.Join(nnsmsStrs, ","))
+				_, err := db.Exec(stmt, nnsmsValues...)
+
+				if err != nil {
+					errlog.Println("나노 SMS Table Insert 처리 중 오류 발생 " + err.Error())
+				}
+
+				nnsmsStrs = nil
+				nnsmsValues = nil
+			}
+
+			if len(nnmmsStrs) >= 1000 {
+				stmt := fmt.Sprintf("insert into MMS_MSG(CALLBACK,PHONE,SUBJECT,MSG,REQDATE,STATUS,FILE_CNT,FILE_PATH1,FILE_PATH2,FILE_PATH3,ETC9,ETC10,IDENTIFICATION_CODE,ETC8) values %s", s.Join(nnmmsStrs, ","))
+				_, err := db.Exec(stmt, nnmmsValues...)
+
+				if err != nil {
+					errlog.Println("나노 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+				}
+
+				nnmmsStrs = nil
+				nnmmsValues = nil
+			}
+
 			if len(rcsStrs) >= 1000 {
 				stmt := fmt.Sprintf("insert into RCS_MESSAGE(msg_id,user_contact ,schedule_type,msg_group_id,msg_service_type ,chatbot_id,agency_id ,messagebase_id ,service_type ,expiry_option ,header  ,footer  ,copy_allowed ,body ,buttons,brand_key) values %s", s.Join(rcsStrs, ","))
 				_, err := db.Exec(stmt, rcsValues...)
@@ -1523,6 +1556,24 @@ func resProcess(wg *sync.WaitGroup) {
 				errlog.Println("스마트미 LMS Table Insert 처리 중 오류 발생 " + err.Error())
 			}
 
+		}
+
+		if len(nnsmsStrs) >= 1000 {
+			stmt := fmt.Sprintf("insert into SMS_MSG(TR_CALLBACK,TR_PHONE,TR_MSG,TR_SENDDATE,TR_SENDSTAT,TR_MSGTYPE,TR_ETC9,TR_ETC10,TR_IDENTIFICATION_CODE,TR_ETC8) values %s", s.Join(nnsmsStrs, ","))
+			_, err := db.Exec(stmt, nnsmsValues...)
+
+			if err != nil {
+				errlog.Println("나노 SMS Table Insert 처리 중 오류 발생 " + err.Error())
+			}
+		}
+
+		if len(nnmmsStrs) >= 1000 {
+			stmt := fmt.Sprintf("insert into MMS_MSG(CALLBACK,PHONE,SUBJECT,MSG,REQDATE,STATUS,FILE_CNT,FILE_PATH1,FILE_PATH2,FILE_PATH3,ETC9,ETC10,IDENTIFICATION_CODE,ETC8) values %s", s.Join(nnmmsStrs, ","))
+			_, err := db.Exec(stmt, nnmmsValues...)
+
+			if err != nil {
+				errlog.Println("나노 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+			}
 		}
 	
 		if len(rcsStrs) > 0 {

@@ -10,10 +10,12 @@ import (
 
 	"webagent/src/config"
 	"webagent/src/databasepool"
-	"webagent/src/nanoit"
+	// "webagent/src/nanoit"
 	"webagent/src/phonemsg"
 	"webagent/src/tblreqprocess"
-	"webagent/src/webaproc"
+	// "webagent/src/webaproc"
+	"webagent/src/webamms"
+	"webagent/src/webasms"
 	"webagent/src/webcmms"
 	"webagent/src/webcsms"
 	"webagent/src/req2ndprocess"
@@ -114,18 +116,23 @@ func resultProc() {
 	
 	go req2ndprocess.Process()
 
-	if conf.SMT {
-		config.Stdlog.Println("SMT 사용 - 시작")
-		go webcsms.Process()
+	//결과 처리이기 때문에 항상 실행되어 있어야 함.
 
-		go webcmms.Process()
-	}
+	//오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
+	go webcsms.Process()
+	go webcmms.Process()
+	//오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
 
-	if conf.GRS {
-		config.Stdlog.Println("GRS 사용 - 시작")
-		go nanoit.Process()
-		go webaproc.Process()
-	}
+	//나노 결과값 조회 및 문자 실패 환불 처리 고루틴
+	go webasms.Process()
+	go webamms.Process()
+	//나노 결과값 조회 및 문자 실패 환불 처리 고루틴
+
+	// if conf.GRS {
+	// 	config.Stdlog.Println("GRS 사용 - 시작")
+	// 	go nanoit.Process()
+	// 	go webaproc.Process()
+	// }
 
 	if conf.SMTPHN {
 		config.Stdlog.Println("Phon 사용 - 시작")
