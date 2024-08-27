@@ -150,6 +150,11 @@ func resultProc() {
 	go webamms.Process()
 	//나노 결과값 조회 및 문자 실패 환불 처리 고루틴
 
+	//나노 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
+	go webasms.Process_g()
+	go webamms.Process_g()
+	//나노 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
+
 	// go nanoit.Process()
 	// go webaproc.Process()
 

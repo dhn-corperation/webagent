@@ -1213,109 +1213,207 @@ func resProcess(wg *sync.WaitGroup) {
 													memo = "웹(A) MMS"
 												}										
 											}
-
 										}
 									}
 								case "GREEN_SHOT_G":
 									cb_msg_message_type = "nl"
 									cb_msg_code = "GRS"
-									//lms_smtcnt++
 
-									if s.EqualFold(msgtype, "SMS") {
-										nnlpsmsStrs = append(nnlpsmsStrs, "(?,?,?,?,?,?,?,?,?,'Y')")
-										nnlpsmsValues = append(nnlpsmsValues, sms_sender)
-										nnlpsmsValues = append(nnlpsmsValues, phnstr)
-										nnlpsmsValues = append(nnlpsmsValues, msg_sms)
-										nnlpsmsValues = append(nnlpsmsValues, time.Now().Format("2006-01-02 15:04:05"))
-										nnlpsmsValues = append(nnlpsmsValues, "0")
-										nnlpsmsValues = append(nnlpsmsValues, "0")
-										nnlpsmsValues = append(nnlpsmsValues, msgid)
-										nnlpsmsValues = append(nnlpsmsValues, remark4)
-										nnlpsmsValues = append(nnlpsmsValues, "302190001")
+									if s.HasPrefix(sms_sender.String, "010") {
+										if s.EqualFold(msgtype, "SMS") {
+											nnsmsStrs = append(nnsmsStrs, "(?,?,?,?,?,?,?,?,?,'Y')")
+											nnsmsValues = append(nnsmsValues, sms_sender)
+											nnsmsValues = append(nnsmsValues, phnstr)
+											nnsmsValues = append(nnsmsValues, msg_sms)
+											nnsmsValues = append(nnsmsValues, time.Now().Format("2006-01-02 15:04:05"))
+											nnsmsValues = append(nnsmsValues, "0")
+											nnsmsValues = append(nnsmsValues, "0")
+											nnsmsValues = append(nnsmsValues, msgid)
+											nnsmsValues = append(nnsmsValues, remark4)
+											nnsmsValues = append(nnsmsValues, "302190001")
 
-										kko_kind = "P"
-										if s.EqualFold(mst_sent_voucher.String, "V") {
-											amount = cprice.V_price_smt_sms.Float64
-											payback = cprice.V_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
-											admin_amt = cprice.B_price_smt_sms.Float64
-											memo = "웹(A) SMS,바우처"
-										} else {
-											amount = cprice.C_price_smt_sms.Float64
-											payback = cprice.C_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
-											admin_amt = cprice.B_price_smt_sms.Float64
-											if s.EqualFold(mst_sent_voucher.String, "B") {
-												memo = "웹(A) SMS,보너스"
-											} else {
-												memo = "웹(A) SMS"
-											}										
-											
-										}
-									} else if s.EqualFold(msgtype, "LMS") {
-										filecnt := 0
-
-										if len(mms_file1.String) > 0 {
-											filecnt = filecnt + 1
-										}
-
-										if len(mms_file2.String) > 0 {
-											filecnt = filecnt + 1
-										}
-
-										if len(mms_file3.String) > 0 {
-											filecnt = filecnt + 1
-										}
-
-										nnlpmmsStrs = append(nnlpmmsStrs, "( ?,?,?,?,?,?,?,?,?,?,?,?,?,'Y')")
-										nnlpmmsValues = append(nnlpmmsValues, sms_sender)
-										nnlpmmsValues = append(nnlpmmsValues, phnstr)
-										nnlpmmsValues = append(nnlpmmsValues, sms_lms_tit)
-										nnlpmmsValues = append(nnlpmmsValues, msg_sms)
-										nnlpmmsValues = append(nnlpmmsValues, time.Now().Format("2006-01-02 15:04:05"))
-										nnlpmmsValues = append(nnlpmmsValues, "0")
-										nnlpmmsValues = append(nnlpmmsValues, filecnt)
-										nnlpmmsValues = append(nnlpmmsValues, mms_file1)
-										nnlpmmsValues = append(nnlpmmsValues, mms_file2)
-										nnlpmmsValues = append(nnlpmmsValues, mms_file3)
-										nnlpmmsValues = append(nnlpmmsValues, msgid)
-										nnlpmmsValues = append(nnlpmmsValues, remark4)
-										nnlpmmsValues = append(nnlpmmsValues, "302190001")
-
-										if len(mms_file1.String) <= 0 {
 											kko_kind = "P"
 											if s.EqualFold(mst_sent_voucher.String, "V") {
-												amount = cprice.V_price_smt.Float64
-												payback = cprice.V_price_smt.Float64 - cprice.P_price_smt.Float64
-												admin_amt = cprice.B_price_smt.Float64
-												memo = "웹(A) LMS,바우처"
+												amount = cprice.V_price_smt_sms.Float64
+												payback = cprice.V_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
+												admin_amt = cprice.B_price_smt_sms.Float64
+												memo = "웹(A) SMS,바우처"
 											} else {
-												amount = cprice.C_price_smt.Float64
-												payback = cprice.C_price_smt.Float64 - cprice.P_price_smt.Float64
-												admin_amt = cprice.B_price_smt.Float64
+												amount = cprice.C_price_smt_sms.Float64
+												payback = cprice.C_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
+												admin_amt = cprice.B_price_smt_sms.Float64
 												if s.EqualFold(mst_sent_voucher.String, "B") {
-													memo = "웹(A) LMS,보너스"
+													memo = "웹(A) SMS,보너스"
 												} else {
-													memo = "웹(A) LMS"
+													memo = "웹(A) SMS"
 												}										
 												
 											}
-										} else {
-											kko_kind = "P"
-											if s.EqualFold(mst_sent_voucher.String, "V") {
-												amount = cprice.V_price_smt_mms.Float64
-												payback = cprice.V_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
-												admin_amt = cprice.B_price_smt_mms.Float64
-												memo = "웹(A) MMS,바우처"
-											} else {
-												amount = cprice.C_price_smt_mms.Float64
-												payback = cprice.C_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
-												admin_amt = cprice.B_price_smt_mms.Float64
-												if s.EqualFold(mst_sent_voucher.String, "B") {
-													memo = "웹(A) MMS,보너스"
-												} else {
-													memo = "웹(A) MMS"
-												}										
+										} else if s.EqualFold(msgtype, "LMS") {
+											filecnt := 0
+
+											if len(mms_file1.String) > 0 {
+												filecnt = filecnt + 1
 											}
 
+											if len(mms_file2.String) > 0 {
+												filecnt = filecnt + 1
+											}
+
+											if len(mms_file3.String) > 0 {
+												filecnt = filecnt + 1
+											}
+
+											nnmmsStrs = append(nnmmsStrs, "( ?,?,?,?,?,?,?,?,?,?,?,?,?,'Y')")
+
+											nnmmsValues = append(nnmmsValues, sms_sender)
+											nnmmsValues = append(nnmmsValues, phnstr)
+											nnmmsValues = append(nnmmsValues, sms_lms_tit)
+											nnmmsValues = append(nnmmsValues, msg_sms)
+											nnmmsValues = append(nnmmsValues, time.Now().Format("2006-01-02 15:04:05"))
+											nnmmsValues = append(nnmmsValues, "0")
+											nnmmsValues = append(nnmmsValues, filecnt)
+											nnmmsValues = append(nnmmsValues, mms_file1)
+											nnmmsValues = append(nnmmsValues, mms_file2)
+											nnmmsValues = append(nnmmsValues, mms_file3)
+											nnmmsValues = append(nnmmsValues, msgid)
+											nnmmsValues = append(nnmmsValues, remark4)
+											nnmmsValues = append(nnmmsValues, "302190001")
+
+											if len(mms_file1.String) <= 0 {
+												kko_kind = "P"
+												if s.EqualFold(mst_sent_voucher.String, "V") {
+													amount = cprice.V_price_smt.Float64
+													payback = cprice.V_price_smt.Float64 - cprice.P_price_smt.Float64
+													admin_amt = cprice.B_price_smt.Float64
+													memo = "웹(A) LMS,바우처"
+												} else {
+													amount = cprice.C_price_smt.Float64
+													payback = cprice.C_price_smt.Float64 - cprice.P_price_smt.Float64
+													admin_amt = cprice.B_price_smt.Float64
+													if s.EqualFold(mst_sent_voucher.String, "B") {
+														memo = "웹(A) LMS,보너스"
+													} else {
+														memo = "웹(A) LMS"
+													}										
+													
+												}
+											} else {
+												kko_kind = "P"
+												if s.EqualFold(mst_sent_voucher.String, "V") {
+													amount = cprice.V_price_smt_mms.Float64
+													payback = cprice.V_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
+													admin_amt = cprice.B_price_smt_mms.Float64
+													memo = "웹(A) MMS,바우처"
+												} else {
+													amount = cprice.C_price_smt_mms.Float64
+													payback = cprice.C_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
+													admin_amt = cprice.B_price_smt_mms.Float64
+													if s.EqualFold(mst_sent_voucher.String, "B") {
+														memo = "웹(A) MMS,보너스"
+													} else {
+														memo = "웹(A) MMS"
+													}										
+												}
+											}
+										}
+									} else {
+										if s.EqualFold(msgtype, "SMS") {
+											nnlpsmsStrs = append(nnlpsmsStrs, "(?,?,?,?,?,?,?,?,?,'Y')")
+											nnlpsmsValues = append(nnlpsmsValues, sms_sender)
+											nnlpsmsValues = append(nnlpsmsValues, phnstr)
+											nnlpsmsValues = append(nnlpsmsValues, msg_sms)
+											nnlpsmsValues = append(nnlpsmsValues, time.Now().Format("2006-01-02 15:04:05"))
+											nnlpsmsValues = append(nnlpsmsValues, "0")
+											nnlpsmsValues = append(nnlpsmsValues, "0")
+											nnlpsmsValues = append(nnlpsmsValues, msgid)
+											nnlpsmsValues = append(nnlpsmsValues, remark4)
+											nnlpsmsValues = append(nnlpsmsValues, "302190001")
+
+											kko_kind = "P"
+											if s.EqualFold(mst_sent_voucher.String, "V") {
+												amount = cprice.V_price_smt_sms.Float64
+												payback = cprice.V_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
+												admin_amt = cprice.B_price_smt_sms.Float64
+												memo = "웹(A) SMS,바우처"
+											} else {
+												amount = cprice.C_price_smt_sms.Float64
+												payback = cprice.C_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
+												admin_amt = cprice.B_price_smt_sms.Float64
+												if s.EqualFold(mst_sent_voucher.String, "B") {
+													memo = "웹(A) SMS,보너스"
+												} else {
+													memo = "웹(A) SMS"
+												}										
+												
+											}
+										} else if s.EqualFold(msgtype, "LMS") {
+											filecnt := 0
+
+											if len(mms_file1.String) > 0 {
+												filecnt = filecnt + 1
+											}
+
+											if len(mms_file2.String) > 0 {
+												filecnt = filecnt + 1
+											}
+
+											if len(mms_file3.String) > 0 {
+												filecnt = filecnt + 1
+											}
+
+											nnlpmmsStrs = append(nnlpmmsStrs, "( ?,?,?,?,?,?,?,?,?,?,?,?,?,'Y')")
+											nnlpmmsValues = append(nnlpmmsValues, sms_sender)
+											nnlpmmsValues = append(nnlpmmsValues, phnstr)
+											nnlpmmsValues = append(nnlpmmsValues, sms_lms_tit)
+											nnlpmmsValues = append(nnlpmmsValues, msg_sms)
+											nnlpmmsValues = append(nnlpmmsValues, time.Now().Format("2006-01-02 15:04:05"))
+											nnlpmmsValues = append(nnlpmmsValues, "0")
+											nnlpmmsValues = append(nnlpmmsValues, filecnt)
+											nnlpmmsValues = append(nnlpmmsValues, mms_file1)
+											nnlpmmsValues = append(nnlpmmsValues, mms_file2)
+											nnlpmmsValues = append(nnlpmmsValues, mms_file3)
+											nnlpmmsValues = append(nnlpmmsValues, msgid)
+											nnlpmmsValues = append(nnlpmmsValues, remark4)
+											nnlpmmsValues = append(nnlpmmsValues, "302190001")
+
+											if len(mms_file1.String) <= 0 {
+												kko_kind = "P"
+												if s.EqualFold(mst_sent_voucher.String, "V") {
+													amount = cprice.V_price_smt.Float64
+													payback = cprice.V_price_smt.Float64 - cprice.P_price_smt.Float64
+													admin_amt = cprice.B_price_smt.Float64
+													memo = "웹(A) LMS,바우처"
+												} else {
+													amount = cprice.C_price_smt.Float64
+													payback = cprice.C_price_smt.Float64 - cprice.P_price_smt.Float64
+													admin_amt = cprice.B_price_smt.Float64
+													if s.EqualFold(mst_sent_voucher.String, "B") {
+														memo = "웹(A) LMS,보너스"
+													} else {
+														memo = "웹(A) LMS"
+													}										
+													
+												}
+											} else {
+												kko_kind = "P"
+												if s.EqualFold(mst_sent_voucher.String, "V") {
+													amount = cprice.V_price_smt_mms.Float64
+													payback = cprice.V_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
+													admin_amt = cprice.B_price_smt_mms.Float64
+													memo = "웹(A) MMS,바우처"
+												} else {
+													amount = cprice.C_price_smt_mms.Float64
+													payback = cprice.C_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
+													admin_amt = cprice.B_price_smt_mms.Float64
+													if s.EqualFold(mst_sent_voucher.String, "B") {
+														memo = "웹(A) MMS,보너스"
+													} else {
+														memo = "웹(A) MMS"
+													}										
+												}
+
+											}
 										}
 									}
 								case "SMT_PHN":
@@ -1576,7 +1674,7 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 
 			if len(nnlpsmsStrs) >= 1000 {
-				stmt := fmt.Sprintf("insert into SMS_G_MSG(TR_CALLBACK,TR_PHONE,TR_MSG,TR_SENDDATE,TR_SENDSTAT,TR_MSGTYPE,TR_ETC9,TR_ETC10,TR_IDENTIFICATION_CODE,TR_ETC8) values %s", s.Join(nnsmsStrs, ","))
+				stmt := fmt.Sprintf("insert into SMS_MSG_G(TR_CALLBACK,TR_PHONE,TR_MSG,TR_SENDDATE,TR_SENDSTAT,TR_MSGTYPE,TR_ETC9,TR_ETC10,TR_IDENTIFICATION_CODE,TR_ETC8) values %s", s.Join(nnsmsStrs, ","))
 				_, err := db.Exec(stmt, nnlpsmsValues...)
 
 				if err != nil {
@@ -1588,7 +1686,7 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 
 			if len(nnlpmmsStrs) >= 1000 {
-				stmt := fmt.Sprintf("insert into MMS_G_MSG(CALLBACK,PHONE,SUBJECT,MSG,REQDATE,STATUS,FILE_CNT,FILE_PATH1,FILE_PATH2,FILE_PATH3,ETC9,ETC10,IDENTIFICATION_CODE,ETC8) values %s", s.Join(nnmmsStrs, ","))
+				stmt := fmt.Sprintf("insert into MMS_MSG_G(CALLBACK,PHONE,SUBJECT,MSG,REQDATE,STATUS,FILE_CNT,FILE_PATH1,FILE_PATH2,FILE_PATH3,ETC9,ETC10,IDENTIFICATION_CODE,ETC8) values %s", s.Join(nnmmsStrs, ","))
 				_, err := db.Exec(stmt, nnlpmmsValues...)
 
 				if err != nil {
