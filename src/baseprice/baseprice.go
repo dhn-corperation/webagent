@@ -101,6 +101,9 @@ type BasePrice struct {
 	V_price_rcs_tem  sql.NullFloat64
 	V_price_ft_cs    sql.NullFloat64
 	V_price_ft_il	 sql.NullFloat64
+	V_price_grs      sql.NullFloat64
+	V_price_grs_sms  sql.NullFloat64
+	V_price_grs_mms  sql.NullFloat64
 	
 }
 
@@ -346,6 +349,9 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.V_price_rcs_tem,
 			&price.V_price_ft_cs,
 			&price.V_price_ft_il,
+			&price.V_price_grs,
+			&price.V_price_grs_sms,
+			&price.V_price_grs_mms,
 		)
 		if err != nil {
 			errlog.Println(err)

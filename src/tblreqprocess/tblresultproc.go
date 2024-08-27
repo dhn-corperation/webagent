@@ -1135,14 +1135,14 @@ func resProcess(wg *sync.WaitGroup) {
 
 										kko_kind = "P"
 										if s.EqualFold(mst_sent_voucher.String, "V") {
-											amount = cprice.V_price_smt_sms.Float64
-											payback = cprice.V_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
-											admin_amt = cprice.B_price_smt_sms.Float64
+											amount = cprice.V_price_grs_sms.Float64
+											payback = cprice.V_price_grs_sms.Float64 - cprice.P_price_grs_sms.Float64
+											admin_amt = cprice.B_price_grs_sms.Float64
 											memo = "웹(A) SMS,바우처"
 										} else {
-											amount = cprice.C_price_smt_sms.Float64
-											payback = cprice.C_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
-											admin_amt = cprice.B_price_smt_sms.Float64
+											amount = cprice.C_price_grs_sms.Float64
+											payback = cprice.C_price_grs_sms.Float64 - cprice.P_price_grs_sms.Float64
+											admin_amt = cprice.B_price_grs_sms.Float64
 											if s.EqualFold(mst_sent_voucher.String, "B") {
 												memo = "웹(A) SMS,보너스"
 											} else {
@@ -1184,14 +1184,14 @@ func resProcess(wg *sync.WaitGroup) {
 										if len(mms_file1.String) <= 0 {
 											kko_kind = "P"
 											if s.EqualFold(mst_sent_voucher.String, "V") {
-												amount = cprice.V_price_smt.Float64
-												payback = cprice.V_price_smt.Float64 - cprice.P_price_smt.Float64
-												admin_amt = cprice.B_price_smt.Float64
+												amount = cprice.V_price_grs.Float64
+												payback = cprice.V_price_grs.Float64 - cprice.P_price_grs.Float64
+												admin_amt = cprice.B_price_grs.Float64
 												memo = "웹(A) LMS,바우처"
 											} else {
-												amount = cprice.C_price_smt.Float64
-												payback = cprice.C_price_smt.Float64 - cprice.P_price_smt.Float64
-												admin_amt = cprice.B_price_smt.Float64
+												amount = cprice.C_price_grs.Float64
+												payback = cprice.C_price_grs.Float64 - cprice.P_price_grs.Float64
+												admin_amt = cprice.B_price_grs.Float64
 												if s.EqualFold(mst_sent_voucher.String, "B") {
 													memo = "웹(A) LMS,보너스"
 												} else {
@@ -1202,14 +1202,14 @@ func resProcess(wg *sync.WaitGroup) {
 										} else {
 											kko_kind = "P"
 											if s.EqualFold(mst_sent_voucher.String, "V") {
-												amount = cprice.V_price_smt_mms.Float64
-												payback = cprice.V_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
-												admin_amt = cprice.B_price_smt_mms.Float64
+												amount = cprice.V_price_grs_mms.Float64
+												payback = cprice.V_price_grs_mms.Float64 - cprice.P_price_grs_mms.Float64
+												admin_amt = cprice.B_price_grs_mms.Float64
 												memo = "웹(A) MMS,바우처"
 											} else {
-												amount = cprice.C_price_smt_mms.Float64
-												payback = cprice.C_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
-												admin_amt = cprice.B_price_smt_mms.Float64
+												amount = cprice.C_price_grs_mms.Float64
+												payback = cprice.C_price_grs_mms.Float64 - cprice.P_price_grs_mms.Float64
+												admin_amt = cprice.B_price_grs_mms.Float64
 												if s.EqualFold(mst_sent_voucher.String, "B") {
 													memo = "웹(A) MMS,보너스"
 												} else {
@@ -1237,14 +1237,14 @@ func resProcess(wg *sync.WaitGroup) {
 
 											kko_kind = "P"
 											if s.EqualFold(mst_sent_voucher.String, "V") {
-												amount = cprice.V_price_smt_sms.Float64
-												payback = cprice.V_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
-												admin_amt = cprice.B_price_smt_sms.Float64
+												amount = cprice.V_price_grs_sms.Float64
+												payback = cprice.V_price_grs_sms.Float64 - cprice.P_price_grs_sms.Float64
+												admin_amt = cprice.B_price_grs_sms.Float64
 												memo = "웹(A) SMS,바우처"
 											} else {
-												amount = cprice.C_price_smt_sms.Float64
-												payback = cprice.C_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
-												admin_amt = cprice.B_price_smt_sms.Float64
+												amount = cprice.C_price_grs_sms.Float64
+												payback = cprice.C_price_grs_sms.Float64 - cprice.P_price_grs_sms.Float64
+												admin_amt = cprice.B_price_grs_sms.Float64
 												if s.EqualFold(mst_sent_voucher.String, "B") {
 													memo = "웹(A) SMS,보너스"
 												} else {
@@ -1286,14 +1286,14 @@ func resProcess(wg *sync.WaitGroup) {
 											if len(mms_file1.String) <= 0 {
 												kko_kind = "P"
 												if s.EqualFold(mst_sent_voucher.String, "V") {
-													amount = cprice.V_price_smt.Float64
-													payback = cprice.V_price_smt.Float64 - cprice.P_price_smt.Float64
-													admin_amt = cprice.B_price_smt.Float64
+													amount = cprice.V_price_grs.Float64
+													payback = cprice.V_price_grs.Float64 - cprice.P_price_grs.Float64
+													admin_amt = cprice.B_price_grs.Float64
 													memo = "웹(A) LMS,바우처"
 												} else {
-													amount = cprice.C_price_smt.Float64
-													payback = cprice.C_price_smt.Float64 - cprice.P_price_smt.Float64
-													admin_amt = cprice.B_price_smt.Float64
+													amount = cprice.C_price_grs.Float64
+													payback = cprice.C_price_grs.Float64 - cprice.P_price_grs.Float64
+													admin_amt = cprice.B_price_grs.Float64
 													if s.EqualFold(mst_sent_voucher.String, "B") {
 														memo = "웹(A) LMS,보너스"
 													} else {
@@ -1304,14 +1304,14 @@ func resProcess(wg *sync.WaitGroup) {
 											} else {
 												kko_kind = "P"
 												if s.EqualFold(mst_sent_voucher.String, "V") {
-													amount = cprice.V_price_smt_mms.Float64
-													payback = cprice.V_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
-													admin_amt = cprice.B_price_smt_mms.Float64
+													amount = cprice.V_price_grs_mms.Float64
+													payback = cprice.V_price_grs_mms.Float64 - cprice.P_price_grs_mms.Float64
+													admin_amt = cprice.B_price_grs_mms.Float64
 													memo = "웹(A) MMS,바우처"
 												} else {
-													amount = cprice.C_price_smt_mms.Float64
-													payback = cprice.C_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
-													admin_amt = cprice.B_price_smt_mms.Float64
+													amount = cprice.C_price_grs_mms.Float64
+													payback = cprice.C_price_grs_mms.Float64 - cprice.P_price_grs_mms.Float64
+													admin_amt = cprice.B_price_grs_mms.Float64
 													if s.EqualFold(mst_sent_voucher.String, "B") {
 														memo = "웹(A) MMS,보너스"
 													} else {
@@ -1335,14 +1335,14 @@ func resProcess(wg *sync.WaitGroup) {
 
 											kko_kind = "P"
 											if s.EqualFold(mst_sent_voucher.String, "V") {
-												amount = cprice.V_price_smt_sms.Float64
-												payback = cprice.V_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
-												admin_amt = cprice.B_price_smt_sms.Float64
+												amount = cprice.V_price_grs_sms.Float64
+												payback = cprice.V_price_grs_sms.Float64 - cprice.P_price_grs_sms.Float64
+												admin_amt = cprice.B_price_grs_sms.Float64
 												memo = "웹(A) SMS,바우처"
 											} else {
-												amount = cprice.C_price_smt_sms.Float64
-												payback = cprice.C_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
-												admin_amt = cprice.B_price_smt_sms.Float64
+												amount = cprice.C_price_grs_sms.Float64
+												payback = cprice.C_price_grs_sms.Float64 - cprice.P_price_grs_sms.Float64
+												admin_amt = cprice.B_price_grs_sms.Float64
 												if s.EqualFold(mst_sent_voucher.String, "B") {
 													memo = "웹(A) SMS,보너스"
 												} else {
@@ -1383,14 +1383,14 @@ func resProcess(wg *sync.WaitGroup) {
 											if len(mms_file1.String) <= 0 {
 												kko_kind = "P"
 												if s.EqualFold(mst_sent_voucher.String, "V") {
-													amount = cprice.V_price_smt.Float64
-													payback = cprice.V_price_smt.Float64 - cprice.P_price_smt.Float64
-													admin_amt = cprice.B_price_smt.Float64
+													amount = cprice.V_price_grs.Float64
+													payback = cprice.V_price_grs.Float64 - cprice.P_price_grs.Float64
+													admin_amt = cprice.B_price_grs.Float64
 													memo = "웹(A) LMS,바우처"
 												} else {
-													amount = cprice.C_price_smt.Float64
-													payback = cprice.C_price_smt.Float64 - cprice.P_price_smt.Float64
-													admin_amt = cprice.B_price_smt.Float64
+													amount = cprice.C_price_grs.Float64
+													payback = cprice.C_price_grs.Float64 - cprice.P_price_grs.Float64
+													admin_amt = cprice.B_price_grs.Float64
 													if s.EqualFold(mst_sent_voucher.String, "B") {
 														memo = "웹(A) LMS,보너스"
 													} else {
@@ -1401,14 +1401,14 @@ func resProcess(wg *sync.WaitGroup) {
 											} else {
 												kko_kind = "P"
 												if s.EqualFold(mst_sent_voucher.String, "V") {
-													amount = cprice.V_price_smt_mms.Float64
-													payback = cprice.V_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
-													admin_amt = cprice.B_price_smt_mms.Float64
+													amount = cprice.V_price_grs_mms.Float64
+													payback = cprice.V_price_grs_mms.Float64 - cprice.P_price_grs_mms.Float64
+													admin_amt = cprice.B_price_grs_mms.Float64
 													memo = "웹(A) MMS,바우처"
 												} else {
-													amount = cprice.C_price_smt_mms.Float64
-													payback = cprice.C_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
-													admin_amt = cprice.B_price_smt_mms.Float64
+													amount = cprice.C_price_grs_mms.Float64
+													payback = cprice.C_price_grs_mms.Float64 - cprice.P_price_grs_mms.Float64
+													admin_amt = cprice.B_price_grs_mms.Float64
 													if s.EqualFold(mst_sent_voucher.String, "B") {
 														memo = "웹(A) MMS,보너스"
 													} else {
