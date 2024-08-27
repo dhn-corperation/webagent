@@ -1832,16 +1832,16 @@ func resProcess(wg *sync.WaitGroup) {
 		}
 
 		if len(nnmmsStrs) > 0 {
-			stmt := fmt.Sprintf("insert into MMS_MSG_G(CALLBACK,PHONE,SUBJECT,MSG,REQDATE,STATUS,FILE_CNT,FILE_PATH1,FILE_PATH2,FILE_PATH3,ETC9,ETC10,IDENTIFICATION_CODE,ETC8) values %s", s.Join(nnmmsStrs, ","))
+			stmt := fmt.Sprintf("insert into MMS_MSG(CALLBACK,PHONE,SUBJECT,MSG,REQDATE,STATUS,FILE_CNT,FILE_PATH1,FILE_PATH2,FILE_PATH3,ETC9,ETC10,IDENTIFICATION_CODE,ETC8) values %s", s.Join(nnmmsStrs, ","))
 			_, err := db.Exec(stmt, nnmmsValues...)
 
 			if err != nil {
-				errlog.Println("나노 저가망 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+				errlog.Println("나노 LMS Table Insert 처리 중 오류 발생 " + err.Error())
 			}
 		}
 
 		if len(nnlpsmsStrs) > 0 {
-			stmt := fmt.Sprintf("insert into SMS_MSG_G(TR_CALLBACK,TR_PHONE,TR_MSG,TR_SENDDATE,TR_SENDSTAT,TR_MSGTYPE,TR_ETC9,TR_ETC10,TR_IDENTIFICATION_CODE,TR_ETC8) values %s", s.Join(nnsmsStrs, ","))
+			stmt := fmt.Sprintf("insert into SMS_MSG_G(TR_CALLBACK,TR_PHONE,TR_MSG,TR_SENDDATE,TR_SENDSTAT,TR_MSGTYPE,TR_ETC9,TR_ETC10,TR_IDENTIFICATION_CODE,TR_ETC8) values %s", s.Join(nnlpsmsStrs, ","))
 			_, err := db.Exec(stmt, nnlpsmsValues...)
 
 			if err != nil {
@@ -1850,11 +1850,11 @@ func resProcess(wg *sync.WaitGroup) {
 		}
 
 		if len(nnlpmmsStrs) > 0 {
-			stmt := fmt.Sprintf("insert into MMS_MSG(CALLBACK,PHONE,SUBJECT,MSG,REQDATE,STATUS,FILE_CNT,FILE_PATH1,FILE_PATH2,FILE_PATH3,ETC9,ETC10,IDENTIFICATION_CODE,ETC8) values %s", s.Join(nnmmsStrs, ","))
+			stmt := fmt.Sprintf("insert into MMS_MSG_G(CALLBACK,PHONE,SUBJECT,MSG,REQDATE,STATUS,FILE_CNT,FILE_PATH1,FILE_PATH2,FILE_PATH3,ETC9,ETC10,IDENTIFICATION_CODE,ETC8) values %s", s.Join(nnlpmmsStrs, ","))
 			_, err := db.Exec(stmt, nnlpmmsValues...)
 
 			if err != nil {
-				errlog.Println("나노 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+				errlog.Println("나노 저가망 LMS Table Insert 처리 중 오류 발생 " + err.Error())
 			}
 		}
 	
