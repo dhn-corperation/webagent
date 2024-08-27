@@ -433,6 +433,8 @@ func resProcess(wg *sync.WaitGroup) {
 
 				phnstr = phn.String
 
+				errlog.Println(mem_resend)
+
 				//mem_resend = mem_2nd_send.String
 
 				if len(p_invoice.String) > 0 && s.EqualFold(message_type.String, "ph") {
