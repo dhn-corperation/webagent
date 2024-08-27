@@ -40,7 +40,7 @@ func resProcess(wg *sync.WaitGroup) {
 	var msg, msg_sms, only_sms, p_com, p_invoice, phn, profile, reg_dt, remark1, remark2, remark3, remark4, remark5, res_dt, reserve_dt sql.NullString
 	var result, s_code, sms_kind, sms_lms_tit, sms_sender, sync, tmpl_id, wide, supplement, price, currency_type, mem_userid, mem_id, mem_level, mem_phn_agent, mem_sms_agent, mem_2nd_send, mms_id, mst_type2, mst_type3, mst_2nd_alim, msgcnt, vancnt, mst_sent_voucher sql.NullString
 	var mms_file1, mms_file2, mms_file3 sql.NullString
-	var mem_lp_flag sql.NullInt32
+	var mem_lp_flag sql.NullInt64
 	var msgtype, phnstr /*, mem_2nd_type*/ string
 	var cprice baseprice.BasePrice
 	var isPass bool
@@ -380,9 +380,9 @@ func resProcess(wg *sync.WaitGroup) {
 						msgtype = "LMS"
 					}
 					
-					if s.Contains(mst_type3.String, "wa") && mem_lp_flag.Int32 != 0 {
+					if s.Contains(mst_type3.String, "wa") && mem_lp_flag.Int64 != 0 {
 						mem_resend = "GREEN_SHOT"
-					} else if s.Contains(mst_type3.String, "wa") && mem_lp_flag.Int32 == 0 {
+					} else if s.Contains(mst_type3.String, "wa") && mem_lp_flag.Int64 == 0 {
 						mem_resend = "GREEN_SHOT_G"
 					}
 					
@@ -410,9 +410,9 @@ func resProcess(wg *sync.WaitGroup) {
 						msgtype = "LMS"
 					}
 	
-					if s.Contains(mst_type2.String, "wa") && mem_lp_flag.Int32 != 0 {
+					if s.Contains(mst_type2.String, "wa") && mem_lp_flag.Int64 != 0 {
 						mem_resend = "GREEN_SHOT"
-					} else if s.Contains(mst_type2.String, "wa") && mem_lp_flag.Int32 == 0 {
+					} else if s.Contains(mst_type2.String, "wa") && mem_lp_flag.Int64 == 0 {
 						mem_resend = "GREEN_SHOT_G"
 					}
 
@@ -433,7 +433,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				phnstr = phn.String
 
-				errlog.Println(mem_lp_flag.Int32)
+				errlog.Println(mem_lp_flag.Int64)
 
 				//mem_resend = mem_2nd_send.String
 
