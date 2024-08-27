@@ -1833,7 +1833,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 		if len(nnmmsStrs) > 0 {
 			stmt := fmt.Sprintf("insert into MMS_MSG_G(CALLBACK,PHONE,SUBJECT,MSG,REQDATE,STATUS,FILE_CNT,FILE_PATH1,FILE_PATH2,FILE_PATH3,ETC9,ETC10,IDENTIFICATION_CODE,ETC8) values %s", s.Join(nnmmsStrs, ","))
-			_, err := db.Exec(stmt, nnlpmmsValues...)
+			_, err := db.Exec(stmt, nnmmsValues...)
 
 			if err != nil {
 				errlog.Println("나노 저가망 LMS Table Insert 처리 중 오류 발생 " + err.Error())
@@ -1851,7 +1851,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 		if len(nnlpmmsStrs) > 0 {
 			stmt := fmt.Sprintf("insert into MMS_MSG(CALLBACK,PHONE,SUBJECT,MSG,REQDATE,STATUS,FILE_CNT,FILE_PATH1,FILE_PATH2,FILE_PATH3,ETC9,ETC10,IDENTIFICATION_CODE,ETC8) values %s", s.Join(nnmmsStrs, ","))
-			_, err := db.Exec(stmt, nnmmsValues...)
+			_, err := db.Exec(stmt, nnlpmmsValues...)
 
 			if err != nil {
 				errlog.Println("나노 LMS Table Insert 처리 중 오류 발생 " + err.Error())
