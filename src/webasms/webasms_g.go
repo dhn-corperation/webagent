@@ -44,7 +44,7 @@ func smsProcess_g(wg *sync.WaitGroup) {
 	var t = time.Now()
 	var monthStr = fmt.Sprintf("%d%02d", t.Year(), t.Month())
 
-	var SMSTable = "SMS_MSG_G_" + monthStr
+	var SMSTable = "SMS_LOG_G_" + monthStr
 	var msgcnt sql.NullString
 
 	//발송 6시간 지난 메세지는 응답과 상관 없이 성공 처리 함.
