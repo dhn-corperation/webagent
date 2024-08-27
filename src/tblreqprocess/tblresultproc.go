@@ -380,9 +380,9 @@ func resProcess(wg *sync.WaitGroup) {
 						msgtype = "LMS"
 					}
 					
-					if s.Contains(mst_type3.String, "wa") && mem_lp_flag.Int64 != 0 {
+					if s.Contains(mst_type3.String, "wa") && mem_lp_flag.Int64 == 0 {
 						mem_resend = "GREEN_SHOT"
-					} else if s.Contains(mst_type3.String, "wa") && mem_lp_flag.Int64 == 0 {
+					} else if s.Contains(mst_type3.String, "wa") && mem_lp_flag.Int64 != 0 {
 						mem_resend = "GREEN_SHOT_G"
 					}
 					
@@ -410,9 +410,9 @@ func resProcess(wg *sync.WaitGroup) {
 						msgtype = "LMS"
 					}
 	
-					if s.Contains(mst_type2.String, "wa") && mem_lp_flag.Int64 != 0 {
+					if s.Contains(mst_type2.String, "wa") && mem_lp_flag.Int64 == 0 {
 						mem_resend = "GREEN_SHOT"
-					} else if s.Contains(mst_type2.String, "wa") && mem_lp_flag.Int64 == 0 {
+					} else if s.Contains(mst_type2.String, "wa") && mem_lp_flag.Int64 != 0 {
 						mem_resend = "GREEN_SHOT_G"
 					}
 
@@ -432,8 +432,6 @@ func resProcess(wg *sync.WaitGroup) {
 				}
 
 				phnstr = phn.String
-
-				errlog.Println(mem_lp_flag.Int64)
 
 				//mem_resend = mem_2nd_send.String
 
