@@ -431,6 +431,10 @@ func resProcess(wg *sync.WaitGroup) {
 										
 				}
 
+				errlog.Println(mst_type3.String)
+				errlog.Println(mem_lp_flag.Int64)
+				errlog.Println(mem_resend)
+
 				phnstr = phn.String
 
 				//mem_resend = mem_2nd_send.String
