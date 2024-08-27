@@ -433,6 +433,8 @@ func resProcess(wg *sync.WaitGroup) {
 
 				phnstr = phn.String
 
+				errlog.Println(mem_resend)
+
 				//mem_resend = mem_2nd_send.String
 
 				if len(p_invoice.String) > 0 && s.EqualFold(message_type.String, "ph") {
@@ -1674,7 +1676,7 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 
 			if len(nnlpsmsStrs) >= 1000 {
-				stmt := fmt.Sprintf("insert into SMS_MSG_G(TR_CALLBACK,TR_PHONE,TR_MSG,TR_SENDDATE,TR_SENDSTAT,TR_MSGTYPE,TR_ETC9,TR_ETC10,TR_IDENTIFICATION_CODE,TR_ETC8) values %s", s.Join(nnsmsStrs, ","))
+				stmt := fmt.Sprintf("insert into SMS_MSG_G(TR_CALLBACK,TR_PHONE,TR_MSG,TR_SENDDATE,TR_SENDSTAT,TR_MSGTYPE,TR_ETC9,TR_ETC10,TR_IDENTIFICATION_CODE,TR_ETC8) values %s", s.Join(nnlpsmsStrs, ","))
 				_, err := db.Exec(stmt, nnlpsmsValues...)
 
 				if err != nil {
@@ -1686,7 +1688,7 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 
 			if len(nnlpmmsStrs) >= 1000 {
-				stmt := fmt.Sprintf("insert into MMS_MSG_G(CALLBACK,PHONE,SUBJECT,MSG,REQDATE,STATUS,FILE_CNT,FILE_PATH1,FILE_PATH2,FILE_PATH3,ETC9,ETC10,IDENTIFICATION_CODE,ETC8) values %s", s.Join(nnmmsStrs, ","))
+				stmt := fmt.Sprintf("insert into MMS_MSG_G(CALLBACK,PHONE,SUBJECT,MSG,REQDATE,STATUS,FILE_CNT,FILE_PATH1,FILE_PATH2,FILE_PATH3,ETC9,ETC10,IDENTIFICATION_CODE,ETC8) values %s", s.Join(nnlpmmsStrs, ","))
 				_, err := db.Exec(stmt, nnlpmmsValues...)
 
 				if err != nil {
