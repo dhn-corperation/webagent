@@ -51,7 +51,7 @@ func smsProcess_g(wg *sync.WaitGroup) {
 	// sms 성공 처리
 	err1 := db.QueryRow("SELECT count(1) as cnt from SMS_MSG_G WHERE TR_SENDSTAT='1' and date_add(TR_SENDDATE, interval 6 HOUR) < now() and TR_ETC10 is not null").Scan(&msgcnt)
 	if err1 != nil {
-	   errlog.Println("OShotMMS Table 조회 중 중 오류 발생", err1)
+	   errlog.Println("나노 저가망 SMS_MSG_G Table 조회 중 중 오류 발생", err1)
 	} else {		
 		if !s.EqualFold(msgcnt.String, "0") {	
 			db.Exec("UPDATE SMS_MSG_G SET TR_RSLTDATE=now(), TR_SENDSTAT='2', TR_NET='ETC' WHERE TR_SENDSTAT=1 and date_add(TR_SENDDATE, interval 6 HOUR) < now() and TR_ETC10 is not null")
@@ -95,12 +95,12 @@ func smsProcess_g(wg *sync.WaitGroup) {
 				"       a.TR_NUM as MsgID " +
 				"      ,a.TR_RSLTSTAT as SendResult" +
 				"      ,a.TR_PHONE AS PHN" +
-				"      ,b.TR_ETC10 AS REMARK4" +
+				"      ,a.TR_ETC10 AS REMARK4" +
 				"      ,(select mem_userid from cb_member cm where cm.mem_id = b.mst_mem_id) AS mem_userid " +
 				"      ,b.mst_mem_id AS mem_id" +
 				"      ,a.TR_ETC9 as cb_msg_id " +
 				" from " + SMSTable + " a INNER JOIN " +
-				"        cb_wt_msg_sent b ON a.mst_id = b.mst_id " +
+				"        cb_wt_msg_sent b ON a.TR_ETC10 = b.mst_id " +
 				"WHERE a.TR_SENDSTAT = '2' and a.TR_ETC8 = 'Y' " +
 				" and a.TR_ETC10 = ?"
 

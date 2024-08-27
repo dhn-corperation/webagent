@@ -49,7 +49,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 	//lms 성공 처리
 	err1 := db.QueryRow("SELECT count(1) as cnt from MMS_MSG WHERE STATUS='2' and date_add(REQDATE, interval 6 HOUR) < now() and ETC10 is not null").Scan(&msgcnt)
 	if err1 != nil {
-	   errlog.Println("MMS_MSG Table 조회 중 중 오류 발생", err1)
+	   errlog.Println("나노 MMS_MSG Table 조회 중 중 오류 발생", err1)
 	} else {		
 		if !s.EqualFold(msgcnt.String, "0") {
 			db.Exec("UPDATE MMS_MSG SET RSLTDATE=now(), REPORTDATE=now(), STATUS='3', TELCOINFO='ETC' WHERE STATUS=2 and date_add(REQDATE, interval 6 HOUR) < now() and ETC10 is not null")
@@ -93,13 +93,13 @@ func mmsProcess(wg *sync.WaitGroup) {
 				"       a.MSGKEY as MsgID " +
 				"      ,a.RSLT as SendResult" +
 				"      ,a.PHONE AS PHN" +
-				"      ,b.ETC10 AS REMARK4" +
+				"      ,a.ETC10 AS REMARK4" +
 				"      ,(select mem_userid from cb_member cm where cm.mem_id = b.mst_mem_id) AS mem_userid " +
 				"      ,b.mst_mem_id AS mem_id" +
 				"      ,a.ETC9 as cb_msg_id " +
 				"      ,a.FILE_PATH1 as mms1 " +
 				" from " + MMSTable + " a INNER JOIN " +
-				"        cb_wt_msg_sent b ON a.mst_id = b.mst_id " +
+				"        cb_wt_msg_sent b ON a.ETC10 = b.mst_id " +
 				" where a.STATUS = '3' and a.ETC8 = 'Y' " +
 				" and a.ETC10 = ?"
 
