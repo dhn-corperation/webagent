@@ -155,6 +155,7 @@ func resProcess(wg *sync.WaitGroup) {
 			errlog.Println(" Result Table 처리 중 오류 발생")
 			errlog.Println(err)
 			errlog.Fatal(resultsql)
+			panic(err)
 		}
 		defer rows.Close()
 
