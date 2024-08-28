@@ -17,6 +17,16 @@ import (
 )
 
 func Process() {
+	var wg sync.WaitGroup
+	for {
+		wg.Add(1)
+		go resProcess(&wg)
+		wg.Wait()
+	}
+
+}
+
+func resProcess(wg *sync.WaitGroup) {
 	defer func() {
 		if r := recover(); r != nil {
 			for {
@@ -29,16 +39,6 @@ func Process() {
 			}
 		}
 	}()
-	var wg sync.WaitGroup
-	for {
-		wg.Add(1)
-		go resProcess(&wg)
-		wg.Wait()
-	}
-
-}
-
-func resProcess(wg *sync.WaitGroup) {
 	//var name string
 	//stdlog.SetPrefix(log.Ldate|log.Ltime, "Result 처리 : ")
 	//errlog.SetPrefix(log.Ldate|log.Ltime, "Result 오류 : ")
