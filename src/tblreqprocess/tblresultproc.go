@@ -29,8 +29,8 @@ func Process() {
 func resProcess(wg *sync.WaitGroup) {
 	defer func() {
 		if r := recover(); r != nil {
-			config.Stdlog.Println("리코버 들어옴")
 			for {
+				config.Stdlog.Println("리코버 들어옴")
 				err := databasepool.DB.Ping()
 				if err == nil {
 					break
@@ -39,11 +39,11 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 		}
 	}()
-	panic("들어가긴하냐")
 	//var name string
 	//stdlog.SetPrefix(log.Ldate|log.Ltime, "Result 처리 : ")
 	//errlog.SetPrefix(log.Ldate|log.Ltime, "Result 오류 : ")
 	defer wg.Done()
+	panic("들어가긴하냐")
 	var db = databasepool.DB
 	var conf = config.Conf
 	var stdlog = config.Stdlog
