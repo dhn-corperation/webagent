@@ -34,7 +34,7 @@ func resProcess(wg *sync.WaitGroup) {
 				if err == nil {
 					break
 				}
-				time.Sleep(1 * time.Minute)
+				time.Sleep(10 * time.Second)
 			}
 		}
 	}()

@@ -26,7 +26,17 @@ func Process() {
 }
 
 func mmsProcess(wg *sync.WaitGroup) {
-
+	defer func() {
+		if r := recover(); r != nil {
+			for {
+				err := databasepool.DB.Ping()
+				if err == nil {
+					break
+				}
+				time.Sleep(10 * time.Second)
+			}
+		}
+	}()
 	defer wg.Done()
 	var db = databasepool.DB
 	var conf = config.Conf
