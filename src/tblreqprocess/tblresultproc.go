@@ -39,6 +39,7 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 		}
 	}()
+	panic("들어가긴하냐")
 	//var name string
 	//stdlog.SetPrefix(log.Ldate|log.Ltime, "Result 처리 : ")
 	//errlog.SetPrefix(log.Ldate|log.Ltime, "Result 오류 : ")
