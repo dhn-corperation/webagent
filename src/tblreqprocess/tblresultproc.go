@@ -43,7 +43,6 @@ func resProcess(wg *sync.WaitGroup) {
 	//stdlog.SetPrefix(log.Ldate|log.Ltime, "Result 처리 : ")
 	//errlog.SetPrefix(log.Ldate|log.Ltime, "Result 오류 : ")
 	defer wg.Done()
-	panic("들어가긴하냐")
 	var db = databasepool.DB
 	var conf = config.Conf
 	var stdlog = config.Stdlog
