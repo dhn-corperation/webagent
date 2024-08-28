@@ -29,7 +29,7 @@ func smsProcess(wg *sync.WaitGroup) {
 	defer func() {
 		if r := recover(); r != nil {
 			for {
-				config.Stdlog.Println("tblresultproc send ping to DB")
+				config.Stdlog.Println("webcsms send ping to DB")
 				err := databasepool.DB.Ping()
 				if err == nil {
 					break
@@ -63,6 +63,7 @@ func smsProcess(wg *sync.WaitGroup) {
 	err1 := db.QueryRow("SELECT count(1) as cnt from OShotSMS WHERE SendResult=1 and date_add(insertdt, interval 6 HOUR) < now() and mst_id is not null").Scan(&msgcnt)
 	if err1 != nil {
 	   errlog.Println("OShotMMS Table 조회 중 중 오류 발생", err1)
+	   panic(err1)
 	} else {		
 		if !s.EqualFold(msgcnt.String, "0") {	
 			db.Exec("UPDATE OShotSMS SET SendDT=now(), SendResult='6', Telecom='000' WHERE SendResult=1 and date_add(insertdt, interval 6 HOUR) < now() and mst_id is not null")
@@ -85,6 +86,7 @@ func smsProcess(wg *sync.WaitGroup) {
 
 		} else {
 			errlog.Fatal(err)
+			panic(err)
 		}
 
 		isProc = false
@@ -122,6 +124,7 @@ func smsProcess(wg *sync.WaitGroup) {
 				errlog.Println("스마트미 SMS 조회 중 오류 발생")
 				errlog.Println(smsQuery)
 				errlog.Fatal(smsQuery)
+				panic(err)
 			}
 			defer rows.Close()
 
@@ -129,6 +132,7 @@ func smsProcess(wg *sync.WaitGroup) {
 			if err != nil {
 				errlog.Println(" 트랜잭션 시작 중 오류 발생")
 				errlog.Fatal(err)
+				panic(err)
 			}
 
 			var amtinsstr = "insert into cb_amt_" + mem_userid.String + "(amt_datetime," +
@@ -204,6 +208,7 @@ func smsProcess(wg *sync.WaitGroup) {
 
 					if err1 != nil {
 						errlog.Println(SMSTable + " Table Update 처리 중 오류 발생 ")
+						panic(err1)
 					}
 
 					upmsgids = nil
@@ -215,6 +220,7 @@ func smsProcess(wg *sync.WaitGroup) {
 
 					if err != nil {
 						errlog.Println("AMT Table Insert 처리 중 오류 발생 " + err.Error())
+						panic(err)
 					}
 
 					amtsStrs = nil
@@ -237,6 +243,7 @@ func smsProcess(wg *sync.WaitGroup) {
 
 				if err1 != nil {
 					errlog.Println(SMSTable + " Table Update 처리 중 오류 발생 ")
+					panic(err1)
 				}
 			}
 
@@ -246,6 +253,7 @@ func smsProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("AMT Table Insert 처리 중 오류 발생 " + err.Error())
+					panic(err)
 				}
 
 			}

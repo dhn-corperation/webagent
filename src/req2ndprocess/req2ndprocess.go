@@ -6,6 +6,7 @@ import (
 	"sync"
 	"webagent/src/databasepool"
 	s "strings"
+	"time"
 )
 
 func Process() {
@@ -19,7 +20,19 @@ func Process() {
 }
 
 func resProcess(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		if r := recover(); r != nil {
+			for {
+				config.Stdlog.Println("tblresultproc send ping to DB")
+				err := databasepool.DB.Ping()
+				if err == nil {
+					break
+				}
+				time.Sleep(10 * time.Second)
+			}
+			wg.Done()
+		}
+	}()
 	var db = databasepool.DB
 	var conf = config.Conf
 	var stdlog = config.Stdlog
@@ -34,6 +47,7 @@ func resProcess(wg *sync.WaitGroup) {
 		stdlog.Println("Result Table 처리 중 오류 발생")
 		stdlog.Println(err)
 		stdlog.Fatal(reqquery)
+		panic(err)
 	}
 	 
 	if !s.EqualFold(cnt.String, "0") { 
@@ -47,6 +61,7 @@ func resProcess(wg *sync.WaitGroup) {
 		
 		if err2 != nil {
 			stdlog.Println("2ND 테이블에서 Req 로 복사 중 오류 발생 - Update P : ", upp)
+			panic(err2)
 		} else {
 		
 			insp, _ := resins.RowsAffected()
@@ -58,4 +73,5 @@ func resProcess(wg *sync.WaitGroup) {
 		
 		
 	}
+	wg.Done()
 }

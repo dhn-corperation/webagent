@@ -29,7 +29,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 	defer func() {
 		if r := recover(); r != nil {
 			for {
-				config.Stdlog.Println("tblresultproc send ping to DB")
+				config.Stdlog.Println("webamms send ping to DB")
 				err := databasepool.DB.Ping()
 				if err == nil {
 					break
@@ -61,6 +61,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 	err1 := db.QueryRow("SELECT count(1) as cnt from MMS_MSG WHERE STATUS='2' and date_add(REQDATE, interval 6 HOUR) < now() and ETC10 is not null").Scan(&msgcnt)
 	if err1 != nil {
 	   errlog.Println("나노 MMS_MSG Table 조회 중 중 오류 발생", err1)
+	   panic(err1)
 	} else {		
 		if !s.EqualFold(msgcnt.String, "0") {
 			db.Exec("UPDATE MMS_MSG SET RSLTDATE=now(), REPORTDATE=now(), STATUS='3', TELCOINFO='ETC' WHERE STATUS=2 and date_add(REQDATE, interval 6 HOUR) < now() and ETC10 is not null")
@@ -81,6 +82,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 			errlog.Println(MMSTable + " 생성 !!")
 		} else {
 			//errlog.Fatal(groupQuery)
+			panic(err)
 		}
 
 		isProc = false
@@ -119,6 +121,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 				errlog.Println("나노 MMS 조회 중 오류 발생")
 				errlog.Println(mmsQuery)
 				errlog.Fatal(mmsQuery)
+				panic(err)
 			}
 			defer rows.Close()
 
@@ -126,6 +129,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 			if err != nil {
 				errlog.Println("나노 MMS 트랜잭션 시작 중 오류 발생")
 				errlog.Fatal(err)
+				panic(err)
 			}
 
 			var amtinsstr = "insert into cb_amt_" + mem_userid.String + "(amt_datetime," +
@@ -223,6 +227,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 
 					if err1 != nil {
 						errlog.Println(MMSTable + " Table Update 처리 중 오류 발생 ")
+						panic(err1)
 					}
 
 					upmsgids = nil
@@ -234,6 +239,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 
 					if err != nil {
 						errlog.Println("나노 MMS AMT Table Insert 처리 중 오류 발생 " + err.Error())
+						panic(err)
 					}
 
 					amtsStrs = nil
@@ -256,6 +262,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 
 				if err1 != nil {
 					errlog.Println(MMSTable + " Table Update 처리 중 오류 발생 ")
+					panic(err1)
 				}
 			}
 
@@ -265,6 +272,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("나노 SMS AMT Table Insert 처리 중 오류 발생 " + err.Error())
+					panic(err)
 				}
 
 			}

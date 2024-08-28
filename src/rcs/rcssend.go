@@ -43,7 +43,7 @@ func rcsProcess(wg *sync.WaitGroup) {
 	defer func() {
 		if r := recover(); r != nil {
 			for {
-				config.Stdlog.Println("tblresultproc send ping to DB")
+				config.Stdlog.Println("rcssend send ping to DB")
 				err := databasepool.DB.Ping()
 				if err == nil {
 					break
@@ -61,6 +61,7 @@ func rcsProcess(wg *sync.WaitGroup) {
 	reqrows, err := db.Query(reqsql)
 	if err != nil {
 		stdlog.Fatal(err)
+		panic(err)
 	}
 	defer reqrows.Close()
 
@@ -324,6 +325,7 @@ proc  ) values %s`
 
 		if err != nil {
 			stdlog.Println("RCS Result Table Insert 처리 중 오류 발생 " + err.Error())
+			panic(err)
 		}
 	}
 
@@ -340,7 +342,8 @@ proc  ) values %s`
 		_, err1 := db.Exec(commastr, delrcsids...)
 
 		if err1 != nil {
-			stdlog.Fatal(err)
+			stdlog.Fatal(err1)
+			panic(err1)
 		}
 	}
 	if procCount > 0 {

@@ -48,7 +48,7 @@ func phnProcess(wg *sync.WaitGroup) {
 	defer func() {
 		if r := recover(); r != nil {
 			for {
-				config.Stdlog.Println("tblresultproc send ping to DB")
+				config.Stdlog.Println("phonemsg send ping to DB")
 				err := databasepool.DB.Ping()
 				if err == nil {
 					break
@@ -73,6 +73,7 @@ func phnProcess(wg *sync.WaitGroup) {
 
 	if cnterr != nil {
 		config.Stdlog.Println("Request Table - select 오류 : " + cnterr.Error())
+		panic(cnterr)
 	} else {
 
 		if count > 0 {
@@ -83,6 +84,7 @@ func phnProcess(wg *sync.WaitGroup) {
 			updateRows, err := db.Exec("update SMT_SEND r set group_no = '" + group_no + "' where  group_no is null and SEND_STATUS = 'READY' limit 1000")
 			if err != nil {
 				config.Stdlog.Println("폰 문자 Request Table - Group No Update 오류" + err.Error())
+				panic(err)
 			} else {
 				rowcnt, _ := updateRows.RowsAffected()
 
@@ -105,6 +107,7 @@ func phnProcess(wg *sync.WaitGroup) {
 					if err != nil {
 						errlog.Println("폰문자 조회 중 오류 발생")
 						errlog.Fatal(err)
+						panic(err)
 					}
 
 					defer Rows.Close()
@@ -172,6 +175,7 @@ func phnProcess(wg *sync.WaitGroup) {
 						tx, err := db.Begin()
 						if err != nil {
 							errlog.Println("폰문자 트랜잭션 시작 중 오류 발생")
+							panic(err)
 							//errlog.Fatal(err)
 						} else {
 							tx.Exec("update SMT_SEND set SEND_STATUS = 'SUCCESS' where message_id in (" + msg_ids.String + ") ")

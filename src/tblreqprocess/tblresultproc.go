@@ -165,6 +165,7 @@ func resProcess(wg *sync.WaitGroup) {
 		if err != nil {
 			errlog.Println(" 트랜잭션 시작 중 오류 발생")
 			errlog.Fatal(err)
+			panic(err)
 		}
 
 		msginsStrs = nil // cb_msg Table Insert 용
@@ -516,6 +517,7 @@ func resProcess(wg *sync.WaitGroup) {
 							errlog.Println("2ND 테이블에서 복사 처리 중 오류 발생 ")
 							errlog.Println(err1)
 							errlog.Println(copystr)
+							panic(err1)
 						} else {
 							errlog.Println("2ND 테이블에서 복사 처리 완료 : ",len(atinsids))
 						}
@@ -1577,6 +1579,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("MSG Table Insert 처리 중 오류 발생 " + err.Error())
+					panic(err)
 				}
 
 				msginsStrs = nil
@@ -1589,6 +1592,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("FT List Table Insert 처리 중 오류 발생 " + err.Error())
+					panic(err)
 				}
 
 				ftlistsStrs = nil
@@ -1609,6 +1613,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				if err1 != nil {
 					errlog.Println("Result Table Update 처리 중 오류 발생 ")
+					panic(err1)
 				}
 
 				upmsgids = nil
@@ -1620,6 +1625,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("AMT Table Insert 처리 중 오류 발생 " + err.Error())
+					panic(err)
 				}
 
 				amtsStrs = nil
@@ -1632,6 +1638,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("Nano it Table Insert 처리 중 오류 발생 " + err.Error())
+					panic(err)
 				}
 
 				nanoitStrs = nil
@@ -1644,6 +1651,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("스마트미 SMS Table Insert 처리 중 오류 발생 " + err.Error())
+					panic(err)
 				}
 
 				ossmsStrs = nil
@@ -1656,6 +1664,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("스마트미 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+					panic(err)
 				}
 
 				osmmsStrs = nil
@@ -1668,6 +1677,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("나노 SMS Table Insert 처리 중 오류 발생 " + err.Error())
+					panic(err)
 				}
 
 				nnsmsStrs = nil
@@ -1680,6 +1690,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("나노 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+					panic(err)
 				}
 
 				nnmmsStrs = nil
@@ -1692,6 +1703,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("나노 SMS Table Insert 처리 중 오류 발생 " + err.Error())
+					panic(err)
 				}
 
 				nnlpsmsStrs = nil
@@ -1704,6 +1716,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("나노 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+					panic(err)
 				}
 
 				nnlpmmsStrs = nil
@@ -1716,6 +1729,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("스마트미 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+					panic(err)
 				}
 
 				rcsStrs = nil
@@ -1728,6 +1742,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("스마트미 폰문자 Table Insert 처리 중 오류 발생 " + err.Error())
+					panic(err)
 				}
 
 				smtpStrs = nil
@@ -1745,6 +1760,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("MSG Table Insert 처리 중 오류 발생 " + err.Error())
+				panic(err)
 			}
 		}
 
@@ -1760,6 +1776,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 			if err1 != nil {
 				errlog.Println("Result Table Update 처리 중 오류 발생 ")
+				panic(err1)
 			}
 		}
 
@@ -1769,6 +1786,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("FT List Table Insert 처리 중 오류 발생 " + err.Error())
+				panic(err)
 			}
 
 			ftlistsStrs = nil
@@ -1790,6 +1808,7 @@ func resProcess(wg *sync.WaitGroup) {
 				errlog.Println("2ND 테이블에서 복사 처리 중 오류 발생 ")
 				errlog.Println(err1)
 				errlog.Println(copystr)
+				panic(err1)
 			} else {
 				errlog.Println("2ND 테이블에서 복사 처리 완료 : ", len(atinsids))
 			}
@@ -1802,6 +1821,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("AMT Table Insert 처리 중 오류 발생 " + err.Error())
+				panic(err)
 			}
 		}
 
@@ -1811,6 +1831,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("Nano it Table Insert 처리 중 오류 발생 " + err.Error())
+				panic(err)
 			}
 
 		}
@@ -1821,6 +1842,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("스마트미 SMS Table Insert 처리 중 오류 발생 " + err.Error())
+				panic(err)
 			}
 
 		}
@@ -1831,6 +1853,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("스마트미 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+				panic(err)
 			}
 
 		}
@@ -1841,6 +1864,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("나노 SMS Table Insert 처리 중 오류 발생 " + err.Error())
+				panic(err)
 			}
 		}
 
@@ -1850,6 +1874,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("나노 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+				panic(err)
 			}
 		}
 
@@ -1859,6 +1884,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("나노 저가망 SMS Table Insert 처리 중 오류 발생 " + err.Error())
+				panic(err)
 			}
 		}
 
@@ -1868,6 +1894,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("나노 저가망 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+				panic(err)
 			}
 		}
 	
@@ -1877,6 +1904,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("RCS Table Insert 처리 중 오류 발생 " + err.Error())
+				panic(err)
 			}
 		}
 			
@@ -1886,6 +1914,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("스마트미 폰문자 Table Insert 처리 중 오류 발생 " + err.Error())
+				panic(err)
 			}
 		}
 
@@ -1920,6 +1949,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("WT_MSG_SENT 카카오 메세지 수량 처리 중 오류 발생 " + err.Error())
+				panic(err)
 			}
 		}
 
