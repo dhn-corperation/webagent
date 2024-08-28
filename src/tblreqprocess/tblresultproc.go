@@ -17,18 +17,6 @@ import (
 )
 
 func Process() {
-	defer func() {
-		if r := recover(); r != nil {
-			for {
-				config.Stdlog.Println("리코버 들어옴")
-				err := databasepool.DB.Ping()
-				if err == nil {
-					break
-				}
-				time.Sleep(10 * time.Second)
-			}
-		}
-	}()
 	var wg sync.WaitGroup
 	for {
 		wg.Add(1)
@@ -39,6 +27,18 @@ func Process() {
 }
 
 func resProcess(wg *sync.WaitGroup) {
+	defer func() {
+		if r := recover(); r != nil {
+			config.Stdlog.Println("리코버 들어옴")
+			for {
+				err := databasepool.DB.Ping()
+				if err == nil {
+					break
+				}
+				time.Sleep(10 * time.Second)
+			}
+		}
+	}()
 	//var name string
 	//stdlog.SetPrefix(log.Ldate|log.Ltime, "Result 처리 : ")
 	//errlog.SetPrefix(log.Ldate|log.Ltime, "Result 오류 : ")
