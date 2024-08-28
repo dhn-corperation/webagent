@@ -23,7 +23,7 @@ func resProcess(wg *sync.WaitGroup) {
 	defer func() {
 		if r := recover(); r != nil {
 			for {
-				config.Stdlog.Println("tblresultproc send ping to DB")
+				config.Stdlog.Println("req2ndprocess send ping to DB")
 				err := databasepool.DB.Ping()
 				if err == nil {
 					break
@@ -44,7 +44,7 @@ func resProcess(wg *sync.WaitGroup) {
 	err := db.QueryRow(reqquery).Scan(&cnt)
 
 	if err != nil {
-		stdlog.Println("Result Table 처리 중 오류 발생")
+		stdlog.Println("Result Table2 처리 중 오류 발생")
 		stdlog.Println(err)
 		stdlog.Fatal(reqquery)
 		panic(err)
