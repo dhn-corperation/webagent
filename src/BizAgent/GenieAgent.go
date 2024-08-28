@@ -20,8 +20,10 @@ import (
 	"webagent/src/webcmms"
 	"webagent/src/webcsms"
 	"webagent/src/rcs"
+	"webagent/src/handler"
 	
 	"github.com/takama/daemon"
+	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -162,5 +164,16 @@ func resultProc() {
 		config.Stdlog.Println("폰문자 처리 시작")
 		go phonemsg.Process()
 	}
+
+	r := gin.New()
+	r.Use(gin.Recovery())
+
+	r.GET("/", func(c *gin.Context) {
+		c.String(200, "igenie api")
+	})
+
+	r.GET("/on", handler.SendNano)
+
+	r.Run(":3010")
 
 }
