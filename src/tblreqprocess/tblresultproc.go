@@ -27,18 +27,6 @@ func Process() {
 }
 
 func resProcess(wg *sync.WaitGroup) {
-	defer func() {
-		if r := recover(); r != nil {
-			for {
-				err := databasepool.DB.Ping()
-				if err == nil {
-					break
-				}
-				time.Sleep(10 * time.Second)
-			}
-		}
-	}()
-
 	//var name string
 	//stdlog.SetPrefix(log.Ldate|log.Ltime, "Result 처리 : ")
 	//errlog.SetPrefix(log.Ldate|log.Ltime, "Result 오류 : ")

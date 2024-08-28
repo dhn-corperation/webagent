@@ -29,17 +29,6 @@ type resultStr struct {
 }
 
 func Process() {
-	defer func() {
-		if r := recover(); r != nil {
-			for {
-				err := databasepool.DB.Ping()
-				if err == nil {
-					break
-				}
-				time.Sleep(10 * time.Second)
-			}
-		}
-	}()
 	for {
 		var db = databasepool.DB
 		var stdlog = config.Stdlog

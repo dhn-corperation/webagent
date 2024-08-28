@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -97,6 +98,17 @@ func main() {
 }
 
 func resultProc() {
+	defer func() {
+		if r := recover(); r != nil {
+			for {
+				err := databasepool.DB.Ping()
+				if err == nil {
+					break
+				}
+				time.Sleep(10 * time.Second)
+			}
+		}
+	}()
 	config.Stdlog.Println("BizAgent 시작")
 	var conf = config.Conf
 
@@ -138,5 +150,7 @@ func resultProc() {
 		config.Stdlog.Println("Phon 사용 - 시작")
 		go phonemsg.Process()
 	}
-
+	for {
+		time.Sleep(1 * time.Second)
+	}
 }

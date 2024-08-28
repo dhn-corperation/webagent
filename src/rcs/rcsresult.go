@@ -36,17 +36,6 @@ func ResultProcess() {
 
 func resultProcess(wg *sync.WaitGroup) {
 	//config.Stdlog.Println("자도 작업 처리 실행!!")
-	defer func() {
-		if r := recover(); r != nil {
-			for {
-				err := databasepool.DB.Ping()
-				if err == nil {
-					break
-				}
-				time.Sleep(10 * time.Second)
-			}
-		}
-	}()
 	defer wg.Done()
 
 	var db = databasepool.DB
