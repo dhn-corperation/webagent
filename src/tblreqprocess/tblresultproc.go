@@ -19,7 +19,6 @@ import (
 func Process() {
 	var wg sync.WaitGroup
 	for {
-		config.Stdlog.Println("우랴두랑")
 		wg.Add(1)
 		go resProcess(&wg)
 		wg.Wait()
@@ -38,6 +37,7 @@ func resProcess(wg *sync.WaitGroup) {
 				}
 				time.Sleep(10 * time.Second)
 			}
+			wg.Done()
 		}
 	}()
 	//var name string
