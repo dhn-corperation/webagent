@@ -326,7 +326,6 @@ proc  ) values %s`
 
 		if err != nil {
 			stdlog.Println("RCS Result Table Insert 처리 중 오류 발생 " + err.Error())
-			panic(err)
 		}
 	}
 
@@ -344,7 +343,6 @@ proc  ) values %s`
 
 		if err1 != nil {
 			// stdlog.Fatal(err1)
-			panic(err1)
 		}
 	}
 	if procCount > 0 {

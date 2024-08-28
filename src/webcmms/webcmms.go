@@ -62,6 +62,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 	err1 := db.QueryRow("SELECT count(1) as cnt from OShotMMS WHERE SendResult=1 and date_add(insertdt, interval 6 HOUR) < now() and mst_id is not null").Scan(&msgcnt)
 	if err1 != nil {
 	   errlog.Println("OShotMMS Table 조회 중 중 오류 발생", err1)
+	   panic(err1)
 	} else {		
 		if !s.EqualFold(msgcnt.String, "0") {
 			db.Exec("UPDATE OShotMMS SET SendDT=now(), SendResult='6', Telecom='000' WHERE SendResult=1 and date_add(insertdt, interval 6 HOUR) < now() and mst_id is not null")

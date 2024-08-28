@@ -62,6 +62,7 @@ func mmsProcess_g(wg *sync.WaitGroup) {
 	err1 := db.QueryRow("SELECT count(1) as cnt from MMS_MSG_G WHERE STATUS='2' and date_add(REQDATE, interval 6 HOUR) < now() and ETC10 is not null").Scan(&msgcnt)
 	if err1 != nil {
 	   errlog.Println("나노 MMS_MSG_G Table 조회 중 중 오류 발생", err1)
+	   panic(err1)
 	} else {		
 		if !s.EqualFold(msgcnt.String, "0") {
 			db.Exec("UPDATE MMS_MSG_G SET RSLTDATE=now(), REPORTDATE=now(), STATUS='3', TELCOINFO='ETC' WHERE STATUS=2 and date_add(REQDATE, interval 6 HOUR) < now() and ETC10 is not null")

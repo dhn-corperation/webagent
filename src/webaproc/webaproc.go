@@ -60,7 +60,7 @@ func grsProcess(wg *sync.WaitGroup) {
 	_, err := db.Exec(updateStr)
 
 	if err != nil {
-		errlog.Println("GRS Proc 6시간 초가 Update 처리 중 오류 발생")
+		errlog.Println("GRS Proc 6시간 초과 Update 처리 중 오류 발생")
 		errcode := err.Error()
 
 		if s.Index(errcode, "1146") > 0 {
@@ -68,6 +68,7 @@ func grsProcess(wg *sync.WaitGroup) {
 			stdlog.Println("cb_grs_broadcast_" + monthStr + " 생성 !!")
 		} else {
 			// errlog.Fatal(err)
+			panic(err)
 		}
 
 	}

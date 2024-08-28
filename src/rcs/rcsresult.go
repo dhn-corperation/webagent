@@ -74,6 +74,7 @@ set rmr.result_status = 'success'
 	_, execErr := databasepool.DB.Exec(resAfter6)
 	if execErr != nil {
 		config.Stdlog.Println("RCS 메시지 결과 6시간 성공 처리 에러 : ", execErr)
+		panic(execErr)
 	}
 
 	RToken = getTokenInfo()

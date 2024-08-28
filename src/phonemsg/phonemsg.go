@@ -74,6 +74,7 @@ func phnProcess(wg *sync.WaitGroup) {
 
 	if cnterr != nil {
 		config.Stdlog.Println("Request Table - select 오류 : " + cnterr.Error())
+		panic(cnterr)
 	} else {
 
 		if count > 0 {

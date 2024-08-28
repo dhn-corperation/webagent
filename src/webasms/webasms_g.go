@@ -64,6 +64,7 @@ func smsProcess_g(wg *sync.WaitGroup) {
 	err1 := db.QueryRow("SELECT count(1) as cnt from SMS_MSG_G WHERE TR_SENDSTAT='1' and date_add(TR_SENDDATE, interval 6 HOUR) < now() and TR_ETC10 is not null").Scan(&msgcnt)
 	if err1 != nil {
 	   errlog.Println("나노 저가망 SMS_MSG_G Table 조회 중 중 오류 발생", err1)
+	   panic(err1)
 	} else {		
 		if !s.EqualFold(msgcnt.String, "0") {	
 			db.Exec("UPDATE SMS_MSG_G SET TR_RSLTDATE=now(), TR_SENDSTAT='2', TR_NET='ETC' WHERE TR_SENDSTAT=1 and date_add(TR_SENDDATE, interval 6 HOUR) < now() and TR_ETC10 is not null")

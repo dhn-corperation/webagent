@@ -48,7 +48,7 @@ func resProcess(wg *sync.WaitGroup) {
 		stdlog.Println("Result Table2 처리 중 오류 발생")
 		stdlog.Println(err)
 		// stdlog.Fatal(reqquery)
-		
+		panic(err)
 	}
 	 
 	if !s.EqualFold(cnt.String, "0") { 
