@@ -36,7 +36,19 @@ func ResultProcess() {
 
 func resultProcess(wg *sync.WaitGroup) {
 	//config.Stdlog.Println("자도 작업 처리 실행!!")
-	defer wg.Done()
+	defer func() {
+		if r := recover(); r != nil {
+			for {
+				config.Stdlog.Println("tblresultproc send ping to DB")
+				err := databasepool.DB.Ping()
+				if err == nil {
+					break
+				}
+				time.Sleep(10 * time.Second)
+			}
+			wg.Done()
+		}
+	}()
 
 	var db = databasepool.DB
 	var stdlog = config.Stdlog
@@ -493,7 +505,7 @@ and rmr.msg_group_id = ?
 		//}
 	}
 	time.Sleep(time.Millisecond * time.Duration(Interval))
-
+	wg.Done()
 }
 
 func RetryProcess() {
@@ -507,7 +519,19 @@ func RetryProcess() {
 }
 
 func retryProc(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		if r := recover(); r != nil {
+			for {
+				config.Stdlog.Println("tblresultproc send ping to DB")
+				err := databasepool.DB.Ping()
+				if err == nil {
+					break
+				}
+				time.Sleep(10 * time.Second)
+			}
+			wg.Done()
+		}
+	}()
 	//config.Stdlog.Println("수작업 처리 실행!!")
 	var db = databasepool.DB
 	var stdlog = config.Stdlog
@@ -570,5 +594,5 @@ func retryProc(wg *sync.WaitGroup) {
 		}
 	}
 	time.Sleep(time.Millisecond * time.Duration(Interval2))
-
+	wg.Done()
 }

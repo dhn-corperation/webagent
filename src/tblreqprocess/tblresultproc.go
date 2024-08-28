@@ -30,7 +30,7 @@ func resProcess(wg *sync.WaitGroup) {
 	defer func() {
 		if r := recover(); r != nil {
 			for {
-				config.Stdlog.Println("리코버 들어옴")
+				config.Stdlog.Println("tblresultproc send ping to DB")
 				err := databasepool.DB.Ping()
 				if err == nil {
 					break
@@ -443,10 +443,6 @@ func resProcess(wg *sync.WaitGroup) {
 					}
 										
 				}
-
-				errlog.Println(mst_type3.String)
-				errlog.Println(mem_lp_flag.String)
-				errlog.Println(mem_resend)
 
 				phnstr = phn.String
 

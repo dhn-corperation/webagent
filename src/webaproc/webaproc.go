@@ -26,7 +26,19 @@ func Process() {
 }
 
 func grsProcess(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		if r := recover(); r != nil {
+			for {
+				config.Stdlog.Println("tblresultproc send ping to DB")
+				err := databasepool.DB.Ping()
+				if err == nil {
+					break
+				}
+				time.Sleep(10 * time.Second)
+			}
+			wg.Done()
+		}
+	}()
 	var db = databasepool.DB
 	var conf = config.Conf
 	var stdlog = config.Stdlog
@@ -224,5 +236,5 @@ func grsProcess(wg *sync.WaitGroup) {
 		stdlog.Printf(" ( %s ) WEB(A) LMS 처리 - %s : %d \n", startTime, gremark4.String, proccnt)
 		
 	}
-
+	wg.Done()
 }

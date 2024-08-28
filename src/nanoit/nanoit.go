@@ -28,8 +28,19 @@ func Process() {
 }
 
 func nanoProcess(wg *sync.WaitGroup) {
-
-	defer wg.Done()
+	defer func() {
+		if r := recover(); r != nil {
+			for {
+				config.Stdlog.Println("tblresultproc send ping to DB")
+				err := databasepool.DB.Ping()
+				if err == nil {
+					break
+				}
+				time.Sleep(10 * time.Second)
+			}
+			wg.Done()
+		}
+	}()
 	var db = databasepool.DB
 	//var stdlog = config.Stdlog
 	var errlog = config.Stdlog
@@ -185,5 +196,5 @@ func nanoProcess(wg *sync.WaitGroup) {
 		db.Exec("delete from cb_nanoit_msg where sn in (" + sn.String + ")")
 
 	}
-
+	wg.Done()
 }
