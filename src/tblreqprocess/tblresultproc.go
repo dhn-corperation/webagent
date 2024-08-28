@@ -109,6 +109,7 @@ func resProcess(wg *sync.WaitGroup) {
 	if err != nil {
 		errlog.Println("Result Table 처리 중 오류 발생")
 		errlog.Println(err)
+		panic(err)
 		//errlog.Fatal(resquery)
 	}
 	defer resrows.Close()
