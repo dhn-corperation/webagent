@@ -17,6 +17,18 @@ import (
 )
 
 func Process() {
+	defer func() {
+		if r := recover(); r != nil {
+			for {
+				config.Stdlog.Println("리코버 들어옴")
+				err := databasepool.DB.Ping()
+				if err == nil {
+					break
+				}
+				time.Sleep(10 * time.Second)
+			}
+		}
+	}()
 	var wg sync.WaitGroup
 	for {
 		wg.Add(1)

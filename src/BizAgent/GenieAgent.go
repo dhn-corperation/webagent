@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -119,17 +118,6 @@ func main() {
 }
 
 func resultProc() {
-	defer func() {
-		if r := recover(); r != nil {
-			for {
-				err := databasepool.DB.Ping()
-				if err == nil {
-					break
-				}
-				time.Sleep(10 * time.Second)
-			}
-		}
-	}()
 	config.Stdlog.Println("GenieAgent 시작")
 	config.Stdlog.Println("---------------------------------------")
 	var conf = config.Conf
@@ -187,8 +175,4 @@ func resultProc() {
 	r.GET("/on", handler.SendNano)
 
 	r.Run(":3010")
-
-	for {
-		time.Sleep(1 * time.Second)
-	}
 }
