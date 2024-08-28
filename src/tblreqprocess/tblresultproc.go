@@ -42,7 +42,6 @@ func resProcess(wg *sync.WaitGroup) {
 	//var name string
 	//stdlog.SetPrefix(log.Ldate|log.Ltime, "Result 처리 : ")
 	//errlog.SetPrefix(log.Ldate|log.Ltime, "Result 오류 : ")
-	defer wg.Done()
 	var db = databasepool.DB
 	var conf = config.Conf
 	var stdlog = config.Stdlog
@@ -1941,6 +1940,7 @@ func resProcess(wg *sync.WaitGroup) {
 		db.Exec("delete a from " + conf.REQTABLE2 + " a where  ( ( a.reserve_dt < DATE_FORMAT(ADDDATE(now(), INTERVAL -2 DAY), '%Y%m%d%H%i%S') and a.reserve_dt <> '00000000000000') or ( a.REG_DT < ADDDATE(now(), INTERVAL -2 DAY) and a.reserve_dt = '00000000000000'))");
 	}
 	//}
+	wg.Done()
 }
 
 func getSubstring(str string, cnt int) string {
