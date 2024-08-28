@@ -26,8 +26,10 @@ func Process() {
 }
 
 func grsProcess(wg *sync.WaitGroup) {
+	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
+			config.Stdlog.Println("webaproc panic 발생 원인 : ", r)
 			for {
 				config.Stdlog.Println("webaproc send ping to DB")
 				err := databasepool.DB.Ping()
@@ -36,7 +38,6 @@ func grsProcess(wg *sync.WaitGroup) {
 				}
 				time.Sleep(10 * time.Second)
 			}
-			wg.Done()
 		}
 	}()
 	var db = databasepool.DB
@@ -66,8 +67,7 @@ func grsProcess(wg *sync.WaitGroup) {
 			db.Exec("Create Table IF NOT EXISTS cb_grs_broadcast_" + monthStr + " like cb_grs_broadcast")
 			stdlog.Println("cb_grs_broadcast_" + monthStr + " 생성 !!")
 		} else {
-			errlog.Fatal(err)
-			panic(err)
+			// errlog.Fatal(err)
 		}
 
 	}
@@ -89,8 +89,7 @@ func grsProcess(wg *sync.WaitGroup) {
 
 	if err != nil {
 		errlog.Println("GRS Proc 처리 대상 조회 중 오류 발생")
-		errlog.Fatal(err)
-		panic(err)
+		// errlog.Fatal(err)
 	}
 
 	defer gRows.Close()
@@ -138,8 +137,7 @@ func grsProcess(wg *sync.WaitGroup) {
 
 		if err != nil {
 			errlog.Println("GRS Proc 처리 대상 조회 중 오류 발생")
-			errlog.Fatal(err)
-			panic(err)
+			// errlog.Fatal(err)
 		}
 
 		defer Rows.Close()
@@ -155,7 +153,7 @@ func grsProcess(wg *sync.WaitGroup) {
 		tx, err := db.Begin()
 		if err != nil {
 			errlog.Println(" 트랜잭션 시작 중 오류 발생")
-			errlog.Fatal(err)
+			// errlog.Fatal(err)
 		}
 
 		var amtinsstr = "insert into cb_amt_" + gmem_userid.String + "(amt_datetime," +
@@ -216,7 +214,6 @@ func grsProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("GRS 환불 AMT Table Insert 처리 중 오류 발생 " + err.Error())
-					panic(err)
 				}
 
 				amtsStrs = nil
@@ -233,7 +230,6 @@ func grsProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("GRS 환불 AMT Table Insert 처리 중 오류 발생 " + err.Error())
-				panic(err)
 			}
 
 		}
@@ -241,5 +237,4 @@ func grsProcess(wg *sync.WaitGroup) {
 		stdlog.Printf(" ( %s ) WEB(A) LMS 처리 - %s : %d \n", startTime, gremark4.String, proccnt)
 		
 	}
-	wg.Done()
 }

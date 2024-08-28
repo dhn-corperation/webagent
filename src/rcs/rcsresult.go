@@ -35,9 +35,11 @@ func ResultProcess() {
 }
 
 func resultProcess(wg *sync.WaitGroup) {
+	defer wg.Done()
 	//config.Stdlog.Println("자도 작업 처리 실행!!")
 	defer func() {
 		if r := recover(); r != nil {
+			config.Stdlog.Println("rcsresult panic 발생 원인 : ", r)
 			for {
 				config.Stdlog.Println("rcsresult send ping to DB")
 				err := databasepool.DB.Ping()
@@ -46,7 +48,6 @@ func resultProcess(wg *sync.WaitGroup) {
 				}
 				time.Sleep(10 * time.Second)
 			}
-			wg.Done()
 		}
 	}()
 
@@ -73,7 +74,6 @@ set rmr.result_status = 'success'
 	_, execErr := databasepool.DB.Exec(resAfter6)
 	if execErr != nil {
 		config.Stdlog.Println("RCS 메시지 결과 6시간 성공 처리 에러 : ", execErr)
-		panic(execErr)
 	}
 
 	RToken = getTokenInfo()
@@ -128,7 +128,6 @@ timestamp ) values %s`
 
 				if err != nil {
 					stdlog.Println("RCS_MESSAGE_STATUS Table Insert 처리 중 오류 발생 " + err.Error())
-					panic(err)
 				}
 
 				resinsStrs = nil
@@ -151,7 +150,6 @@ set rmr.result_status = '` + si.Status + `'
 
 			if err != nil {
 				stdlog.Println("RCS_MESSAGE_STATUS Table Insert 처리 중 오류 발생 " + err.Error())
-				panic(err)
 			}
 
 			resinsStrs = nil
@@ -174,7 +172,6 @@ set rmr.result_status = '` + si.Status + `'
 		grows, err := db.Query(groupsql)
 		if err != nil {
 			stdlog.Println("RCS_MESSAGE_RESULT select 오류 ", err)
-			panic(err)
 		} else {
 			defer grows.Close()
 
@@ -227,7 +224,6 @@ and rmr.msg_group_id = ?
 				resrows, err := db.Query(ressql, mst_id.String)
 				if err != nil {
 					stdlog.Println("결과 처리 Select 오류 ", err)
-					panic(err)
 				} else {
 					defer resrows.Close()
 
@@ -466,7 +462,6 @@ and rmr.msg_group_id = ?
 
 						if err != nil {
 							stdlog.Println("스마트미 SMS Table Insert 처리 중 오류 발생 " + err.Error())
-							panic(err)
 						}
 
 						ossmsStrs = nil
@@ -479,7 +474,6 @@ and rmr.msg_group_id = ?
 
 						if err != nil {
 							stdlog.Println("스마트미 LMS Table Insert 처리 중 오류 발생 " + err.Error())
-							panic(err)
 						}
 
 						osmmsStrs = nil
@@ -492,7 +486,6 @@ and rmr.msg_group_id = ?
 
 						if err != nil {
 							stdlog.Println("AMT Table Insert 처리 중 오류 발생 " + err.Error())
-							panic(err)
 						}
 
 						amtsStrs = nil
@@ -516,7 +509,6 @@ and rmr.msg_group_id = ?
 		//}
 	}
 	time.Sleep(time.Millisecond * time.Duration(Interval))
-	wg.Done()
 }
 
 func RetryProcess() {
@@ -530,6 +522,7 @@ func RetryProcess() {
 }
 
 func retryProc(wg *sync.WaitGroup) {
+	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
 			for {
@@ -540,7 +533,6 @@ func retryProc(wg *sync.WaitGroup) {
 				}
 				time.Sleep(10 * time.Second)
 			}
-			wg.Done()
 		}
 	}()
 	//config.Stdlog.Println("수작업 처리 실행!!")
@@ -554,7 +546,6 @@ func retryProc(wg *sync.WaitGroup) {
 	retryrows, err := db.Query(sqlStr)
 	if err != nil {
 		stdlog.Println("RCS_MESSAGE_RESULT 수작업 select 오류", err)
-		panic(err)
 	}
 	defer retryrows.Close()
 
@@ -583,7 +574,6 @@ func retryProc(wg *sync.WaitGroup) {
 
 		if err != nil {
 			config.Stdlog.Println("RCS 메시지 결과 서버 호출 오류 : ", err)
-			panic(err)
 			//	return nil
 		} else {
 			var resultInfo RcsResultInfo
@@ -606,5 +596,4 @@ func retryProc(wg *sync.WaitGroup) {
 		}
 	}
 	time.Sleep(time.Millisecond * time.Duration(Interval2))
-	wg.Done()
 }

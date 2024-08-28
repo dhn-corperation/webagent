@@ -26,8 +26,10 @@ func Process_g() {
 }
 
 func smsProcess_g(wg *sync.WaitGroup) {
+	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
+			config.Stdlog.Println("websms_g panic 발생 원인 : ", r)
 			for {
 				config.Stdlog.Println("webasms_g send ping to DB")
 				err := databasepool.DB.Ping()
@@ -36,7 +38,6 @@ func smsProcess_g(wg *sync.WaitGroup) {
 				}
 				time.Sleep(10 * time.Second)
 			}
-			wg.Done()
 		}
 	}()
 	var db = databasepool.DB
@@ -63,7 +64,6 @@ func smsProcess_g(wg *sync.WaitGroup) {
 	err1 := db.QueryRow("SELECT count(1) as cnt from SMS_MSG_G WHERE TR_SENDSTAT='1' and date_add(TR_SENDDATE, interval 6 HOUR) < now() and TR_ETC10 is not null").Scan(&msgcnt)
 	if err1 != nil {
 	   errlog.Println("나노 저가망 SMS_MSG_G Table 조회 중 중 오류 발생", err1)
-	   panic(err1)
 	} else {		
 		if !s.EqualFold(msgcnt.String, "0") {	
 			db.Exec("UPDATE SMS_MSG_G SET TR_RSLTDATE=now(), TR_SENDSTAT='2', TR_NET='ETC' WHERE TR_SENDSTAT=1 and date_add(TR_SENDDATE, interval 6 HOUR) < now() and TR_ETC10 is not null")
@@ -84,7 +84,6 @@ func smsProcess_g(wg *sync.WaitGroup) {
 			errlog.Println(SMSTable + " 생성 !!")
 		} else {
 			//errlog.Fatal(groupQuery)
-			panic(err)
 		}
 
 		isProc = false
@@ -121,16 +120,14 @@ func smsProcess_g(wg *sync.WaitGroup) {
 			if err != nil {
 				errlog.Println("나노 저가망 SMS 조회 중 오류 발생")
 				errlog.Println(smsQuery)
-				errlog.Fatal(smsQuery)
-				panic(err)
+				// errlog.Fatal(smsQuery)
 			}
 			defer rows.Close()
 
 			tx, err := db.Begin()
 			if err != nil {
 				errlog.Println(" 트랜잭션 시작 중 오류 발생")
-				errlog.Fatal(err)
-				panic(err)
+				// errlog.Fatal(err)
 			}
 
 			var amtinsstr = "insert into cb_amt_" + mem_userid.String + "(amt_datetime," +
@@ -206,7 +203,6 @@ func smsProcess_g(wg *sync.WaitGroup) {
 
 					if err1 != nil {
 						errlog.Println(SMSTable + " Table Update 처리 중 오류 발생 ")
-						panic(err1)
 					}
 
 					upmsgids = nil
@@ -218,7 +214,6 @@ func smsProcess_g(wg *sync.WaitGroup) {
 
 					if err != nil {
 						errlog.Println("나노 저가망 SMS AMT Table Insert 처리 중 오류 발생 " + err.Error())
-						panic(err)
 					}
 
 					amtsStrs = nil
@@ -241,7 +236,6 @@ func smsProcess_g(wg *sync.WaitGroup) {
 
 				if err1 != nil {
 					errlog.Println(SMSTable + " Table Update 처리 중 오류 발생 ")
-					panic(err1)
 				}
 			}
 
@@ -251,7 +245,6 @@ func smsProcess_g(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("나논 SMS AMT Table Insert 처리 중 오류 발생 " + err.Error())
-					panic(err)
 				}
 
 			}
@@ -261,5 +254,4 @@ func smsProcess_g(wg *sync.WaitGroup) {
 			stdlog.Printf(" ( %s ) WEB(A) 저가망 SMS 처리 - %s : %d \n", startTime, sent_key.String, smscnt)
 		}
 	}
-	wg.Done()
 }

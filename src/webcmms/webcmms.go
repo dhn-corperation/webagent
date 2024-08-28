@@ -26,8 +26,10 @@ func Process() {
 }
 
 func mmsProcess(wg *sync.WaitGroup) {
+	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
+			config.Stdlog.Println("webcmms panic 발생 원인 : ", r)
 			for {
 				config.Stdlog.Println("webcmms send ping to DB")
 				err := databasepool.DB.Ping()
@@ -36,7 +38,6 @@ func mmsProcess(wg *sync.WaitGroup) {
 				}
 				time.Sleep(10 * time.Second)
 			}
-			wg.Done()
 		}
 	}()
 	var db = databasepool.DB
@@ -61,7 +62,6 @@ func mmsProcess(wg *sync.WaitGroup) {
 	err1 := db.QueryRow("SELECT count(1) as cnt from OShotMMS WHERE SendResult=1 and date_add(insertdt, interval 6 HOUR) < now() and mst_id is not null").Scan(&msgcnt)
 	if err1 != nil {
 	   errlog.Println("OShotMMS Table 조회 중 중 오류 발생", err1)
-	   panic(err1)
 	} else {		
 		if !s.EqualFold(msgcnt.String, "0") {
 			db.Exec("UPDATE OShotMMS SET SendDT=now(), SendResult='6', Telecom='000' WHERE SendResult=1 and date_add(insertdt, interval 6 HOUR) < now() and mst_id is not null")
@@ -81,8 +81,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 			db.Exec("Create Table IF NOT EXISTS " + MMSTable + " like OShotMMS")
 			stdlog.Println(MMSTable + " 생성 !!")
 		} else {
-			errlog.Fatal(groupQuery)
-			panic(err)
+			// errlog.Fatal(groupQuery)
 		}
 
 		isProc = false
@@ -122,16 +121,14 @@ func mmsProcess(wg *sync.WaitGroup) {
 			if err != nil {
 				errlog.Println("스마트미 MMS 조회 중 오류 발생")
 				errlog.Println(mmsQuery)
-				errlog.Fatal(mmsQuery)
-				panic(err)
+				// errlog.Fatal(mmsQuery)
 			}
 			defer rows.Close()
 
 			tx, err := db.Begin()
 			if err != nil {
 				errlog.Println(" 트랜잭션 시작 중 오류 발생")
-				errlog.Fatal(err)
-				panic(err)
+				// errlog.Fatal(err)
 			}
 
 			var amtinsstr = "insert into cb_amt_" + mem_userid.String + "(amt_datetime," +
@@ -228,7 +225,6 @@ func mmsProcess(wg *sync.WaitGroup) {
 
 					if err1 != nil {
 						errlog.Println(MMSTable + " Table Update 처리 중 오류 발생 ")
-						panic(err1)
 					}
 
 					upmsgids = nil
@@ -240,7 +236,6 @@ func mmsProcess(wg *sync.WaitGroup) {
 
 					if err != nil {
 						errlog.Println("AMT Table Insert 처리 중 오류 발생 " + err.Error())
-						panic(err)
 					}
 
 					amtsStrs = nil
@@ -263,7 +258,6 @@ func mmsProcess(wg *sync.WaitGroup) {
 
 				if err1 != nil {
 					errlog.Println(MMSTable + " Table Update 처리 중 오류 발생 ")
-					panic(err1)
 				}
 			}
 
@@ -273,7 +267,6 @@ func mmsProcess(wg *sync.WaitGroup) {
 
 				if err != nil {
 					errlog.Println("AMT Table Insert 처리 중 오류 발생 " + err.Error())
-					panic(err)
 				}
 
 			}
@@ -284,5 +277,4 @@ func mmsProcess(wg *sync.WaitGroup) {
 
 		}
 	}
-	wg.Done()
 }

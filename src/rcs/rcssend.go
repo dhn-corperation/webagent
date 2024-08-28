@@ -40,8 +40,10 @@ func Process() {
 
 
 func rcsProcess(wg *sync.WaitGroup) {
+	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
+			config.Stdlog.Println("rcssend panic 발생 원인 : ", r)
 			for {
 				config.Stdlog.Println("rcssend send ping to DB")
 				err := databasepool.DB.Ping()
@@ -50,7 +52,6 @@ func rcsProcess(wg *sync.WaitGroup) {
 				}
 				time.Sleep(10 * time.Second)
 			}
-			wg.Done()
 		}
 	}()
 	var db = databasepool.DB
@@ -60,14 +61,14 @@ func rcsProcess(wg *sync.WaitGroup) {
 
 	reqrows, err := db.Query(reqsql)
 	if err != nil {
-		stdlog.Fatal(err)
+		// stdlog.Fatal(err)
 		panic(err)
 	}
 	defer reqrows.Close()
 
 	columnTypes, err := reqrows.ColumnTypes()
 	if err != nil {
-		stdlog.Fatal(err)
+		// stdlog.Fatal(err)
 	}
 	count := len(columnTypes)
 
@@ -144,7 +145,7 @@ proc  ) values %s`
 
 		err := reqrows.Scan(scanArgs...)
 		if err != nil {
-			stdlog.Fatal(err)
+			// stdlog.Fatal(err)
 		}
 
 		//masterData := map[string]interface{}{}
@@ -342,7 +343,7 @@ proc  ) values %s`
 		_, err1 := db.Exec(commastr, delrcsids...)
 
 		if err1 != nil {
-			stdlog.Fatal(err1)
+			// stdlog.Fatal(err1)
 			panic(err1)
 		}
 	}
@@ -354,7 +355,6 @@ proc  ) values %s`
 	}
 	Token = ""
 	time.Sleep(time.Millisecond * time.Duration(SendInterval))
-	wg.Done()
 }
 
 func getTokenInfo() string {

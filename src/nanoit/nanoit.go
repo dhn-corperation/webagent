@@ -28,8 +28,10 @@ func Process() {
 }
 
 func nanoProcess(wg *sync.WaitGroup) {
+	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
+			config.Stdlog.Println("nanoit panic 발생 원인 : ", r)
 			for {
 				config.Stdlog.Println("nanoit send ping to DB")
 				err := databasepool.DB.Ping()
@@ -38,7 +40,6 @@ func nanoProcess(wg *sync.WaitGroup) {
 				}
 				time.Sleep(10 * time.Second)
 			}
-			wg.Done()
 		}
 	}()
 	var db = databasepool.DB
@@ -87,8 +88,7 @@ func nanoProcess(wg *sync.WaitGroup) {
 	if err != nil {
 		errlog.Println("cb_nanoit_msg 조회 중 오류 발생")
 		errlog.Println(err)
-		errlog.Fatal(nanomsg_str)
-		panic(err)
+		// errlog.Fatal(nanomsg_str)
 	}
 
 	defer Rows.Close()
@@ -155,8 +155,7 @@ func nanoProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("cb_grs_msg Insert 처리 중 오류 발생")
-				errlog.Fatal(err)
-				panic(err)
+				// errlog.Fatal(err)
 			}
 			msg_id, _ = res.LastInsertId()
 		}
@@ -188,7 +187,6 @@ func nanoProcess(wg *sync.WaitGroup) {
 
 			if err != nil {
 				errlog.Println("Nano it Table Insert 처리 중 오류 발생 " + err.Error())
-				panic(err)
 			}
 
 			nanobcStrs = nil
@@ -199,5 +197,4 @@ func nanoProcess(wg *sync.WaitGroup) {
 		db.Exec("delete from cb_nanoit_msg where sn in (" + sn.String + ")")
 
 	}
-	wg.Done()
 }

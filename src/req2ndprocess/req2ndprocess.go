@@ -20,8 +20,10 @@ func Process() {
 }
 
 func resProcess(wg *sync.WaitGroup) {
+	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
+			config.Stdlog.Println("req2ndprocess panic 발생 원인 : ", r)
 			for {
 				config.Stdlog.Println("req2ndprocess send ping to DB")
 				err := databasepool.DB.Ping()
@@ -30,7 +32,6 @@ func resProcess(wg *sync.WaitGroup) {
 				}
 				time.Sleep(10 * time.Second)
 			}
-			wg.Done()
 		}
 	}()
 	var db = databasepool.DB
@@ -46,8 +47,7 @@ func resProcess(wg *sync.WaitGroup) {
 	if err != nil {
 		stdlog.Println("Result Table2 처리 중 오류 발생")
 		stdlog.Println(err)
-		panic(err)
-		stdlog.Fatal(reqquery)
+		// stdlog.Fatal(reqquery)
 		
 	}
 	 
@@ -62,7 +62,6 @@ func resProcess(wg *sync.WaitGroup) {
 		
 		if err2 != nil {
 			stdlog.Println("2ND 테이블에서 Req 로 복사 중 오류 발생 - Update P : ", upp)
-			panic(err2)
 		} else {
 		
 			insp, _ := resins.RowsAffected()
@@ -74,5 +73,4 @@ func resProcess(wg *sync.WaitGroup) {
 		
 		
 	}
-	wg.Done()
 }
