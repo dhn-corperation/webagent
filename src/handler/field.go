@@ -1,44 +1,48 @@
 package handler
 
+import (
+	"database/sql"
+)
+
 type OshotSmsTable struct {
-	MsgId int 			`db:"MsgID"`
-	Sender string		`db:"Sender"`
-	Receiver string		`db:"Receiver"`
-	Msg string			`db:"Msg"`
-	Url string			`db:"URL"`
-	ReserveDt string	`db:"ReserveDT"`
-	TimeoutDt string	`db:"TimeoutDT"`
-	SendDt string		`db:"SendDT"`
-	SendResult int		`db:"SendResult"`
-	Telecom string		`db:"Telecom"`
-	InsertDt string		`db:"InsertDT"`
-	MstId int			`db:"mst_id"`
-	ProcFlag string		`db:"proc_flag"`
-	CbMsgId string		`db:"cb_msg_id"`
-	ResendFlag int 		`db:"resend_flag"`
+	MsgId int 					`db:"MsgID"`
+	Sender string				`db:"Sender"`
+	Receiver string				`db:"Receiver"`
+	Msg string					`db:"Msg"`
+	Url string					`db:"URL"`
+	ReserveDt sql.NullString	`db:"ReserveDT"`
+	TimeoutDt sql.NullString	`db:"TimeoutDT"`
+	SendDt sql.NullString		`db:"SendDT"`
+	SendResult int				`db:"SendResult"`
+	Telecom sql.NullString		`db:"Telecom"`
+	InsertDt string				`db:"InsertDT"`
+	MstId int					`db:"mst_id"`
+	ProcFlag string				`db:"proc_flag"`
+	CbMsgId string				`db:"cb_msg_id"`
+	ResendFlag int 				`db:"resend_flag"`
 }
 
 type OshotMmsTable struct {
-	MsgId int			`db:"MsgID"`
-	MsgGroupId string	`db:"MsgGroupID"`
-	Sender string		`db:"Sender"`
-	Receiver string		`db:"Receiver"`
-	Subject string		`db:"Subject"`
-	Msg string			`db:"Msg"`
-	ReserveDt string	`db:"ReserveDT"`
-	TimeoutDt string	`db:"TimeoutDT"`
-	SendDt string		`db:"SendDT"`
-	SendResult int		`db:"SendResult"`
-	Telecom string		`db:"Telecom"`
-	FilePath1 string	`db:"File_Path1"`
-	FilePath2 string	`db:"File_Path2"`
-	FilePath3 string	`db:"File_Path3"`
-	FilePath4 string	`db:"File_Path4"`
-	InsertDt string		`db:"InsertDT"`
-	MstId int			`db:"mst_id"`
-	ProcFlag string		`db:"proc_flag"`
-	CbMsgId string		`db:"cb_msg_id"`
-	ResendFlag int		`db:"resend_flag"`
+	MsgId int					`db:"MsgID"`
+	MsgGroupId string			`db:"MsgGroupID"`
+	Sender string				`db:"Sender"`
+	Receiver string				`db:"Receiver"`
+	Subject string				`db:"Subject"`
+	Msg string					`db:"Msg"`
+	ReserveDt sql.NullString	`db:"ReserveDT"`
+	TimeoutDt sql.NullString	`db:"TimeoutDT"`
+	SendDt sql.NullString		`db:"SendDT"`
+	SendResult int				`db:"SendResult"`
+	Telecom sql.NullString		`db:"Telecom"`
+	FilePath1 sql.NullString	`db:"File_Path1"`
+	FilePath2 sql.NullString	`db:"File_Path2"`
+	FilePath3 sql.NullString	`db:"File_Path3"`
+	FilePath4 sql.NullString	`db:"File_Path4"`
+	InsertDt string				`db:"InsertDT"`
+	MstId int					`db:"mst_id"`
+	ProcFlag string				`db:"proc_flag"`
+	CbMsgId string				`db:"cb_msg_id"`
+	ResendFlag int				`db:"resend_flag"`
 }
 
 type NanoSmsTable struct {
