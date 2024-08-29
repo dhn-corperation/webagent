@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"context"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -116,6 +117,8 @@ func main() {
 }
 
 func resultProc() {
+	contextCancel := map[string]interface{}{}
+
 	config.Stdlog.Println("GenieAgent 시작")
 	config.Stdlog.Println("---------------------------------------")
 	var conf = config.Conf
@@ -170,7 +173,40 @@ func resultProc() {
 		c.String(200, "igenie api")
 	})
 
-	r.GET("/on", handler.SendNano)
+	r.GET("/on", func(c *gin.Context) {
+		target := c.Query("target")
+		ctx, cancel := context.WithCancel(context.Background())
+		if target == "nano" {
+			contextCancel[target] = cancel
+			go handler.SendNano(ctx)
+		} else if target == "oshot" {
+			contextCancel[target] = cancel
+			//TODO : 오샷으로 넘기는 func
+		} else {
+			c.JSON(404, gin.H{
+				"code":    "error",
+				"message": "target이 잘못 되었습니다.",
+			})
+		}
+		c.JSON(200, gin.H{
+			"code":    "ok",
+			"message": target + "이 정상적으로 시작되었습니다.",
+		})
+	})
+
+	r.GET("/off", func(c *gin.Context){
+		target := c.Query("target")
+		if target == "nano" || target == "oshot" {
+			cancel := contextCancel[target].(context.CancelFunc)
+			cancel()
+			delete(contextCancel, target)
+			c.JSON(200, gin.H{
+				"code":    "ok",
+				"message": target + "이 정상적으로 종료되었습니다.",
+			})
+		}
+
+	})
 
 	r.Run(":3010")
 }
