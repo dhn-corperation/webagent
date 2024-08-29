@@ -31,13 +31,15 @@ func resProcess(wg *sync.WaitGroup) {
 	defer func() {
 		if r := recover(); r != nil {
 			config.Stdlog.Println("tblresultproc panic 발생 원인 : ", r)
-			for {
-				config.Stdlog.Println("tblresultproc send ping to DB")
-				err := databasepool.DB.Ping()
-				if err == nil {
-					break
+			if _, ok := r.(string); ok && s.Contains(r.(string), "connection refused") {
+				for {
+					config.Stdlog.Println("tblresultproc send ping to DB")
+					err := databasepool.DB.Ping()
+					if err == nil {
+						break
+					}
+					time.Sleep(10 * time.Second)
 				}
-				time.Sleep(10 * time.Second)
 			}
 		}
 	}()

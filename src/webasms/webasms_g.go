@@ -29,14 +29,16 @@ func smsProcess_g(wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
-			config.Stdlog.Println("websms_g panic 발생 원인 : ", r)
-			for {
-				config.Stdlog.Println("webasms_g send ping to DB")
-				err := databasepool.DB.Ping()
-				if err == nil {
-					break
+			config.Stdlog.Println("webasms_g panic 발생 원인 : ", r)
+			if _, ok := r.(string); ok && s.Contains(r.(string), "connection refused") {
+				for {
+					config.Stdlog.Println("webasms_g send ping to DB")
+					err := databasepool.DB.Ping()
+					if err == nil {
+						break
+					}
+					time.Sleep(10 * time.Second)
 				}
-				time.Sleep(10 * time.Second)
 			}
 		}
 	}()
