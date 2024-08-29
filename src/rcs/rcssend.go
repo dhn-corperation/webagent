@@ -47,7 +47,7 @@ func rcsProcess(wg *sync.WaitGroup) {
 			if err, ok := r.(error); ok {
 				if s.Contains(err.Error(), "connection refused") {
 					for {
-						config.Stdlog.Println("nanoit send ping to DB")
+						config.Stdlog.Println("rcssend send ping to DB")
 						err := databasepool.DB.Ping()
 						if err == nil {
 							break

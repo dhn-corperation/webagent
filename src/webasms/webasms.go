@@ -30,8 +30,8 @@ func smsProcess(wg *sync.WaitGroup) {
 	defer func() {
 		if r := recover(); r != nil {
 			config.Stdlog.Println("webasms panic 발생 원인 : ", r)
-			if err, ok := r.(string); ok {
-				if s.Contains(err, "connection refused") {
+			if err, ok := r.(error); ok {
+				if s.Contains(err.Error(), "connection refused") {
 					for {
 						config.Stdlog.Println("webasms send ping to DB")
 						err := databasepool.DB.Ping()

@@ -30,8 +30,8 @@ func mmsProcess_g(wg *sync.WaitGroup) {
 	defer func() {
 		if r := recover(); r != nil {
 			config.Stdlog.Println("webamms_g panic 발생 원인 : ", r)
-			if err, ok := r.(string); ok {
-				if s.Contains(err, "connection refused") {
+			if err, ok := r.(error); ok {
+				if s.Contains(err.Error(), "connection refused") {
 					for {
 						config.Stdlog.Println("webamms_g send ping to DB")
 						err := databasepool.DB.Ping()
