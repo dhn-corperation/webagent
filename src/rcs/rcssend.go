@@ -44,10 +44,10 @@ func rcsProcess(wg *sync.WaitGroup) {
 	defer func() {
 		if r := recover(); r != nil {
 			config.Stdlog.Println("rcssend panic 발생 원인 : ", r)
-			if err, ok := r.(string); ok {
-				if s.Contains(err, "connection refused") {
+			if err, ok := r.(error); ok {
+				if s.Contains(err.Error(), "connection refused") {
 					for {
-						config.Stdlog.Println("rcssend send ping to DB")
+						config.Stdlog.Println("nanoit send ping to DB")
 						err := databasepool.DB.Ping()
 						if err == nil {
 							break

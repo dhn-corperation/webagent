@@ -11,14 +11,14 @@ import (
 	"webagent/src/config"
 	"webagent/src/databasepool"
 	"webagent/src/tblreqprocess"
-	"webagent/src/phonemsg"
-	"webagent/src/req2ndprocess"
-	"webagent/src/webamms"
-	"webagent/src/webasms"
-	"webagent/src/webcmms"
-	"webagent/src/webcsms"
-	"webagent/src/rcs"
-	"webagent/src/handler"
+	// "webagent/src/phonemsg"
+	// "webagent/src/req2ndprocess"
+	// "webagent/src/webamms"
+	// "webagent/src/webasms"
+	// "webagent/src/webcmms"
+	// "webagent/src/webcsms"
+	// "webagent/src/rcs"
+	// "webagent/src/handler"
 	
 	"github.com/takama/daemon"
 	"github.com/gin-gonic/gin"
@@ -124,44 +124,44 @@ func resultProc() {
 
 	go tblreqprocess.Process()
 
-	go req2ndprocess.Process()
+	// go req2ndprocess.Process()
 
-	if conf.RCS {
-		config.Stdlog.Println("RCS 사용 - 시작")
-		config.Stdlog.Println("RCS ID :",config.RCSID)
-		config.Stdlog.Println("RCS PW :",config.RCSPW)
+	// if conf.RCS {
+	// 	config.Stdlog.Println("RCS 사용 - 시작")
+	// 	config.Stdlog.Println("RCS ID :",config.RCSID)
+	// 	config.Stdlog.Println("RCS PW :",config.RCSPW)
 		
-		go rcs.ResultProcess()
+	// 	go rcs.ResultProcess()
 		
-		go rcs.RetryProcess()
+	// 	go rcs.RetryProcess()
 		
-		go rcs.Process()
-	}
+	// 	go rcs.Process()
+	// }
 
-	//결과 처리이기 때문에 항상 실행되어 있어야 함.
+	// //결과 처리이기 때문에 항상 실행되어 있어야 함.
 
-	//오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
-	go webcsms.Process()
-	go webcmms.Process()
-	//오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
+	// //오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
+	// go webcsms.Process()
+	// go webcmms.Process()
+	// //오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
 
-	//나노 결과값 조회 및 문자 실패 환불 처리 고루틴
-	go webasms.Process()
-	go webamms.Process()
-	//나노 결과값 조회 및 문자 실패 환불 처리 고루틴
+	// //나노 결과값 조회 및 문자 실패 환불 처리 고루틴
+	// go webasms.Process()
+	// go webamms.Process()
+	// //나노 결과값 조회 및 문자 실패 환불 처리 고루틴
 
-	//나노 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
-	go webasms.Process_g()
-	go webamms.Process_g()
-	//나노 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
+	// //나노 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
+	// go webasms.Process_g()
+	// go webamms.Process_g()
+	// //나노 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
 
-	// go nanoit.Process()
-	// go webaproc.Process()
+	// // go nanoit.Process()
+	// // go webaproc.Process()
 
-	if conf.SMTPHN {
-		config.Stdlog.Println("폰문자 처리 시작")
-		go phonemsg.Process()
-	}
+	// if conf.SMTPHN {
+	// 	config.Stdlog.Println("폰문자 처리 시작")
+	// 	go phonemsg.Process()
+	// }
 
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -170,7 +170,7 @@ func resultProc() {
 		c.String(200, "igenie api")
 	})
 
-	r.GET("/on", handler.SendNano)
+	// r.GET("/on", handler.SendNano)
 
 	r.Run(":3010")
 }
