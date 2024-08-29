@@ -9,17 +9,18 @@ import(
 )
 
 func SendNano(ctx context.Context){
-	select {
-	case <- ctx.Done():
-		return
-	}
 	test := 0
 	for {
-
-		config.Stdlog.Println(test)
-		test++
+		select {
+		case <- ctx.Done():
+			return
+		default:
+			config.Stdlog.Println(test)
+			test++
+		}
 		time.Sleep(5 * time.Second)
 	}
+
 	// uid := c.Query("uid")
 	// sd := c.Query("sd")
 	// uip := c.ClientIP()
