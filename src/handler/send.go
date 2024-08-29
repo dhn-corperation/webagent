@@ -1,7 +1,7 @@
 package handler
 
 import(
-	// "time"
+	"time"
 	// s "strings"
 	"context"
 
@@ -30,6 +30,7 @@ func Resend(ctx context.Context, db *sqlx.DB, target, sd string) {
 				}
 			}
 		}
+		time.Sleep(5 * time.Second)
 	}
 }
 
@@ -39,7 +40,7 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 	
 	var oshotSmsDataList []OshotSmsTable
 	// var oshotMmsDataList []OshotMmsTable
-	var nanoSmsDataList []NanoSmsTable
+	// var nanoSmsDataList []NanoSmsTable
 	// var nanoMmsDataList []NanoSmsTable
 
 	infolog.Println("oshotToNano sms 처리 시작 start dt : ", sd)
@@ -89,7 +90,7 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 	}
 
 	
-	if len(nanoSmsDataList) > 0 {
+	if len(smsUpdateId) > 0 {
 
 		if err != nil {
 			errlog.Println("oshotToNano / SMS_MSG 삽입 실패 / err : ", err)
