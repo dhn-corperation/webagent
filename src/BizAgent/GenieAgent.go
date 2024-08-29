@@ -195,9 +195,6 @@ func resultProc() {
 			})
 		}
 
-		db.SetMaxOpenConns(5)
-		db.SetMaxIdleConns(2)
-
 		parseSd, err := time.Parse("20060102150405", sd)
 		if err != nil {
 			c.JSON(400, gin.H{

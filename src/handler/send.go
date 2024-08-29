@@ -37,93 +37,83 @@ func Resend(ctx context.Context, db *sqlx.DB, target, sd string) {
 func oshotToNano(db *sqlx.DB, sd string) bool {
 	infolog := config.Stdlog
 	errlog := config.Stdlog
-	
+
+	var smsUpdateId []int
 	var oshotSmsDataList []OshotSmsTable
 	// var oshotMmsDataList []OshotMmsTable
 	// var nanoSmsDataList []NanoSmsTable
 	// var nanoMmsDataList []NanoSmsTable
 
-	infolog.Println("oshotToNano sms 처리 시작 start dt : ", sd)
-	err := db.Select(&oshotSmsDataList, "select * from OShotSMS where resend_flag = '0' and InsertDT >= ?", sd)
-	if err != nil {
-		errlog.Println("oshotToNano / OShotSMS 조회 실패 / err : ", err)
-		return false
-	}
-	var smsUpdateId []int
 	tx, err := db.Beginx()
 	if err != nil {
 		errlog.Println("oshotToNano / 트랜잭션 실행 실패 / err : ", err)
 		return false
 	}
-	errlog.Println("여기오냐3")
 
+	infolog.Println("oshotToNano sms 처리 시작 start dt : ", sd)
+	err = tx.Select(&oshotSmsDataList, "select * from OShotSMS where resend_flag = '0' and InsertDT >= ?", sd)
+	if err != nil {
+		errlog.Println("oshotToNano / OShotSMS 조회 실패 / err : ", err)
+		return false
+	}
+	
 	smsInsertQuery := `
 		insert into SMS_MSG(TR_SENDDATE, TR_PHONE, TR_CALLBACK, TR_MSG, TR_IDENTIFICATION_CODE, TR_ETC9, TR_ETC10)
 		values (:TR_SENDDATE, :TR_PHONE, :TR_CALLBACK, :TR_MSG, :TR_IDENTIFICATION_CODE, :TR_ETC9, :TR_ETC10)
 	`
-	for _, smsData := range oshotSmsDataList {
-		mapData := map[string]interface{}{
-			"TR_SENDDATE": smsData.InsertDt,
-			"TR_PHONE": smsData.Receiver,
-			"TR_CALLBACK": smsData.Sender,
-			"TR_MSG": smsData.Msg,
-			"TR_IDENTIFICATION_CODE": "302190001",
-			"TR_ETC9": smsData.MstId,
-			"TR_ETC10": smsData.CbMsgId,
+	if len(oshotSmsDataList) > 0 {
+		for _, smsData := range oshotSmsDataList {
+			mapData := map[string]interface{}{
+				"TR_SENDDATE": smsData.InsertDt,
+				"TR_PHONE": smsData.Receiver,
+				"TR_CALLBACK": smsData.Sender,
+				"TR_MSG": smsData.Msg,
+				"TR_IDENTIFICATION_CODE": "302190001",
+				"TR_ETC9": smsData.MstId,
+				"TR_ETC10": smsData.CbMsgId,
+			}
+
+			_, err := tx.NamedExec(smsInsertQuery, mapData)
+			if err != nil {
+				errlog.Println("oshotToNano / insert 실패 / OShotSMS의 MsgID 값 : ", smsData.MsgId, " / err : ", err)
+			} else {
+				smsUpdateId = append(smsUpdateId, smsData.MsgId)
+			}
 		}
 
-		_, err := tx.NamedExec(smsInsertQuery, mapData)
-		if err != nil {
-			errlog.Println("oshotToNano / insert 실패 / OShotSMS의 MsgID 값 : ", smsData.MsgId, " / err : ", err)
-		} else {
-			smsUpdateId = append(smsUpdateId, smsData.MsgId)
-		}
+		if len(smsUpdateId) > 0 {
+			if err != nil {
+				errlog.Println("oshotToNano / SMS_MSG 삽입 실패 / err : ", err)
+				return false
+			}
 
-		// nanoSmsDataList = append(nanoSmsDataList, NanoSmsTable{
-		// 	SendDate: smsData.InsertDt,
-		// 	Phone: smsData.Receiver,
-		// 	Callback: smsData.Sender,
-		// 	Msg: smsData.Msg,
-		// 	IdentificationCode: "302190001",
-		// 	Etc9: strconv.Itoa(smsData.MstId),
-		// 	Etc10: smsData.CbMsgId,
-		// })
-		errlog.Println("여기오냐4")
-	}
+			smsUpdateQuery, args, err := sqlx.In(`update OShotSMS set resend_flag = '1' where MsgID IN (?)`, smsUpdateId)
+			if err != nil {
+				errlog.Println("oshotToNano / OShotSMS 재발송 flag 변환 Sql 생성 실패 / err : ", err)
+				return false
+			}
 
-	errlog.Println("여기오냐5")
-	if len(smsUpdateId) > 0 {
-		errlog.Println("여기오냐6")
-		if err != nil {
-			errlog.Println("oshotToNano / SMS_MSG 삽입 실패 / err : ", err)
-			return false
-		}
+			smsUpdateQuery = tx.Rebind(smsUpdateQuery)
 
-		smsUpdateQuery, args, err := sqlx.In(`update OShotSMS set resend_flag = '1' where MsgID IN (?)`, smsUpdateId)
-		if err != nil {
-			errlog.Println("oshotToNano / OShotSMS 재발송 flag 변환 Sql 생성 실패 / err : ", err)
-			return false
-		}
+			smsUpdateResult, err := tx.Exec(smsUpdateQuery, args...)
 
-		smsUpdateQuery = tx.Rebind(smsUpdateQuery)
+			if err != nil {
+				errlog.Println("oshotToNano / OShotSMS 재발송 flag 변환 실패 / err : ", err)
+				tx.Rollback()
+				return false
+			}
 
-		smsUpdateResult, err := tx.Exec(smsUpdateQuery, args...)
+			smsUpdateRowCnt, _ := smsUpdateResult.RowsAffected()
+			infolog.Println("oshotToNano sms 처리 끝 업데이트 건수 : ", smsUpdateRowCnt)
 
-		if err != nil {
-			errlog.Println("oshotToNano / OShotSMS 재발송 flag 변환 실패 / err : ", err)
-			tx.Rollback()
-			return false
-		}
-
-		smsUpdateRowCnt, _ := smsUpdateResult.RowsAffected()
-		infolog.Println("oshotToNano sms 처리 끝 업데이트 건수 : ", smsUpdateRowCnt)
-
-		err = tx.Commit()
-		if err != nil {
-			errlog.Println("oshotToNano / sms commit 실패 / err : ", err)
-			return false
+			err = tx.Commit()
+			if err != nil {
+				errlog.Println("oshotToNano / sms commit 실패 / err : ", err)
+				return false
+			}
 		}
 	}
+	
 	
 	return true
 }
