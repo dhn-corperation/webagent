@@ -41,7 +41,7 @@ type OshotMmsTable struct {
 	InsertDt string				`db:"InsertDT"`
 	MstId int					`db:"mst_id"`
 	ProcFlag string				`db:"proc_flag"`
-	CbMsgId string				`db:"cb_msg_id"`
+	CbMsgId string				`db:"cb_msg_Id"`
 	ResendFlag int				`db:"resend_flag"`
 }
 
