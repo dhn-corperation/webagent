@@ -4,7 +4,6 @@ import(
 	// "time"
 	// s "strings"
 	"context"
-	"strconv"
 
 	"webagent/src/config"
 
@@ -47,27 +46,50 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 	err := db.Select(&oshotSmsDataList, "select * from OShotSMS where resend_flag = '0' and InsertDT >= ?", sd)
 	if err != nil {
 		errlog.Println("oshotToNano / OShotSMS 조회 실패 / err : ", err)
+		return false
 	}
 	var smsUpdateId []int
-	for _, smsData := range oshotSmsDataList {
-		nanoSmsDataList = append(nanoSmsDataList, NanoSmsTable{
-			SendDate: smsData.InsertDt,
-			Phone: smsData.Receiver,
-			Callback: smsData.Sender,
-			Msg: smsData.Msg,
-			IdentificationCode: "302190001",
-			Etc9: strconv.Itoa(smsData.MstId),
-			Etc10: smsData.CbMsgId,
-		})
-		smsUpdateId = append(smsUpdateId, smsData.MsgId)
+	tx, err := db.Beginx()
+	if err != nil {
+		errlog.Println("oshotToNano / 트랜잭션 실행 실패 / err : ", err)
+		return false
 	}
 
 	smsInsertQuery := `
 		insert into SMS_MSG(TR_SENDATE, TR_PHONE, TR_CALLBACK, TR_MSG, TR_IDENTIFICATION_CODE, TR_ETC9, TR_ETC10)
-		values (:TR_SENDATE, :TR_PHONE, :TR_CALLBACK, :TR_MSG, :TR_IDENTIFICATION_CODE, :TR_ETC9, :TR_ETC10)
+		values (:TR_SENDDATE, :TR_PHONE, :TR_CALLBACK, :TR_MSG, :TR_IDENTIFICATION_CODE, :TR_ETC9, :TR_ETC10)
 	`
+	for _, smsData := range oshotSmsDataList {
+		mapData := map[string]interface{}{
+			"TR_SENDDATE": smsData.InsertDt,
+			"TR_PHONE": smsData.Receiver,
+			"TR_CALLBACK": smsData.Sender,
+			"TR_MSG": smsData.Msg,
+			"TR_IDENTIFICATION_CODE": "302190001",
+			"TR_ETC9": smsData.MstId,
+			"TR_ETC10": smsData.CbMsgId,
+		}
+
+		_, err := tx.NamedExec(smsInsertQuery, mapData)
+		if err != nil {
+			errlog.Println("oshotToNano / insert 실패 / OShotSMS의 MsgID 값 : ", smsData.MsgId, " / err : ", err)
+		} else {
+			smsUpdateId = append(smsUpdateId, smsData.MsgId)
+		}
+
+		// nanoSmsDataList = append(nanoSmsDataList, NanoSmsTable{
+		// 	SendDate: smsData.InsertDt,
+		// 	Phone: smsData.Receiver,
+		// 	Callback: smsData.Sender,
+		// 	Msg: smsData.Msg,
+		// 	IdentificationCode: "302190001",
+		// 	Etc9: strconv.Itoa(smsData.MstId),
+		// 	Etc10: smsData.CbMsgId,
+		// })
+	}
+
+	
 	if len(nanoSmsDataList) > 0 {
-		_, err = db.NamedExec(smsInsertQuery, nanoSmsDataList)
 
 		if err != nil {
 			errlog.Println("oshotToNano / SMS_MSG 삽입 실패 / err : ", err)
@@ -80,16 +102,24 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 			return false
 		}
 
-		smsUpdateQuery = db.Rebind(smsUpdateQuery)
+		smsUpdateQuery = tx.Rebind(smsUpdateQuery)
 
-		smsUpdateResult, err := db.Exec(smsUpdateQuery, args...)
+		smsUpdateResult, err := tx.Exec(smsUpdateQuery, args...)
 
 		if err != nil {
 			errlog.Println("oshotToNano / OShotSMS 재발송 flag 변환 실패 / err : ", err)
+			tx.Rollback()
+			return false
 		}
 
 		smsUpdateRowCnt, _ := smsUpdateResult.RowsAffected()
 		infolog.Println("oshotToNano sms 처리 끝 업데이트 건수 : ", smsUpdateRowCnt)
+
+		err = tx.Commit()
+		if err != nil {
+			errlog.Println("oshotToNano / sms commit 실패 / err : ", err)
+			return false
+		}
 	}
 	
 	return true
