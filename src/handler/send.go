@@ -130,32 +130,29 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 	
 	if len(oshotMmsDataList) > 0 {
 		for _, mmsData := range oshotMmsDataList {
+			fc := 0
+			if len(mmsData.FilePath1.String) > 0 {
+				fc++
+			}
+			if len(mmsData.FilePath2.String) > 0 {
+				fc++
+			}
+			if len(mmsData.FilePath3.String) > 0 {
+				fc++
+			}
 			mapData := map[string]interface{}{
 				"SUBJECT": mmsData.Subject,
 				"PHONE": mmsData.Receiver,
 				"CALLBACK": mmsData.Sender,
 				"REQDATE": mmsData.InsertDt,
 				"MSG": mmsData.Msg,
+				"FILE_CNT": fc,
+				"FILE_PATH1": mmsData.FilePath1.String,
+				"FILE_PATH2": mmsData.FilePath2.String,
+				"FILE_PATH3": mmsData.FilePath3.String,
 				"IDENTIFICATION_CODE": "302190001",
 				"ETC9": mmsData.MstId,
 				"ETC10": mmsData.CbMsgId,
-			}
-
-			fc := 0
-			if len(mmsData.FilePath1.String) > 0 {
-				mapData["FILE_PATH1"] = mmsData.FilePath1.String
-				fc++
-			}
-			if len(mmsData.FilePath2.String) > 0 {
-				mapData["FILE_PATH2"] = mmsData.FilePath2.String
-				fc++
-			}
-			if len(mmsData.FilePath3.String) > 0 {
-				mapData["FILE_PATH3"] = mmsData.FilePath3.String
-				fc++
-			}
-			if fc > 0 {
-				mapData["FILE_CNT"] = fc
 			}
 
 			_, err := tx.NamedExec(mmsInsertQuery, mapData)
