@@ -56,7 +56,7 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 	}
 
 	smsInsertQuery := `
-		insert into SMS_MSG(TR_SENDATE, TR_PHONE, TR_CALLBACK, TR_MSG, TR_IDENTIFICATION_CODE, TR_ETC9, TR_ETC10)
+		insert into SMS_MSG(TR_SENDDATE, TR_PHONE, TR_CALLBACK, TR_MSG, TR_IDENTIFICATION_CODE, TR_ETC9, TR_ETC10)
 		values (:TR_SENDDATE, :TR_PHONE, :TR_CALLBACK, :TR_MSG, :TR_IDENTIFICATION_CODE, :TR_ETC9, :TR_ETC10)
 	`
 	for _, smsData := range oshotSmsDataList {
