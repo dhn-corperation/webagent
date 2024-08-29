@@ -55,6 +55,7 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 		errlog.Println("oshotToNano / 트랜잭션 실행 실패 / err : ", err)
 		return false
 	}
+	errlog.Println("여기오냐3")
 
 	smsInsertQuery := `
 		insert into SMS_MSG(TR_SENDDATE, TR_PHONE, TR_CALLBACK, TR_MSG, TR_IDENTIFICATION_CODE, TR_ETC9, TR_ETC10)
@@ -87,11 +88,12 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 		// 	Etc9: strconv.Itoa(smsData.MstId),
 		// 	Etc10: smsData.CbMsgId,
 		// })
+		errlog.Println("여기오냐4")
 	}
 
-	
+	errlog.Println("여기오냐5")
 	if len(smsUpdateId) > 0 {
-
+		errlog.Println("여기오냐6")
 		if err != nil {
 			errlog.Println("oshotToNano / SMS_MSG 삽입 실패 / err : ", err)
 			return false
