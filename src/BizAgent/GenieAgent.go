@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 	"context"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -23,6 +24,7 @@ import (
 	
 	"github.com/takama/daemon"
 	"github.com/gin-gonic/gin"
+	"github.com/jmoiron/sqlx"
 )
 
 const (
@@ -175,22 +177,53 @@ func resultProc() {
 
 	r.GET("/on", func(c *gin.Context) {
 		target := c.Query("target")
-		ctx, cancel := context.WithCancel(context.Background())
-		if target == "nano" {
-			contextCancel[target] = cancel
-			go handler.SendNano(ctx)
-		} else if target == "oshot" {
-			contextCancel[target] = cancel
-			//TODO : 오샷으로 넘기는 func
-		} else {
-			c.JSON(404, gin.H{
+		sd := c.Query("sd")
+
+		if len(contextCancel) > 0 {
+			c.JSON(400, gin.H{
 				"code":    "error",
-				"message": "target이 잘못 되었습니다.",
+				"message": "이미 실행중입니다.",
+			})
+		}
+
+		db, err := sqlx.Connect(config.Conf.DB, config.Conf.DBURL)
+		if err != nil {
+			config.Stdlog.Println("DB 접속 불가")
+			c.JSON(500, gin.H{
+				"code":    "error",
+				"message": "DB 연결이 되지 않습니다.",
+			})
+		}
+
+		db.SetMaxOpenConns(5)
+		db.SetMaxIdleConns(2)
+
+		parseSd, err := time.Parse("20060102150405", sd)
+		if err != nil {
+			c.JSON(400, gin.H{
+				"code":    "error",
+				"message": "잘못된 시간형식 입니다.",
+				"sd":  sd,
+			})
+		}
+		formattedSd := parseSd.Format("2006-01-02 15:04:05")
+
+		ctx, cancel := context.WithCancel(context.Background())
+
+		if target == "nano" || target == "oshot" {
+			contextCancel[target] = cancel
+			go handler.Resend(ctx, db, target, formattedSd)
+		} else {
+			c.JSON(400, gin.H{
+				"code":    "error",
+				"message": "잘못된 타겟 입니다.",
+				"target": target,
 			})
 		}
 		c.JSON(200, gin.H{
 			"code":    "ok",
-			"message": target + "이 정상적으로 시작되었습니다.",
+			"message":  "'시작' 신호가 정상적으로 되었습니다 / 타겟 : " + target,
+			"sd": sd,
 		})
 	})
 
@@ -202,11 +235,11 @@ func resultProc() {
 			delete(contextCancel, target)
 			c.JSON(200, gin.H{
 				"code":    "ok",
-				"message": target + "이 정상적으로 종료되었습니다.",
+				"message": "'종료' 신호가 정상적으로 전달되었습니다 / 타겟 : " + target,
 			})
 		}
 
 	})
 
-	r.Run(":3010")
+	r.Run(":3030")
 }
