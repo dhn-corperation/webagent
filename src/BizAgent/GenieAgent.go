@@ -36,6 +36,8 @@ var dependencies = []string{"GenieAgent.service"}
 
 var resultTable string
 
+var cc context.CancelFunc
+
 type Service struct {
 	daemon.Daemon
 }
@@ -127,7 +129,9 @@ func resultProc() {
 	config.Stdlog.Println(conf)
 	config.Stdlog.Println("---------------------------------------")
 
-	go tblreqprocess.Process()
+	ctx, cancel := context.WithCancel(context.Background())
+	cc = cancel
+	go tblreqprocess.Process(ctx)
 
 	go req2ndprocess.Process()
 
@@ -236,6 +240,17 @@ func resultProc() {
 			})
 		}
 
+	})
+
+	r.GET("/allstop", func(c *gin.Context){
+		uid := c.Query("uid")
+		if uid == "dhn" {
+			cc()
+			cc = nil
+			c.String(200, "전체 종료 성공")
+		} else {
+			c.String(400, "전체 종료 실패")
+		}
 	})
 
 	r.Run(":3030")
