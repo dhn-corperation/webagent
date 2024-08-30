@@ -313,6 +313,7 @@ func nanoToOshot(db *sqlx.DB, sd string) bool {
 				"File_Path1": mmsData.FilePath1.String,
 				"File_Path2": mmsData.FilePath2.String,
 				"File_Path3": mmsData.FilePath3.String,
+				"InsertDT": mmsData.ReqDate,
 				"mst_id": mmsData.Etc10.String,
 				"cb_msg_Id": mmsData.Etc9.String,
 			}

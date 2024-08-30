@@ -234,6 +234,7 @@ func resultProc() {
 		}
 		rcc()
 		rcc = nil
+		config.Stdlog.Println("'종료' 신호가 정상적으로 전달되었습니다")
 		c.JSON(200, gin.H{
 			"code":    "ok",
 			"message": "'종료' 신호가 정상적으로 전달되었습니다",

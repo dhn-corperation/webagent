@@ -98,7 +98,7 @@ type NanoMmsTable struct {
 	FilePath5 sql.NullString			`db:"FILE_PATH5"`
 	FilePath5Siz sql.NullInt64 			`db:"FILE_PATH5_SIZ"`
 	ExpireTime sql.NullString			`db:"EXPIRETIME"`
-	SendDate sql.NullString				`db:"SENDDATE"`
+	SentDate sql.NullString				`db:"SENTDATE"`
 	RsltDate sql.NullString				`db:"RSLTDATE"`
 	ReportDate sql.NullString			`db:"REPORTDATE"`
 	TerminatedDate sql.NullString		`db:"TERMINATEDDATE"`
