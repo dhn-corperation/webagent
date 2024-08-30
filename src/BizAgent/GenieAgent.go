@@ -13,7 +13,6 @@ import (
 	"webagent/src/config"
 	"webagent/src/databasepool"
 	"webagent/src/tblreqprocess"
-	"webagent/src/phonemsg"
 	"webagent/src/req2ndprocess"
 	"webagent/src/webamms"
 	"webagent/src/webasms"
@@ -131,8 +130,8 @@ func resultProc() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cc = cancel
-	go tblreqprocess.Process(ctx)
 
+	go tblreqprocess.Process(ctx)
 	go req2ndprocess.Process(ctx)
 
 	if conf.RCS {
@@ -141,36 +140,29 @@ func resultProc() {
 		config.Stdlog.Println("RCS PW :",config.RCSPW)
 		
 		go rcs.ResultProcess(ctx)
-		
 		go rcs.RetryProcess(ctx)
-		
 		go rcs.Process(ctx)
 	}
 
 	//결과 처리이기 때문에 항상 실행되어 있어야 함.
 
 	//오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
+	config.Stdlog.Println("오샷 결과 처리 프로세스 - 시작")
 	go webcsms.Process(ctx)
 	go webcmms.Process(ctx)
 	//오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
 
 	//나노 결과값 조회 및 문자 실패 환불 처리 고루틴
+	config.Stdlog.Println("나노(일반망) 결과 처리 프로세스 - 시작")
 	go webasms.Process(ctx)
 	go webamms.Process(ctx)
 	//나노 결과값 조회 및 문자 실패 환불 처리 고루틴
 
 	//나노 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
+	config.Stdlog.Println("나노(저가망) 결과 처리 프로세스 - 시작")
 	go webasms.Process_g(ctx)
 	go webamms.Process_g(ctx)
 	//나노 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
-
-	// go nanoit.Process()
-	// go webaproc.Process()
-
-	if conf.SMTPHN {
-		config.Stdlog.Println("폰문자 처리 시작")
-		go phonemsg.Process(ctx)
-	}
 
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -239,12 +231,20 @@ func resultProc() {
 				"message": "'종료' 신호가 정상적으로 전달되었습니다 / 타겟 : " + target,
 			})
 		}
+	})
 
+	r.GET("/list", func(c *gin.Context){
+		if len(contextCancel) > 0 {
+			c.String(200, "1")
+		} else {
+			c.String(200, "0")
+		}
 	})
 
 	r.GET("/allstop", func(c *gin.Context){
 		uid := c.Query("uid")
 		if uid == "dhn" {
+			config.Stdlog.Println("전체 종료 시작")
 			cc()
 			cc = nil
 			c.String(200, "전체 종료 성공")

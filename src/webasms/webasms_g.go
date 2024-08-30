@@ -22,7 +22,7 @@ func Process_g(ctx context.Context) {
 		select {
 		case <- ctx.Done():
 			time.Sleep(20 * time.Second)
-			config.Stdlog.Println("webasms 정상적으로 종료되었습니다.")
+			config.Stdlog.Println("webasms_g 정상적으로 종료되었습니다.")
 			return
 		default:
 			wg.Add(1)
