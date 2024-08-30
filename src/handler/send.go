@@ -210,9 +210,9 @@ func nanoToOshot(db *sqlx.DB, sd string) bool {
 	errlog := config.Stdlog
 
 	var smsUpdateId []int
-	var mmsUpdateId []int
+	var mmsUpdateId []string
 	var nanoSmsDataList []NanoSmsTable
-	var nanoMmsDataList []NanoSmsTable
+	var nanoMmsDataList []NanoMmsTable
 
 	tx, err := db.Beginx()
 	if err != nil {
@@ -301,19 +301,11 @@ func nanoToOshot(db *sqlx.DB, sd string) bool {
 	`
 	
 	if len(nanoMmsDataList) > 0 {
+		groupId := "resend"+time.Now().Format("20060102150405")
 		for _, mmsData := range nanoMmsDataList {
-			fc := 0
-			if len(mmsData.FilePath1.String) > 0 {
-				fc++
-			}
-			if len(mmsData.FilePath2.String) > 0 {
-				fc++
-			}
-			if len(mmsData.FilePath3.String) > 0 {
-				fc++
-			}
+			
 			mapData := map[string]interface{}{
-				"MsgGroupID": ,
+				"MsgGroupID": groupId,
 				"Sender": mmsData.Callback,
 				"Receiver": mmsData.Phone,
 				"Subject": mmsData.Subject,
@@ -321,15 +313,15 @@ func nanoToOshot(db *sqlx.DB, sd string) bool {
 				"File_Path1": mmsData.FilePath1.String,
 				"File_Path2": mmsData.FilePath2.String,
 				"File_Path3": mmsData.FilePath3.String,
-				"mst_id": mmsData.Etc10,
-				"cb_msg_Id": mmsData.Etc9,
+				"mst_id": mmsData.Etc10.String,
+				"cb_msg_Id": mmsData.Etc9.String,
 			}
 
 			_, err := tx.NamedExec(mmsInsertQuery, mapData)
 			if err != nil {
-				errlog.Println("nanoToOshot / insert 실패 / "+oshotMmsTableName+"의 MsgID 값 : ", mmsData.MsgId, " / err : ", err)
+				errlog.Println("nanoToOshot / insert 실패 / "+oshotMmsTableName+"의 MsgID 값 : ", mmsData.MsgKey, " / err : ", err)
 			} else {
-				mmsUpdateId = append(mmsUpdateId, mmsData.MsgId)
+				mmsUpdateId = append(mmsUpdateId, mmsData.MsgKey)
 			}
 		}
 

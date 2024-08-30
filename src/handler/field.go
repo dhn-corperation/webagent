@@ -109,14 +109,14 @@ type NanoMmsTable struct {
 	Id sql.NullString					`db:"ID"`
 	Post sql.NullString					`db:"POST"`
 	IdentificationCode sql.NullString	`db:"IDENTIFICATION_CODE"`
-	ETC1 sql.NullString					`db:"ETC1"`
-	ETC2 sql.NullString					`db:"ETC2"`
-	ETC3 sql.NullString					`db:"ETC3"`
-	ETC4 sql.NullString					`db:"ETC4"`
-	ETC5 sql.NullString					`db:"ETC5"`
-	ETC6 sql.NullString					`db:"ETC6"`
-	ETC7 sql.NullString					`db:"ETC7"`
-	ETC8 sql.NullString					`db:"ETC8"`
-	ETC9 sql.NullString					`db:"ETC9"`
-	ETC10 sql.NullString				`db:"ETC10"`
+	Etc1 sql.NullString					`db:"ETC1"`
+	Etc2 sql.NullString					`db:"ETC2"`
+	Etc3 sql.NullString					`db:"ETC3"`
+	Etc4 sql.NullString					`db:"ETC4"`
+	Etc5 sql.NullString					`db:"ETC5"`
+	Etc6 sql.NullString					`db:"ETC6"`
+	Etc7 sql.NullString					`db:"ETC7"`
+	Etc8 sql.NullString					`db:"ETC8"`
+	Etc9 sql.NullString					`db:"ETC9"`
+	Etc10 sql.NullString				`db:"ETC10"`
 }
