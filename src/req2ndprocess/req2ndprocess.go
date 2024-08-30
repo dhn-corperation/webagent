@@ -7,16 +7,23 @@ import (
 	"webagent/src/databasepool"
 	s "strings"
 	"time"
+	"context"
 )
 
-func Process() {
+func Process(ctx context.Context) {
 	var wg sync.WaitGroup
 	for {
-		wg.Add(1)
-		go resProcess(&wg)
-		wg.Wait()
+		select {
+		case <- ctx.Done():
+			time.Sleep(20 * time.Second)
+			config.Stdlog.Println("req2ndprocess 정상적으로 종료되었습니다.")
+			return
+		default:
+			wg.Add(1)
+			go resProcess(&wg)
+			wg.Wait()
+		}
 	}
-
 }
 
 func resProcess(wg *sync.WaitGroup) {

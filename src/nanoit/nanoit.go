@@ -11,20 +11,27 @@ import (
 	"regexp"
 	s "strings"
 	"sync"
+	"context"
 
-	//	"time"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func Process() {
+func Process(ctx context.Context) {
 	var wg sync.WaitGroup
 	for {
-		wg.Add(1)
-		go nanoProcess(&wg)
-		wg.Wait()
+		select {
+		case <- ctx.Done():
+			time.Sleep(20 * time.Second)
+			config.Stdlog.Println("nanoit 정상적으로 종료되었습니다.")
+			return
+		default:
+			wg.Add(1)
+			go nanoProcess(&wg)
+			wg.Wait()
+		}
 	}
-
 }
 
 func nanoProcess(wg *sync.WaitGroup) {

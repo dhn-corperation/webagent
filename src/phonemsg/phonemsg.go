@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 	"fmt"
+	"context"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -34,14 +35,20 @@ type MsgJson struct {
 var url = "http://66.232.143.52/apis/pms/send"
 // var url = "http://api.martok.co.kr/apis/pms/send"
 
-func Process() {
+func Process(ctx context.Context) {
 	var wg sync.WaitGroup
 	for {
-		wg.Add(1)
-		go phnProcess(&wg)
-		wg.Wait()
+		select {
+		case <- ctx.Done():
+			time.Sleep(20 * time.Second)
+			config.Stdlog.Println("phonemsg 정상적으로 종료되었습니다.")
+			return
+		default:
+			wg.Add(1)
+			go phnProcess(&wg)
+			wg.Wait()
+		}
 	}
-
 }
 
 func phnProcess(wg *sync.WaitGroup) {

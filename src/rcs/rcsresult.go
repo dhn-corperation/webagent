@@ -18,6 +18,7 @@ import (
 
 	"sync"
 	"time"
+	"context"
 )
 
 var RToken string
@@ -25,12 +26,19 @@ var RToken2 string
 var Interval int32 = 1000
 var Interval2 int32 = 60000
 
-func ResultProcess() {
+func ResultProcess(ctx context.Context) {
 	var wg sync.WaitGroup
 	for {
-		wg.Add(1)
-		go resultProcess(&wg)
-		wg.Wait()
+		select {
+		case <- ctx.Done():
+			time.Sleep(20 * time.Second)
+			config.Stdlog.Println("rcsresult_ResultProcess 정상적으로 종료되었습니다.")
+			return
+		default:
+			wg.Add(1)
+			go resultProcess(&wg)
+			wg.Wait()
+		}
 	}
 }
 
@@ -516,13 +524,20 @@ and rmr.msg_group_id = ?
 	time.Sleep(time.Millisecond * time.Duration(Interval))
 }
 
-func RetryProcess() {
-
+func RetryProcess(ctx context.Context) {
 	var wg sync.WaitGroup
 	for {
-		wg.Add(1)
-		go retryProc(&wg)
-		wg.Wait()
+		select {
+		case <- ctx.Done():
+			time.Sleep(20 * time.Second)
+			config.Stdlog.Println("rcsresult_RetryProcess 정상적으로 종료되었습니다.")
+			return
+		default:
+			wg.Add(1)
+			go retryProc(&wg)
+			wg.Wait()
+		}
+		
 	}
 }
 

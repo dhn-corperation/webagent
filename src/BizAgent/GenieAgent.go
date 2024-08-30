@@ -133,35 +133,35 @@ func resultProc() {
 	cc = cancel
 	go tblreqprocess.Process(ctx)
 
-	go req2ndprocess.Process()
+	go req2ndprocess.Process(ctx)
 
 	if conf.RCS {
 		config.Stdlog.Println("RCS 사용 - 시작")
 		config.Stdlog.Println("RCS ID :",config.RCSID)
 		config.Stdlog.Println("RCS PW :",config.RCSPW)
 		
-		go rcs.ResultProcess()
+		go rcs.ResultProcess(ctx)
 		
-		go rcs.RetryProcess()
+		go rcs.RetryProcess(ctx)
 		
-		go rcs.Process()
+		go rcs.Process(ctx)
 	}
 
 	//결과 처리이기 때문에 항상 실행되어 있어야 함.
 
 	//오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
-	go webcsms.Process()
-	go webcmms.Process()
+	go webcsms.Process(ctx)
+	go webcmms.Process(ctx)
 	//오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
 
 	//나노 결과값 조회 및 문자 실패 환불 처리 고루틴
-	go webasms.Process()
-	go webamms.Process()
+	go webasms.Process(ctx)
+	go webamms.Process(ctx)
 	//나노 결과값 조회 및 문자 실패 환불 처리 고루틴
 
 	//나노 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
-	go webasms.Process_g()
-	go webamms.Process_g()
+	go webasms.Process_g(ctx)
+	go webamms.Process_g(ctx)
 	//나노 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
 
 	// go nanoit.Process()
@@ -169,7 +169,7 @@ func resultProc() {
 
 	if conf.SMTPHN {
 		config.Stdlog.Println("폰문자 처리 시작")
-		go phonemsg.Process()
+		go phonemsg.Process(ctx)
 	}
 
 	r := gin.New()
