@@ -35,6 +35,8 @@ var dependencies = []string{"GenieAgent.service"}
 
 var resultTable string
 
+var rcc context.CancelFunc
+
 var cc context.CancelFunc
 
 type Service struct {
@@ -120,7 +122,6 @@ func main() {
 }
 
 func resultProc() {
-	contextCancel := map[string]interface{}{}
 
 	config.Stdlog.Println("GenieAgent 시작")
 	config.Stdlog.Println("---------------------------------------")
@@ -175,7 +176,7 @@ func resultProc() {
 		target := c.Query("target")
 		sd := c.Query("sd")
 
-		if len(contextCancel) > 0 {
+		if rcc != nil {
 			c.JSON(400, gin.H{
 				"code":    "error",
 				"message": "이미 실행중입니다.",
@@ -206,7 +207,7 @@ func resultProc() {
 
 		if target == "nano" || target == "oshot" {
 			ctx, cancel := context.WithCancel(context.Background())
-			contextCancel[target] = cancel
+			rcc = cancel
 			go handler.Resend(ctx, db, target, formattedSd)
 		} else {
 			c.JSON(400, gin.H{
@@ -224,20 +225,23 @@ func resultProc() {
 	})
 
 	r.GET("/resendstop", func(c *gin.Context){
-		target := c.Query("target")
-		if target == "nano" || target == "oshot" {
-			cancel := contextCancel[target].(context.CancelFunc)
-			cancel()
-			delete(contextCancel, target)
-			c.JSON(200, gin.H{
-				"code":    "ok",
-				"message": "'종료' 신호가 정상적으로 전달되었습니다 / 타겟 : " + target,
+		if rcc == nil {
+			c.JSON(400, gin.H{
+				"code":    "error",
+				"message":  "가동중인 재발송이 없습니다",
 			})
+			return
 		}
+		rcc()
+		rcc = nil
+		c.JSON(200, gin.H{
+			"code":    "ok",
+			"message": "'종료' 신호가 정상적으로 전달되었습니다",
+		})
 	})
 
 	r.GET("/resendlist", func(c *gin.Context){
-		if len(contextCancel) > 0 {
+		if rcc != nil {
 			c.String(200, "1")
 		} else {
 			c.String(200, "0")
