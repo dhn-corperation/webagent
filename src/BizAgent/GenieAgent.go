@@ -180,6 +180,7 @@ func resultProc() {
 				"code":    "error",
 				"message": "이미 실행중입니다.",
 			})
+			return
 		}
 
 		db, err := sqlx.Connect(config.Conf.DB, config.Conf.DBURL)
@@ -189,6 +190,7 @@ func resultProc() {
 				"code":    "error",
 				"message": "DB 연결이 되지 않습니다.",
 			})
+			return
 		}
 
 		parseSd, err := time.Parse("20060102150405", sd)
@@ -198,12 +200,12 @@ func resultProc() {
 				"message": "잘못된 시간형식 입니다.",
 				"sd":  sd,
 			})
+			return
 		}
 		formattedSd := parseSd.Format("2006-01-02 15:04:05")
 
-		ctx, cancel := context.WithCancel(context.Background())
-
 		if target == "nano" || target == "oshot" {
+			ctx, cancel := context.WithCancel(context.Background())
 			contextCancel[target] = cancel
 			go handler.Resend(ctx, db, target, formattedSd)
 		} else {
@@ -212,6 +214,7 @@ func resultProc() {
 				"message": "잘못된 타겟 입니다.",
 				"target": target,
 			})
+			return
 		}
 		c.JSON(200, gin.H{
 			"code":    "ok",
