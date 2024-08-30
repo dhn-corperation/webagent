@@ -171,7 +171,7 @@ func resultProc() {
 		c.String(200, "igenie api")
 	})
 
-	r.GET("/on", func(c *gin.Context) {
+	r.GET("/resendrun", func(c *gin.Context) {
 		target := c.Query("target")
 		sd := c.Query("sd")
 
@@ -220,7 +220,7 @@ func resultProc() {
 		})
 	})
 
-	r.GET("/off", func(c *gin.Context){
+	r.GET("/resendstop", func(c *gin.Context){
 		target := c.Query("target")
 		if target == "nano" || target == "oshot" {
 			cancel := contextCancel[target].(context.CancelFunc)
@@ -233,7 +233,7 @@ func resultProc() {
 		}
 	})
 
-	r.GET("/list", func(c *gin.Context){
+	r.GET("/resendlist", func(c *gin.Context){
 		if len(contextCancel) > 0 {
 			c.String(200, "1")
 		} else {
