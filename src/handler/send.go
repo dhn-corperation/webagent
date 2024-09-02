@@ -27,12 +27,16 @@ func Resend(ctx context.Context, db *sqlx.DB, target, sd string) {
 			return
 		default:
 			config.Stdlog.Println("대기 발송 전환 루프 시작 / 타겟 : " + target)
-			if target == "nano" {
+			if target == "oshot" {
 				if !oshotToNano(db, sd) {
 					ctx.Done()
 				}
-			} else if target == "oshot" {
+			} else if target == "nano" {
 				if !nanoToOshot(db, sd) {
+					ctx.Done()
+				}
+			} else if target == "nano_g" {
+				if !nanoLowToOshot(db, sd) {
 					ctx.Done()
 				}
 			}

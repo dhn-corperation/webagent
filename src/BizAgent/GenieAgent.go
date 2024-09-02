@@ -205,7 +205,7 @@ func resultProc() {
 		}
 		formattedSd := parseSd.Format("2006-01-02 15:04:05")
 
-		if target == "nano" || target == "oshot" {
+		if target == "nano" || target == "oshot" || target == "nano_g" {
 			ctx, cancel := context.WithCancel(context.Background())
 			rcc = cancel
 			go handler.Resend(ctx, db, target, formattedSd)
