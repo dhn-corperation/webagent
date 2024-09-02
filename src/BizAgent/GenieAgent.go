@@ -169,7 +169,13 @@ func resultProc() {
 	r.Use(gin.Recovery())
 
 	r.GET("/", func(c *gin.Context) {
-		c.String(200, "igenie api")
+		c.String(200, `----------------------------------------------------------------
+지니 API
+/resendrun?target=XXX&sd=XXXXXXXXXXXXXX		description : 임시 재발송
+/resendstop?uid=XXXX 						description : 임시 재발송 종료
+/resendlist 								description : 임시 재발송 리스트
+/allstop?uid=XXXXXX 						description : 발송 전체 종료
+----------------------------------------------------------------`)
 	})
 
 	r.GET("/resendrun", func(c *gin.Context) {
@@ -179,7 +185,7 @@ func resultProc() {
 		if rcc != nil {
 			c.JSON(400, gin.H{
 				"code":    "error",
-				"message": "이미 실행중입니다.",
+				"message": "이미 실행중입니다",
 			})
 			return
 		}
@@ -189,7 +195,7 @@ func resultProc() {
 			config.Stdlog.Println("DB 접속 불가")
 			c.JSON(500, gin.H{
 				"code":    "error",
-				"message": "DB 연결이 되지 않습니다.",
+				"message": "DB 연결이 되지 않습니다",
 			})
 			return
 		}
@@ -198,7 +204,7 @@ func resultProc() {
 		if err != nil {
 			c.JSON(400, gin.H{
 				"code":    "error",
-				"message": "잘못된 시간형식 입니다.",
+				"message": "잘못된 시간형식 입니다",
 				"sd":  sd,
 			})
 			return
@@ -212,7 +218,7 @@ func resultProc() {
 		} else {
 			c.JSON(400, gin.H{
 				"code":    "error",
-				"message": "잘못된 타겟 입니다.",
+				"message": "잘못된 타겟 입니다",
 				"target": target,
 			})
 			return
@@ -225,19 +231,26 @@ func resultProc() {
 	})
 
 	r.GET("/resendstop", func(c *gin.Context){
-		if rcc == nil {
-			c.JSON(400, gin.H{
-				"code":    "error",
-				"message":  "가동중인 재발송이 없습니다",
+		uid := c.Query("uid")
+		if uid == "dhn" {
+			if rcc == nil {
+				c.JSON(400, gin.H{
+					"code":    "error",
+					"message":  "가동중인 재발송이 없습니다",
+				})
+				return
+			}
+			rcc()
+			rcc = nil
+			config.Stdlog.Println("'종료' 신호가 정상적으로 전달되었습니다")
+			c.JSON(200, gin.H{
+				"code":    "ok",
+				"message": "'종료' 신호가 정상적으로 전달되었습니다",
 			})
-			return
 		}
-		rcc()
-		rcc = nil
-		config.Stdlog.Println("'종료' 신호가 정상적으로 전달되었습니다")
-		c.JSON(200, gin.H{
-			"code":    "ok",
-			"message": "'종료' 신호가 정상적으로 전달되었습니다",
+		c.JSON(400, gin.H{
+			"code":    "error",
+			"message": "종료할 수 없습니다",
 		})
 	})
 
