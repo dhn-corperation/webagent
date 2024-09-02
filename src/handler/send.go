@@ -15,6 +15,8 @@ const (
 	oshotMmsTableName = "OShotMMS"
 	nanoSmsTableName = "SMS_MSG"
 	nanoMmsTableName = "MMS_MSG"
+	nanoLowSmsTableName = "SMS_MSG_G"
+	nanoLowMmsTableName = "MMS_MSG_G"
 )
 
 func Resend(ctx context.Context, db *sqlx.DB, target, sd string) {
@@ -320,14 +322,14 @@ func nanoToOshot(db *sqlx.DB, sd string) bool {
 
 			_, err := tx.NamedExec(mmsInsertQuery, mapData)
 			if err != nil {
-				errlog.Println("nanoToOshot / insert 실패 / "+oshotMmsTableName+"의 MsgID 값 : ", mmsData.MsgKey, " / err : ", err)
+				errlog.Println("nanoToOshot / insert 실패 / "+nanoMmsTableName+"의 MSGKEY 값 : ", mmsData.MsgKey, " / err : ", err)
 			} else {
 				mmsUpdateId = append(mmsUpdateId, mmsData.MsgKey)
 			}
 		}
 
 		if len(mmsUpdateId) > 0 {
-			mmsUpdateQuery, args, err := sqlx.In(`update `+oshotMmsTableName+` set resend_flag = '1' where MsgID IN (?)`, mmsUpdateId)
+			mmsUpdateQuery, args, err := sqlx.In(`update `+nanoMmsTableName+` set ETC7 = '1' where MSGKEY IN (?)`, mmsUpdateId)
 			if err != nil {
 				errlog.Println("nanoToOshot / OShotMMS 재발송 flag 변환 Sql 생성 실패 / err : ", err)
 				return false
@@ -338,7 +340,7 @@ func nanoToOshot(db *sqlx.DB, sd string) bool {
 			mmsUpdateResult, err := tx.Exec(mmsUpdateQuery, args...)
 
 			if err != nil {
-				errlog.Println("nanoToOshot / ", oshotMmsTableName, " 재발송 flag 변환 실패 / err : ", err)
+				errlog.Println("nanoToOshot / ", nanoMmsTableName, " 재발송 flag 변환 실패 / err : ", err)
 				tx.Rollback()
 				return false
 			}
@@ -355,6 +357,162 @@ func nanoToOshot(db *sqlx.DB, sd string) bool {
 		}
 	} else {
 		infolog.Println("nanoToOshot mms 처리 끝 / sd :", sd, " / 업데이트 건수 : 0")
+	}
+	
+	
+	return true
+}
+
+func nanoLowToOshot(db *sqlx.DB, sd string) bool {
+	infolog := config.Stdlog
+	errlog := config.Stdlog
+
+	var smsUpdateId []int
+	var mmsUpdateId []string
+	var nanoSmsDataList []NanoSmsTable
+	var nanoMmsDataList []NanoMmsTable
+
+	tx, err := db.Beginx()
+	if err != nil {
+		errlog.Println("nanoLowToOshot / sms 트랜잭션 실행 실패 / err : ", err)
+		return false
+	}
+
+	infolog.Println("nanoLowToOshot sms 처리 시작 / sd : ", sd)
+	err = tx.Select(&nanoSmsDataList, "select * from "+nanoLowSmsTableName+" where TR_ETC7 is null and TR_SENDDATE >= ?", sd)
+	if err != nil {
+		errlog.Println("nanoLowToOshot / ", nanoLowSmsTableName, " 조회 실패 / err : ", err)
+		return false
+	}
+	
+	smsInsertQuery := `
+		insert into `+oshotSmsTableName+`(Sender, Receiver, Msg, InsertDT, mst_id, cb_msg_id)
+		values (:Sender, :Receiver, :Msg, :InsertDT, :mst_id, :cb_msg_id)
+	`
+
+	if len(nanoSmsDataList) > 0 {
+		for _, smsData := range nanoSmsDataList {
+			mapData := map[string]interface{}{
+				"Sender": smsData.Callback,
+				"Receiver": smsData.Phone,
+				"Msg": smsData.Msg,
+				"InsertDT": smsData.SendDate,
+				"mst_id": smsData.Etc10,
+				"cb_msg_id": smsData.Etc9,
+			}
+
+			_, err := tx.NamedExec(smsInsertQuery, mapData)
+			if err != nil {
+				errlog.Println("nanoLowToOshot / insert 실패 / ", nanoLowSmsTableName, "의 MsgID 값 : ", smsData.Num, " / err : ", err)
+			} else {
+				smsUpdateId = append(smsUpdateId, smsData.Num)
+			}
+		}
+
+		if len(smsUpdateId) > 0 {
+			smsUpdateQuery, args, err := sqlx.In(`update `+nanoLowSmsTableName+` set TR_ETC7 = '1' where TR_NUM IN (?)`, smsUpdateId)
+			if err != nil {
+				errlog.Println("nanoLowToOshot / ", nanoLowSmsTableName, " 재발송 flag 변환 Sql 생성 실패 / err : ", err)
+				return false
+			}
+
+			smsUpdateQuery = tx.Rebind(smsUpdateQuery)
+
+			smsUpdateResult, err := tx.Exec(smsUpdateQuery, args...)
+
+			if err != nil {
+				errlog.Println("nanoLowToOshot / ", nanoLowSmsTableName, " 재발송 flag 변환 실패 / err : ", err)
+				tx.Rollback()
+				return false
+			}
+
+			smsUpdateRowCnt, _ := smsUpdateResult.RowsAffected()
+
+			err = tx.Commit()
+			if err != nil {
+				errlog.Println("nanoLowToOshot / sms commit 실패 / err : ", err)
+				return false
+			} else {
+				infolog.Println("nanoLowToOshot sms 처리 끝 / sd :", sd, " / 업데이트 건수 : ", smsUpdateRowCnt)
+			}
+		}
+	} else {
+		infolog.Println("nanoLowToOshot sms 처리 끝 / sd :", sd, " / 업데이트 건수 : 0")
+	}
+
+	tx, err = db.Beginx()
+	if err != nil {
+		errlog.Println("nanoLowToOshot / mms 트랜잭션 실행 실패 / err : ", err)
+		return false
+	}
+
+	infolog.Println("nanoLowToOshot mms 처리 시작 / sd : ", sd)
+	err = tx.Select(&nanoMmsDataList, "select * from "+nanoLowMmsTableName+" where ETC7 is null and REQDATE >= ?", sd)
+	if err != nil {
+		errlog.Println("nanoLowToOshot / ", nanoLowMmsTableName, " 조회 실패 / err : ", err)
+		return false
+	}
+	
+	mmsInsertQuery := `
+		insert into `+oshotMmsTableName+`(MsgGroupID, Sender, Receiver, Subject, Msg, File_Path1, File_Path2, File_Path3, mst_id, cb_msg_Id)
+		values (:MsgGroupID, :Sender, :Receiver, :Subject, :Msg, :File_Path1, :File_Path2, :File_Path3, :mst_id, :cb_msg_Id)
+	`
+	
+	if len(nanoMmsDataList) > 0 {
+		groupId := "resend"+time.Now().Format("20060102150405")
+		for _, mmsData := range nanoMmsDataList {
+			
+			mapData := map[string]interface{}{
+				"MsgGroupID": groupId,
+				"Sender": mmsData.Callback,
+				"Receiver": mmsData.Phone,
+				"Subject": mmsData.Subject,
+				"Msg": mmsData.Msg,
+				"File_Path1": mmsData.FilePath1.String,
+				"File_Path2": mmsData.FilePath2.String,
+				"File_Path3": mmsData.FilePath3.String,
+				"InsertDT": mmsData.ReqDate,
+				"mst_id": mmsData.Etc10.String,
+				"cb_msg_Id": mmsData.Etc9.String,
+			}
+
+			_, err := tx.NamedExec(mmsInsertQuery, mapData)
+			if err != nil {
+				errlog.Println("nanoLowToOshot / insert 실패 / "+nanoLowMmsTableName+"의 MSGKEY 값 : ", mmsData.MsgKey, " / err : ", err)
+			} else {
+				mmsUpdateId = append(mmsUpdateId, mmsData.MsgKey)
+			}
+		}
+
+		if len(mmsUpdateId) > 0 {
+			mmsUpdateQuery, args, err := sqlx.In(`update `+nanoLowMmsTableName+` set ETC7 = '1' where MSGKEY IN (?)`, mmsUpdateId)
+			if err != nil {
+				errlog.Println("nanoLowToOshot / OShotMMS 재발송 flag 변환 Sql 생성 실패 / err : ", err)
+				return false
+			}
+
+			mmsUpdateQuery = tx.Rebind(mmsUpdateQuery)
+
+			mmsUpdateResult, err := tx.Exec(mmsUpdateQuery, args...)
+
+			if err != nil {
+				errlog.Println("nanoLowToOshot / ", nanoLowMmsTableName, " 재발송 flag 변환 실패 / err : ", err)
+				tx.Rollback()
+				return false
+			}
+
+			mmsUpdateRowCnt, _ := mmsUpdateResult.RowsAffected()
+
+			err = tx.Commit()
+			if err != nil {
+				errlog.Println("nanoLowToOshot / mms commit 실패 / err : ", err)
+				return false
+			} else {
+				infolog.Println("nanoLowToOshot mms 처리 끝 / sd :", sd, " / 업데이트 건수 : ", mmsUpdateRowCnt)
+			}
+		}
+	} else {
+		infolog.Println("nanoLowToOshot mms 처리 끝 / sd :", sd, " / 업데이트 건수 : 0")
 	}
 	
 	
