@@ -162,7 +162,7 @@ func smsProcess(wg *sync.WaitGroup) {
 
 			upmsgids := []interface{}{}
 
-			var msgid, sendresult, phn, sent_key, userid, cb_msg_id sql.NullString
+			var msgid, sendresult, phn, sent_key, userid, cb_msg_id, resend_flag sql.NullString
 			var startNow = time.Now()
 			var startTime = fmt.Sprintf("%02d:%02d:%02d", startNow.Hour(), startNow.Minute(), startNow.Second())
 			for rows.Next() {
