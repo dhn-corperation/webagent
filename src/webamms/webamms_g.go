@@ -3,6 +3,7 @@ package webamms
 import (
 	"webagent/src/baseprice"
 	"webagent/src/config"
+	"webagent/src/mapper"
 	"database/sql"
 	"webagent/src/databasepool"
 	"fmt"
@@ -171,7 +172,7 @@ func mmsProcess_g(wg *sync.WaitGroup) {
 				if !s.EqualFold(sendresult.String, "0") && conf.REFUND {
 					mmserrcnt++
 					//upcbmsgids = append(upcbmsgids, cb_msg_id.String)
-					message = sendresult.String
+					message = mapper.NanoCode(sendresult.String)
 					result = "N"
 
 					amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")

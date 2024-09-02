@@ -69,8 +69,8 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 	}
 	
 	smsInsertQuery := `
-		insert into `+nanoSmsTableName+`(TR_SENDDATE, TR_PHONE, TR_CALLBACK, TR_MSG, TR_IDENTIFICATION_CODE, TR_ETC9, TR_ETC10)
-		values (:TR_SENDDATE, :TR_PHONE, :TR_CALLBACK, :TR_MSG, :TR_IDENTIFICATION_CODE, :TR_ETC9, :TR_ETC10)
+		insert into `+nanoSmsTableName+`(TR_SENDDATE, TR_PHONE, TR_CALLBACK, TR_MSG, TR_IDENTIFICATION_CODE, TR_ETC8, TR_ETC9, TR_ETC10)
+		values (:TR_SENDDATE, :TR_PHONE, :TR_CALLBACK, :TR_MSG, :TR_IDENTIFICATION_CODE, :TR_ETC8, :TR_ETC9, :TR_ETC10)
 	`
 
 	if len(oshotSmsDataList) > 0 {
@@ -81,6 +81,7 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 				"TR_CALLBACK": smsData.Sender,
 				"TR_MSG": smsData.Msg,
 				"TR_IDENTIFICATION_CODE": "302190001",
+				"TR_ETC8": "Y",
 				"TR_ETC9": smsData.CbMsgId,
 				"TR_ETC10": smsData.MstId,
 			}
@@ -140,8 +141,8 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 	}
 	
 	mmsInsertQuery := `
-		insert into `+nanoMmsTableName+`(SUBJECT, PHONE, CALLBACK, REQDATE, MSG, FILE_CNT, FILE_PATH1, FILE_PATH2, FILE_PATH3, IDENTIFICATION_CODE, ETC9, ETC10)
-		values (:SUBJECT, :PHONE, :CALLBACK, :REQDATE, :MSG, :FILE_CNT, :FILE_PATH1, :FILE_PATH2, :FILE_PATH3, :IDENTIFICATION_CODE, :ETC9, :ETC10)
+		insert into `+nanoMmsTableName+`(SUBJECT, PHONE, CALLBACK, REQDATE, MSG, FILE_CNT, FILE_PATH1, FILE_PATH2, FILE_PATH3, IDENTIFICATION_CODE, ETC8, ETC9, ETC10)
+		values (:SUBJECT, :PHONE, :CALLBACK, :REQDATE, :MSG, :FILE_CNT, :FILE_PATH1, :FILE_PATH2, :FILE_PATH3, :IDENTIFICATION_CODE, :ETC8, :ETC9, :ETC10)
 	`
 	
 	if len(oshotMmsDataList) > 0 {
@@ -167,6 +168,7 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 				"FILE_PATH2": mmsData.FilePath2.String,
 				"FILE_PATH3": mmsData.FilePath3.String,
 				"IDENTIFICATION_CODE": "302190001",
+				"ETC8": "Y",
 				"ETC9": mmsData.CbMsgId,
 				"ETC10": mmsData.MstId,
 			}
