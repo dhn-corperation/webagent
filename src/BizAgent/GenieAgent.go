@@ -170,7 +170,7 @@ func resultProc() {
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(200, `----------------------------------------------------------------
-지니 API
+지니 API 리스트
 /resendrun?target=XXX&sd=XXXXXXXXXXXXXX		description : 임시 재발송
 /resendstop?uid=XXXX 						description : 임시 재발송 종료
 /resendlist 								description : 임시 재발송 리스트
