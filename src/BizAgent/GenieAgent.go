@@ -27,6 +27,8 @@ import (
 )
 
 const (
+	// name        = "BizAgent"
+	// description = "DHN 메세지 후속 처리 프로그램"
 	name        = "GenieAgent"
 	description = "지니 메세지 후속 처리 프로그램"
 )
