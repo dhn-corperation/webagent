@@ -60,7 +60,7 @@ type NanoSmsTable struct {
 	RsltDate sql.NullString				`db:"TR_RSLTDATE"`
 	Modified sql.NullString				`db:"TR_MODIFIED"`
 	Msg string							`db:"TR_MSG"`
-	Net string							`db:"TR_NET"`
+	Net sql.NullString					`db:"TR_NET"`
 	IdentificationCode sql.NullString	`db:"TR_IDENTIFICATION_CODE"`
 	Etc1 sql.NullString					`db:"TR_ETC1"`
 	Etc2 sql.NullString					`db:"TR_ETC2"`
