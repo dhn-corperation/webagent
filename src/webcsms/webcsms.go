@@ -125,6 +125,7 @@ func smsProcess(wg *sync.WaitGroup) {
 				"      ,(select mem_userid from cb_member cm where cm.mem_id = b.mst_mem_id) AS mem_userid " +
 				"      ,b.mst_mem_id AS mem_id" +
 				"      ,a.cb_msg_id " +
+				"      ,a.resend_flag " +
 				" from " + SMSTable + " a INNER JOIN " +
 				"        cb_wt_msg_sent b ON a.mst_id = b.mst_id " +
 				"WHERE a.proc_flag = 'Y' " +
@@ -167,16 +168,19 @@ func smsProcess(wg *sync.WaitGroup) {
 			for rows.Next() {
 				var message = ""
 				var result = ""
-				rows.Scan(&msgid, &sendresult, &phn, &sent_key, &userid, &mem_id, &cb_msg_id)
-				smscnt++
+				rows.Scan(&msgid, &sendresult, &phn, &sent_key, &userid, &mem_id, &cb_msg_id, &resend_flag)
+				if !s.EqualFold(resend_flag.String, "2"){
+					smscnt++
+				}
 				if !s.EqualFold(sendresult.String, "6") && conf.REFUND {
-					smserrcnt++
 					//upcbmsgids = append(upcbmsgids, cb_msg_id.String)
 					message = sendresult.String
 					result = "N"
-
-					amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
-					amtsValues = append(amtsValues, "3")
+					if !s.EqualFold(resend_flag.String, "2"){
+						smserrcnt++
+						amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
+						amtsValues = append(amtsValues, "3")
+					}
 					if s.EqualFold(mst_sent_voucher.String, "V") {
 						amtsValues = append(amtsValues, cprice.V_price_smt_sms.Float64)
 						amtsValues = append(amtsValues, "웹(C) 발송실패 환불,바우처")

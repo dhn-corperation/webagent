@@ -123,7 +123,8 @@ func mmsProcess(wg *sync.WaitGroup) {
 				"      ,a.cb_msg_id " +
 				"      ,a.File_Path1 as mms1 " +
 				"      ,a.File_Path2 as mms2 " +
-				"      ,a.File_Path3 as mm3 " +
+				"      ,a.File_Path3 as mms3 " +
+				"      ,a.resend_flag " +
 				" from " + MMSTable + " a INNER JOIN " +
 				"        cb_wt_msg_sent b ON a.mst_id = b.mst_id " +
 				"WHERE a.proc_flag = 'Y' " +
@@ -160,22 +161,25 @@ func mmsProcess(wg *sync.WaitGroup) {
 
 			upmsgids := []interface{}{}
 
-			var msgid, sendresult, phn, sent_key, userid, cb_msg_id, mms1, mms2, mms3 sql.NullString
+			var msgid, sendresult, phn, sent_key, userid, cb_msg_id, mms1, mms2, mms3, resend_flag sql.NullString
 			var startNow = time.Now()
 			var startTime = fmt.Sprintf("%02d:%02d:%02d", startNow.Hour(), startNow.Minute(), startNow.Second())
 			for rows.Next() {
 				var message = ""
 				var result = ""
-				rows.Scan(&msgid, &sendresult, &phn, &sent_key, &userid, &mem_id, &cb_msg_id, &mms1, &mms2, &mms3)
-				mmscnt++
+				rows.Scan(&msgid, &sendresult, &phn, &sent_key, &userid, &mem_id, &cb_msg_id, &mms1, &mms2, &mms3, &resend_flag)
+				if !s.EqualFold(resend_flag.String, "2"){
+					mmscnt++
+				}
 				if !s.EqualFold(sendresult.String, "6") && conf.REFUND {
-					mmserrcnt++
 					//upcbmsgids = append(upcbmsgids, cb_msg_id.String)
 					message = sendresult.String
 					result = "N"
-
-					amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
-					amtsValues = append(amtsValues, "3")
+					if !s.EqualFold(resend_flag.String, "2"){
+						mmserrcnt++
+						amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
+						amtsValues = append(amtsValues, "3")
+					}
 					if len(mms1.String) > 0 {
 						if s.EqualFold(mst_sent_voucher.String, "V") {
 							amtsValues = append(amtsValues, cprice.V_price_smt_mms.Float64)

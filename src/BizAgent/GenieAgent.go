@@ -249,6 +249,7 @@ func resultProc() {
 				"code":    "ok",
 				"message": "'종료' 신호가 정상적으로 전달되었습니다",
 			})
+			return
 		}
 		c.JSON(400, gin.H{
 			"code":    "error",

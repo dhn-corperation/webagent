@@ -69,7 +69,7 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 	}
 	
 	smsInsertQuery := `
-		insert into `+nanoSmsTableName+`(TR_SENDDATE, TR_PHONE, TR_CALLBACK, TR_MSG, TR_IDENTIFICATION_CODE, TR_ETC8, TR_ETC9, TR_ETC10)
+		insert into `+nanoSmsTableName+`(TR_SENDDATE, TR_PHONE, TR_CALLBACK, TR_MSG, TR_IDENTIFICATION_CODE, TR_ETC7, TR_ETC8, TR_ETC9, TR_ETC10)
 		values (:TR_SENDDATE, :TR_PHONE, :TR_CALLBACK, :TR_MSG, :TR_IDENTIFICATION_CODE, :TR_ETC8, :TR_ETC9, :TR_ETC10)
 	`
 
@@ -81,6 +81,7 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 				"TR_CALLBACK": smsData.Sender,
 				"TR_MSG": smsData.Msg,
 				"TR_IDENTIFICATION_CODE": "302190001",
+				"TR_ETC7": "2",
 				"TR_ETC8": "Y",
 				"TR_ETC9": smsData.CbMsgId,
 				"TR_ETC10": smsData.MstId,
@@ -141,8 +142,8 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 	}
 	
 	mmsInsertQuery := `
-		insert into `+nanoMmsTableName+`(SUBJECT, PHONE, CALLBACK, REQDATE, MSG, FILE_CNT, FILE_PATH1, FILE_PATH2, FILE_PATH3, IDENTIFICATION_CODE, ETC8, ETC9, ETC10)
-		values (:SUBJECT, :PHONE, :CALLBACK, :REQDATE, :MSG, :FILE_CNT, :FILE_PATH1, :FILE_PATH2, :FILE_PATH3, :IDENTIFICATION_CODE, :ETC8, :ETC9, :ETC10)
+		insert into `+nanoMmsTableName+`(SUBJECT, PHONE, CALLBACK, REQDATE, MSG, FILE_CNT, FILE_PATH1, FILE_PATH2, FILE_PATH3, IDENTIFICATION_CODE, ETC7, ETC8, ETC9, ETC10)
+		values (:SUBJECT, :PHONE, :CALLBACK, :REQDATE, :MSG, :FILE_CNT, :FILE_PATH1, :FILE_PATH2, :FILE_PATH3, :IDENTIFICATION_CODE, :ETC7, :ETC8, :ETC9, :ETC10)
 	`
 	
 	if len(oshotMmsDataList) > 0 {
@@ -168,6 +169,7 @@ func oshotToNano(db *sqlx.DB, sd string) bool {
 				"FILE_PATH2": mmsData.FilePath2.String,
 				"FILE_PATH3": mmsData.FilePath3.String,
 				"IDENTIFICATION_CODE": "302190001",
+				"ETC7": "2",
 				"ETC8": "Y",
 				"ETC9": mmsData.CbMsgId,
 				"ETC10": mmsData.MstId,
@@ -241,8 +243,8 @@ func nanoToOshot(db *sqlx.DB, sd, smsTable, mmsTable string) bool {
 	}
 	
 	smsInsertQuery := `
-		insert into `+oshotSmsTableName+`(Sender, Receiver, Msg, InsertDT, mst_id, cb_msg_id)
-		values (:Sender, :Receiver, :Msg, :InsertDT, :mst_id, :cb_msg_id)
+		insert into `+oshotSmsTableName+`(Sender, Receiver, Msg, InsertDT, mst_id, cb_msg_id, resend_flag)
+		values (:Sender, :Receiver, :Msg, :InsertDT, :mst_id, :cb_msg_id, :resend_flag)
 	`
 
 	if len(nanoSmsDataList) > 0 {
@@ -254,6 +256,7 @@ func nanoToOshot(db *sqlx.DB, sd, smsTable, mmsTable string) bool {
 				"InsertDT": smsData.SendDate,
 				"mst_id": smsData.Etc10,
 				"cb_msg_id": smsData.Etc9,
+				"resend_flag": "2",
 			}
 
 			_, err := tx.NamedExec(smsInsertQuery, mapData)
@@ -311,8 +314,8 @@ func nanoToOshot(db *sqlx.DB, sd, smsTable, mmsTable string) bool {
 	}
 	
 	mmsInsertQuery := `
-		insert into `+oshotMmsTableName+`(MsgGroupID, Sender, Receiver, Subject, Msg, File_Path1, File_Path2, File_Path3, mst_id, cb_msg_Id)
-		values (:MsgGroupID, :Sender, :Receiver, :Subject, :Msg, :File_Path1, :File_Path2, :File_Path3, :mst_id, :cb_msg_Id)
+		insert into `+oshotMmsTableName+`(MsgGroupID, Sender, Receiver, Subject, Msg, File_Path1, File_Path2, File_Path3, mst_id, cb_msg_Id, resend_flag)
+		values (:MsgGroupID, :Sender, :Receiver, :Subject, :Msg, :File_Path1, :File_Path2, :File_Path3, :mst_id, :cb_msg_Id, :resend_flag)
 	`
 	
 	if len(nanoMmsDataList) > 0 {
@@ -331,6 +334,7 @@ func nanoToOshot(db *sqlx.DB, sd, smsTable, mmsTable string) bool {
 				"InsertDT": mmsData.ReqDate,
 				"mst_id": mmsData.Etc10.String,
 				"cb_msg_Id": mmsData.Etc9.String,
+				"resend_flag": "2",
 			}
 
 			_, err := tx.NamedExec(mmsInsertQuery, mapData)

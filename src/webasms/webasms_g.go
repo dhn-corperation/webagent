@@ -124,6 +124,7 @@ func smsProcess_g(wg *sync.WaitGroup) {
 				"      ,a.TR_ETC10 AS REMARK4" +
 				"      ,(select mem_userid from cb_member cm where cm.mem_id = b.mst_mem_id) AS mem_userid " +
 				"      ,b.mst_mem_id AS mem_id" +
+				"      ,a.TR_ETC7 as resend_flag " +
 				"      ,a.TR_ETC9 as cb_msg_id " +
 				" from " + SMSTable + " a INNER JOIN " +
 				"        cb_wt_msg_sent b ON a.TR_ETC10 = b.mst_id " +
@@ -161,22 +162,25 @@ func smsProcess_g(wg *sync.WaitGroup) {
 
 			upmsgids := []interface{}{}
 
-			var msgid, sendresult, phn, sent_key, userid, cb_msg_id sql.NullString
+			var msgid, sendresult, phn, sent_key, userid, cb_msg_id, resend_flag sql.NullString
 			var startNow = time.Now()
 			var startTime = fmt.Sprintf("%02d:%02d:%02d", startNow.Hour(), startNow.Minute(), startNow.Second())
 			for rows.Next() {
 				var message = ""
 				var result = ""
-				rows.Scan(&msgid, &sendresult, &phn, &sent_key, &userid, &mem_id, &cb_msg_id)
-				smscnt++
+				rows.Scan(&msgid, &sendresult, &phn, &sent_key, &userid, &mem_id, &resend_flag, &cb_msg_id)
+				if !s.EqualFold(resend_flag.String, "2"){
+					smscnt++
+				}
 				if !s.EqualFold(sendresult.String, "0") && conf.REFUND {
-					smserrcnt++
 					//upcbmsgids = append(upcbmsgids, cb_msg_id.String)
 					message = mapper.NanoCode(sendresult.String)
 					result = "N"
-
-					amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
-					amtsValues = append(amtsValues, "3")
+					if !s.EqualFold(resend_flag.String, "2"){
+						smserrcnt++
+						amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
+						amtsValues = append(amtsValues, "3")
+					}
 					if s.EqualFold(mst_sent_voucher.String, "V") {
 						amtsValues = append(amtsValues, cprice.V_price_grs_sms.Float64)
 						amtsValues = append(amtsValues, "웹(A) 발송실패 환불,바우처")
