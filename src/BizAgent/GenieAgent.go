@@ -31,7 +31,7 @@ const (
 	description = "지니 메세지 후속 처리 프로그램"
 )
 
-var dependencies = []string{"GenieAgent.service"}
+var dependencies = []string{name+".service"}
 
 var resultTable string
 
@@ -45,7 +45,7 @@ type Service struct {
 
 func (service *Service) Manage() (string, error) {
 
-	usage := "Usage: GenieAgent install | remove | start | stop | status"
+	usage := "Usage: "+name+" install | remove | start | stop | status"
 
 	if len(os.Args) > 1 {
 		command := os.Args[1]
@@ -123,7 +123,7 @@ func main() {
 
 func resultProc() {
 
-	config.Stdlog.Println("GenieAgent 시작")
+	config.Stdlog.Println(name, " 시작")
 	config.Stdlog.Println("---------------------------------------")
 	var conf = config.Conf
 	config.Stdlog.Println(conf)
@@ -170,11 +170,11 @@ func resultProc() {
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(200, `----------------------------------------------------------------
-지니 API 리스트
-/resendrun?target=XXX&sd=XXXXXXXXXXXXXX		description : 임시 재발송
-/resendstop?uid=XXXX 						description : 임시 재발송 종료
-/resendlist 								description : 임시 재발송 리스트
-/allstop?uid=XXXXXX 						description : 발송 전체 종료
+`+name+` API 리스트
+/resendrun?target=XXX&sd=XXXXXXXXXXXXXX     description : 임시 재발송
+/resendstop?uid=XXXX                        description : 임시 재발송 종료
+/resendlist                                 description : 임시 재발송 리스트
+/allstop?uid=XXXXXX                         description : 발송 전체 종료
 ----------------------------------------------------------------`)
 	})
 
