@@ -86,7 +86,7 @@ func (service *Service) Manage() (string, error) {
 
 func main() {
 
-	config.InitConfigG()
+	config.InitConfig()
 
 	databasepool.InitDatabase()
 
