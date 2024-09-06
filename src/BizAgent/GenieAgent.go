@@ -87,9 +87,10 @@ func (service *Service) Manage() (string, error) {
 func main() {
 
 	config.InitConfig()
+	config.Stdlog.Println("여기까지 오냐1")
 
 	databasepool.InitDatabase()
-
+	config.Stdlog.Println("여기까지 오냐2")
 	var rLimit syscall.Rlimit
 
 	rLimit.Max = 50000
