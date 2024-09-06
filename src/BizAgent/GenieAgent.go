@@ -27,10 +27,10 @@ import (
 )
 
 const (
-	name        = "BizAgent"
-	description = "DHN 메세지 후속 처리 프로그램"
-	// name        = "GenieAgent"
-	// description = "지니 메세지 후속 처리 프로그램"
+	// name        = "BizAgent"
+	// description = "DHN 메세지 후속 처리 프로그램"
+	name        = "GenieAgent"
+	description = "지니 메세지 후속 처리 프로그램"
 )
 
 var dependencies = []string{name+".service"}
@@ -86,7 +86,7 @@ func (service *Service) Manage() (string, error) {
 
 func main() {
 
-	config.InitConfig()
+	config.InitConfigG()
 
 	databasepool.InitDatabase()
 
@@ -277,5 +277,5 @@ func resultProc() {
 		}
 	})
 
-	r.Run(":3040")
+	r.Run(":3030")
 }
