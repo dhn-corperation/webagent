@@ -27,10 +27,10 @@ import (
 )
 
 const (
-	// name        = "BizAgent"
-	// description = "DHN 메세지 후속 처리 프로그램"
-	name        = "GenieAgent"
-	description = "지니 메세지 후속 처리 프로그램"
+	name        = "BizAgent"
+	description = "DHN 메세지 후속 처리 프로그램"
+	// name        = "GenieAgent"
+	// description = "지니 메세지 후속 처리 프로그램"
 )
 
 var dependencies = []string{name+".service"}
@@ -177,7 +177,7 @@ func resultProc() {
 /resendstop?uid=XXXX                        description : 임시 재발송 종료
 /resendlist                                 description : 임시 재발송 리스트
 /allstop?uid=XXXXXX                         description : 발송 전체 종료
-----------------------------------------------------------------`)
+----------------------------------------------------------------\n`)
 	})
 
 	r.GET("/resendrun", func(c *gin.Context) {
