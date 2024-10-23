@@ -213,6 +213,9 @@ func resProcess(wg *sync.WaitGroup) {
 		nnlpmmsStrs = nil //나노 저가망 LMS/MMS Table Insert 용
 		nnlpmmsValues = nil
 
+		rcsStrs = nil
+		rcsValues = nil
+
 		smtpStrs = nil //스마트미 폰문자 Table Insert 용
 		smtpValues = nil
 
