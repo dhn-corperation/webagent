@@ -266,7 +266,7 @@ func smsProcess(wg *sync.WaitGroup) {
 
 			}
 
-			tx.Exec("update cb_wt_msg_sent set mst_err_smt = ifnull(mst_err_smt,0) + ?, mst_smt = ifnull(mst_smt,0) + ?, mst_wait = mst_wait - ?  where mst_id=?", smserrcnt, (smscnt-smserrcnt), smscnt, sent_key.String)
+			tx.Exec("update cb_wt_msg_sent set mst_err_grs = ifnull(mst_err_grs,0) + ?, mst_grs = ifnull(mst_grs,0) + ?, mst_wait = mst_wait - ?  where mst_id=?", smserrcnt, (smscnt-smserrcnt), smscnt, sent_key.String)
 			tx.Commit()
 			stdlog.Printf(" ( %s ) WEB(A) SMS 처리 - %s : %d \n", startTime, sent_key.String, smscnt)
 		}
