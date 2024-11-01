@@ -92,8 +92,8 @@ func (service *Service) Manage() (string, error) {
 
 func main() {
 
-	// config.InitConfig()
-	config.InitConfigG()
+	config.InitConfig()
+	// config.InitConfigG()
 
 	databasepool.InitDatabase()
 
