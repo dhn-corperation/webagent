@@ -83,7 +83,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 		}
     }
 
-	var groupQuery = "select a.ETC10 as mst_id, b.mst_mem_id as mem_id, (select mem_userid from cb_member cm where cm.mem_id = b.mst_mem_id) AS mem_userid, b.mst_sent_voucher from " + MMSTable + " a inner join cb_wt_msg_sent b on a.ETC10 = b.mst_id where a.status = '3' and a.ETC8 = 'Y' "
+	var groupQuery = "select distinct a.ETC10 as mst_id, b.mst_mem_id as mem_id, (select mem_userid from cb_member cm where cm.mem_id = b.mst_mem_id) AS mem_userid, b.mst_sent_voucher from " + MMSTable + " a inner join cb_wt_msg_sent b on a.ETC10 = b.mst_id where a.status = '3' and a.ETC8 = 'Y' "
 
 	groupRows, err := db.Query(groupQuery)
 	if err != nil {
