@@ -26,17 +26,19 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// const (
-// 	name        = "GenieAgent"
-// 	description = "DHN 메세지 후속 처리 프로그램"
-// 	port  		= ":3030"
-// )
-
 const (
-	name        = "BizAgent"
+	name        = "GenieAgent"
 	description = "DHN 메세지 후속 처리 프로그램"
-	port  		= ":3040"
+	port  		= ":3030"
+	gflag 		= true
 )
+
+// const (
+// 	name        = "BizAgent"
+// 	description = "DHN 메세지 후속 처리 프로그램"
+// 	port  		= ":3040"
+//  gflag		= false
+// )
 
 
 var dependencies = []string{name+".service"}
@@ -92,8 +94,11 @@ func (service *Service) Manage() (string, error) {
 
 func main() {
 
-	config.InitConfig()
-	// config.InitConfigG()
+	if gflag {
+		config.InitConfigG()
+	} else {
+		config.InitConfig()
+	}
 
 	databasepool.InitDatabase()
 

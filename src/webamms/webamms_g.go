@@ -3,7 +3,7 @@ package webamms
 import (
 	"webagent/src/baseprice"
 	"webagent/src/config"
-	"webagent/src/mapper"
+	// "webagent/src/mapper"
 	"database/sql"
 	"webagent/src/databasepool"
 	"fmt"
@@ -174,7 +174,8 @@ func mmsProcess_g(wg *sync.WaitGroup) {
 				}
 				if !s.EqualFold(sendresult.String, "0") && conf.REFUND {
 					//upcbmsgids = append(upcbmsgids, cb_msg_id.String)
-					message = mapper.NanoCode(sendresult.String)
+					// message = mapper.NanoCode(sendresult.String)
+					message = sendresult.String
 					result = "N"
 					if !s.EqualFold(resend_flag.String, "2"){
 						mmserrcnt++
