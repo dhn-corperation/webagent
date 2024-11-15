@@ -80,8 +80,8 @@ func smsProcess(wg *sync.WaitGroup) {
 	} else {		
 		if !s.EqualFold(msgcnt.String, "0") {	
 			db.Exec("UPDATE SMS_MSG SET TR_RSLTDATE=now(), TR_SENDSTAT='2', TR_NET='ETC' WHERE TR_SENDSTAT=1 and date_add(TR_SENDDATE, interval 6 HOUR) < now() and TR_ETC10 is not null")
-			db.Exec("insert into " + SMSTable + " SELECT * FROM SMS_MSG WHERE TR_SENDSTAT='2' AND TR_RSLTDATE is not null and telecom = 'ETC'")
-			db.Exec("delete FROM SMS_MSG WHERE TR_SENDSTAT='2' AND TR_RSLTDATE is not null and telecom = 'ETC'")
+			db.Exec("insert into " + SMSTable + " SELECT * FROM SMS_MSG WHERE TR_SENDSTAT='2' AND TR_RSLTDATE is not null and TR_NET = 'ETC'")
+			db.Exec("delete FROM SMS_MSG WHERE TR_SENDSTAT='2' AND TR_RSLTDATE is not null and TR_NET = 'ETC'")
 		}
 	}
 

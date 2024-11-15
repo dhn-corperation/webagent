@@ -26,19 +26,19 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const (
-	name        = "GenieAgent"
-	description = "DHN 메세지 후속 처리 프로그램"
-	port  		= ":3030"
-	gflag 		= true
-)
-
 // const (
-// 	name        = "BizAgent"
+// 	name        = "GenieAgent"
 // 	description = "DHN 메세지 후속 처리 프로그램"
-// 	port  		= ":3040"
-//  gflag		= false
+// 	port  		= ":3030"
+// 	gflag 		= true
 // )
+
+const (
+	name        = "BizAgent"
+	description = "DHN 메세지 후속 처리 프로그램"
+	port  		= ":3040"
+ gflag		= false
+)
 
 
 var dependencies = []string{name+".service"}
