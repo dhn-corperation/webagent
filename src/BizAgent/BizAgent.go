@@ -26,17 +26,17 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const (
-	name        = "BizAgent_m"
-	description = "마트톡 메세지 후속 처리 프로그램"
-	port  		= ":3010"
-)
-
 // const (
-// 	name        = "BizAgent_g"
-// 	description = "지니 메세지 후속 처리 프로그램"
-// 	port  		= ":3020"
+// 	name        = "BizAgent_m"
+// 	description = "마트톡 메세지 후속 처리 프로그램"
+// 	port  		= ":3010"
 // )
+
+const (
+	name        = "BizAgent_g"
+	description = "올지니 메세지 후속 처리 프로그램"
+	port  		= ":3020"
+)
 
 // const (
 // 	name        = "BizAgent_o"
