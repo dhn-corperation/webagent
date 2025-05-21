@@ -1,10 +1,11 @@
 package config
 
 import (
+	"os"
 	"fmt"
 	"log"
-	"os"
 	"time"
+	"path/filepath"
 
 	ini "github.com/BurntSushi/toml"
 	rotatelogs "github.com/lestrrat/go-file-rotatelogs"
@@ -45,13 +46,18 @@ var RCSID = ""
 var RCSPW = ""
 
 func InitConfig() {
-	path := "/root/BizAgent/log/BizAgent"
-	//path := "./log/BizAgent"
+	realpath, _ := os.Executable()
+	dir := filepath.Dir(realpath)
+	logDir := filepath.Join(dir, "logs")
+	err := createDir(logDir)
+	if err != nil {
+		log.Fatalf("Failed to ensure log directory: %s", err)
+	}
+
+	path := filepath.Join(logDir, "BizAgent")
 	loc, _ := time.LoadLocation("Asia/Seoul")
 	writer, err := rotatelogs.New(
 		fmt.Sprintf("%s-%s.log", path, "%Y-%m-%d"),
-		//rotatelogs.WithMaxAge(time.Hour*24*7),
-		//rotatelogs.WithRotationTime(time.Hour*24),
 		rotatelogs.WithLocation(loc),
 		rotatelogs.WithMaxAge(-1),
 		rotatelogs.WithRotationCount(7),
@@ -75,11 +81,12 @@ func InitConfig() {
 }
 
 func readConfig() Config {
-	var configfile = "/root/BizAgent/config.ini"
-	//var configfile = "./config.ini"
+	realpath, _ := os.Executable()
+	dir := filepath.Dir(realpath)
+	var configfile = filepath.Join(dir, "config.ini")
 	_, err := os.Stat(configfile)
 	if err != nil {
-		fmt.Println("Config file is missing : ", configfile)
+		log.Fatalf("Failed to Initialize config File %s", err)
 	}
 
 	var result Config
@@ -92,91 +99,10 @@ func readConfig() Config {
 	return result
 }
 
-func InitConfigG() {
-	path := "/root/GenieAgent/log/GenieAgent"
-	loc, _ := time.LoadLocation("Asia/Seoul")
-	writer, err := rotatelogs.New(
-		fmt.Sprintf("%s-%s.log", path, "%Y-%m-%d"),
-		//rotatelogs.WithMaxAge(time.Hour*24*7),
-		//rotatelogs.WithRotationTime(time.Hour*24),
-		rotatelogs.WithLocation(loc),
-		rotatelogs.WithMaxAge(-1),
-		rotatelogs.WithRotationCount(7),
-	)
-
+func createDir(dirName string) error {
+	err := os.MkdirAll(dirName, os.ModePerm)
 	if err != nil {
-		log.Fatalf("Failed to Initialize Log File %s", err)
+		return fmt.Errorf("failed to create directory: %w", err)
 	}
-
-	log.SetOutput(writer)
-	stdlog := log.New(os.Stdout, "INFO -> ", log.Ldate|log.Ltime)
-	stdlog.SetOutput(writer)
-	Stdlog = stdlog
-
-	Conf = readConfigG()
-
-	RCSID = Conf.RCSID
-	RCSPW = Conf.RCSPW
-
-	Client = resty.New()
-
-}
-
-func readConfigG() Config {
-	var configfile = "/root/GenieAgent/config.ini"
-	_, err := os.Stat(configfile)
-	if err != nil {
-		fmt.Println("Config file is missing : ", configfile)
-	}
-
-	var result Config
-	_, err1 := ini.DecodeFile(configfile, &result)
-
-	if err1 != nil {
-		fmt.Println("Config file read error : ", err1)
-	}
-
-	return result
-}
-
-func InitConfigU(_path string) {
-	path := _path + "/log/Agent"
-	loc, _ := time.LoadLocation("Asia/Seoul")
-	writer, err := rotatelogs.New(
-		fmt.Sprintf("%s-%s.log", path, "%Y-%m-%d"),
-		//rotatelogs.WithMaxAge(time.Hour*24*7),
-		//rotatelogs.WithRotationTime(time.Hour*24),
-		rotatelogs.WithLocation(loc),
-		rotatelogs.WithMaxAge(-1),
-		rotatelogs.WithRotationCount(7),
-	)
-
-	if err != nil {
-		log.Fatalf("Failed to Initialize Log File %s", err)
-	}
-
-	log.SetOutput(writer)
-	stdlog := log.New(os.Stdout, "INFO -> ", log.Ldate|log.Ltime)
-	stdlog.SetOutput(writer)
-	Stdlog = stdlog
-
-	Conf = readConfigU(_path)
-
-}
-
-func readConfigU(_path string) Config {
-	var configfile = _path + "/config.ini"
-	_, err := os.Stat(configfile)
-	if err != nil {
-		fmt.Println("Config file is missing : ", configfile)
-	}
-
-	var result Config
-	_, err1 := ini.DecodeFile(configfile, &result)
-
-	if err1 != nil {
-		fmt.Println("Config file read error : ", err1)
-	}
-
-	return result
+	return nil
 }

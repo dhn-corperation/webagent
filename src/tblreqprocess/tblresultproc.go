@@ -7,7 +7,7 @@ import (
 	"sync"
 	//"encoding/json"
 	//	"os"
-	//"strconv"
+	"strconv"
 	"webagent/src/baseprice"
 	"webagent/src/databasepool"
 	//"rcs"
@@ -1085,7 +1085,8 @@ func resProcess(wg *sync.WaitGroup) {
 										}
 									} else if s.EqualFold(msgtype, "LMS") {
 										osmmsStrs = append(osmmsStrs, "(?,?,?,?,?,?,null,?,?,?,?,?,?)")
-										osmmsValues = append(osmmsValues, remark4)
+										seqCnt := strconv.Itoa(cnt)
+										osmmsValues = append(osmmsValues, time.Now().Format("050102150405") + seqCnt)
 										osmmsValues = append(osmmsValues, sms_sender)
 										osmmsValues = append(osmmsValues, phnstr)
 										osmmsValues = append(osmmsValues, sms_lms_tit)
