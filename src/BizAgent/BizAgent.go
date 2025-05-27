@@ -32,17 +32,23 @@ import (
 // 	port  		= ":3010"
 // )
 
-const (
-	name        = "BizAgent_g"
-	description = "올지니 메세지 후속 처리 프로그램"
-	port  		= ":3020"
-)
+// const (
+// 	name        = "BizAgent_g"
+// 	description = "올지니 메세지 후속 처리 프로그램"
+// 	port  		= ":3020"
+// )
 
 // const (
 // 	name        = "BizAgent_o"
 // 	description = "오투오 메세지 후속 처리 프로그램"
 // 	port  		= ":3030"
 // )
+
+const (
+	name        = "BizAgent_s"
+	description = "싸다고 메세지 후속 처리 프로그램"
+	port  		= ":3040"
+)
 
 
 var dependencies = []string{name+".service"}
