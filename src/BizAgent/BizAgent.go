@@ -26,11 +26,11 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// const (
-// 	name        = "BizAgent_m"
-// 	description = "마트톡 메세지 후속 처리 프로그램"
-// 	port  		= ":3010"
-// )
+const (
+	name        = "BizAgent_m"
+	description = "마트톡 메세지 후속 처리 프로그램"
+	port  		= ":3010"
+)
 
 // const (
 // 	name        = "BizAgent_g"
@@ -44,11 +44,11 @@ import (
 // 	port  		= ":3030"
 // )
 
-const (
-	name        = "BizAgent_s"
-	description = "싸다고 메세지 후속 처리 프로그램"
-	port  		= ":3040"
-)
+// const (
+// 	name        = "BizAgent_s"
+// 	description = "싸다고 메세지 후속 처리 프로그램"
+// 	port  		= ":3040"
+// )
 
 
 var dependencies = []string{name+".service"}
