@@ -316,7 +316,7 @@ func resProcess(wg *sync.WaitGroup) {
 		var isPayment bool
 		var startNow = time.Now()
 		var startTime = fmt.Sprintf("%02d:%02d:%02d", startNow.Hour(), startNow.Minute(), startNow.Second())
-		var oshotGroupId = time.Now().Format("050102150405")
+		// var oshotGroupId = time.Now().Format("050102150405")
 		for rows.Next() {
 
 			isPass = false
@@ -1085,7 +1085,7 @@ func resProcess(wg *sync.WaitGroup) {
 										}
 									} else if s.EqualFold(msgtype, "LMS") {
 										osmmsStrs = append(osmmsStrs, "(?,?,?,?,?,?,null,?,?,?,?,?,?)")
-										osmmsValues = append(osmmsValues, oshotGroupId)
+										osmmsValues = append(osmmsValues, remark4)
 										osmmsValues = append(osmmsValues, sms_sender)
 										osmmsValues = append(osmmsValues, phnstr)
 										osmmsValues = append(osmmsValues, sms_lms_tit)
