@@ -76,11 +76,11 @@ func resProcess(wg *sync.WaitGroup) {
 	ftlistsStrs := []string{}
 	ftlistsValues := []interface{}{}
 
-	// nanoitStrs := []string{}
+	// nanoitStrs := []string{} 250611
 	// nanoitValues := []interface{}{}
 
-	mmsmsgStrs := []string{}
-	mmsmsgValues := []interface{}{}
+	// mmsmsgStrs := []string{}
+	// mmsmsgValues := []interface{}{}
 
 	ossmsStrs := []string{}
 	ossmsValues := []interface{}{}
@@ -103,11 +103,11 @@ func resProcess(wg *sync.WaitGroup) {
 	rcsStrs := []string{}
 	rcsValues := []interface{}{}
 
-	// smtpStrs := []string{}
+	// smtpStrs := []string{} 250611
 	// smtpValues := []interface{}{}
-	
+
 	var resquery = `
-		SELECT
+		SELECT DISTINCT
 			trr.REMARK4 AS ressendkey,
 			cm.mem_userid as username,
 			cm.mem_id as user_mem_id,
@@ -118,10 +118,7 @@ func resProcess(wg *sync.WaitGroup) {
 			cb_member cm ON trr.remark2 = cm.mem_id 
 		WHERE
 			trr.remark3 IS NOT null 
-			and ( trr.reserve_dt < DATE_FORMAT(NOW(), '%Y%m%d%H%i%S') or trr.reserve_dt = '00000000000000')
-		GROUP BY 
-			trr.REMARK4,
-			cm.mem_userid`
+			and ( trr.reserve_dt < DATE_FORMAT(NOW(), '%Y%m%d%H%i%S') or trr.reserve_dt = '00000000000000')`
 
 	resrows, err := db.Query(resquery)
 
@@ -141,8 +138,8 @@ func resProcess(wg *sync.WaitGroup) {
 		var rcsTemplate, rcsBrand, rcsDatetime, rcsKind, rcsContent, rcsBtn1, rcsBtn2, rcsBtn3, rcsBtn4, rcsBtn5, rcsChatbotID, rcsBtns, rcsBody, rcsBrandkey sql.NullString
 		
 		resrows.Scan(&ressendkey, &username, &usermem_id, &gsms_sender)
-		var t = time.Now()
-		var nowstr = fmt.Sprintf("%d%02d%02d%02d%02d%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
+		// var t = time.Now() 250611
+		// var nowstr = fmt.Sprintf("%d%02d%02d%02d%02d%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second()) 
 		var resultsql string
 		resultsql = " select SQL_NO_CACHE msgid, ad_flag, button1, button2, button3, button4, button5, code, image_link, image_url, kind, message, message_type," +
 			" msg, msg_sms, only_sms, p_com, p_invoice, phn, profile, reg_dt, remark1, remark2, remark3, remark4, remark5, res_dt, reserve_dt, " +
@@ -189,11 +186,11 @@ func resProcess(wg *sync.WaitGroup) {
 		ftlistsStrs = nil // 친구톡 성공 List 저장용
 		ftlistsValues = nil
 
-		// nanoitStrs = nil // 나노IT Table Insert 용
+		// nanoitStrs = nil // 나노IT Table Insert 용 250611
 		// nanoitValues = nil
 
-		mmsmsgStrs = nil //웹(A) Table Insert 용
-		mmsmsgValues = nil
+		// mmsmsgStrs = nil //웹(A) Table Insert 용
+		// mmsmsgValues = nil
 
 		ossmsStrs = nil //스마트미 SMS Table Insert 용
 		ossmsValues = nil
@@ -216,7 +213,7 @@ func resProcess(wg *sync.WaitGroup) {
 		rcsStrs = nil
 		rcsValues = nil
 
-		// smtpStrs = nil //스마트미 폰문자 Table Insert 용
+		// smtpStrs = nil //스마트미 폰문자 Table Insert 용 250611
 		// smtpValues = nil
 
 		var insstr = ""
@@ -255,11 +252,6 @@ func resProcess(wg *sync.WaitGroup) {
 		var cb_msg_code = ""
 		var cb_msg_message = ""
 		var result_flag = ""
-
-		// var resend_message_type = ""
-		// var resend_code = ""
-
-		//var aicnt = 0
 
 		var sendkey = ""
 		var mem_resend = ""
@@ -327,7 +319,7 @@ func resProcess(wg *sync.WaitGroup) {
 			var memo string
 			var payback float64
 			var admin_amt float64
-			// var ph_msg_type string
+			// var ph_msg_type string 250611
 			if cnt == 0 {
 				sendkey = ressendkey.String
 			}
@@ -397,7 +389,7 @@ func resProcess(wg *sync.WaitGroup) {
 			if s.EqualFold(msgcnt.String, "0") {
 
 				mem_resend = ""
-				// ph_msg_type = ""
+				// ph_msg_type = "" 250611
 				
 				if s.EqualFold(mst_type2.String, "AI") || s.EqualFold(mst_type2.String, "AT") {
 					if s.Contains(mst_type3.String, "s") {
@@ -424,7 +416,7 @@ func resProcess(wg *sync.WaitGroup) {
 						}						
 					}
 					
-					// if s.Contains(mst_type3.String, "wp") {
+					// if s.Contains(mst_type3.String, "wp") { 250611
 					// 	mem_resend = "SMT_PHN"
 					// 	ph_msg_type = mst_type3.String
 					// }
@@ -450,7 +442,7 @@ func resProcess(wg *sync.WaitGroup) {
 						mem_resend = "RCS"				
 					}
 
-					// if s.Contains(mst_type2.String, "wp") {
+					// if s.Contains(mst_type2.String, "wp") { 250611
 					// 	mem_resend = "SMT_PHN"
 					// 	ph_msg_type = mst_type2.String
 					// }
@@ -527,7 +519,6 @@ func resProcess(wg *sync.WaitGroup) {
 				if isPass == false {
 					// 발신 성공 시 금액 차감 처리
 					if s.EqualFold(result.String, "Y") { // 카카오 메세지 성공시 차감 처리
-						//errlog.Println("성공 처리 : ",result.String, message_type.String)
 						if s.HasPrefix(s.ToUpper(message_type.String), "F") { // 친구톡 이면
 							if s.EqualFold(message_type.String, "FC") {
 								ftcscnt++
@@ -682,54 +673,54 @@ func resProcess(wg *sync.WaitGroup) {
 								isPayment = false
 
 								switch mem_resend {
-								case "015":
-									if s.EqualFold(msgtype, "SMS") {
-										err_015cnt++
-										cb_msg_message_type = "15"
-										cb_msg_code = "015"
-									} else if s.EqualFold(msgtype, "LMS") {
-										if len(mms_file1.String) <= 0 {
-											err_015cnt++
-											cb_msg_message_type = "15"
-											cb_msg_code = "015"
-										} else {
-											err_015cnt++
-											cb_msg_message_type = "15"
-											cb_msg_code = "015"
-										}
-									}
-								case "PHONE":
-									if s.EqualFold(msgtype, "SMS") {
-										err_phncnt++
-										cb_msg_message_type = "ph"
-										cb_msg_code = "PHN"
-									} else if s.EqualFold(msgtype, "LMS") {
-										if len(mms_file1.String) <= 0 {
-											err_phncnt++
-											cb_msg_message_type = "ph"
-											cb_msg_code = "PHN"
-										} else {
-											err_phncnt++
-											cb_msg_message_type = "ph"
-											cb_msg_code = "PHN"
-										}
-									}
-								case "BKG":
-									if s.EqualFold(msgtype, "SMS") {
-										err_grscnt++
-										cb_msg_message_type = "gs"
-										cb_msg_code = "GRS"
-									} else if s.EqualFold(msgtype, "LMS") {
-										if len(mms_file1.String) <= 0 {
-											err_grscnt++
-											cb_msg_message_type = "gs"
-											cb_msg_code = "GRS"
-										} else {
-											err_grscnt++
-											cb_msg_message_type = "gs"
-											cb_msg_code = "GRS"
-										}
-									}
+								// case "015": 250611
+								// 	if s.EqualFold(msgtype, "SMS") {
+								// 		err_015cnt++
+								// 		cb_msg_message_type = "15"
+								// 		cb_msg_code = "015"
+								// 	} else if s.EqualFold(msgtype, "LMS") {
+								// 		if len(mms_file1.String) <= 0 {
+								// 			err_015cnt++
+								// 			cb_msg_message_type = "15"
+								// 			cb_msg_code = "015"
+								// 		} else {
+								// 			err_015cnt++
+								// 			cb_msg_message_type = "15"
+								// 			cb_msg_code = "015"
+								// 		}
+								// 	}
+								// case "PHONE":
+								// 	if s.EqualFold(msgtype, "SMS") {
+								// 		err_phncnt++
+								// 		cb_msg_message_type = "ph"
+								// 		cb_msg_code = "PHN"
+								// 	} else if s.EqualFold(msgtype, "LMS") {
+								// 		if len(mms_file1.String) <= 0 {
+								// 			err_phncnt++
+								// 			cb_msg_message_type = "ph"
+								// 			cb_msg_code = "PHN"
+								// 		} else {
+								// 			err_phncnt++
+								// 			cb_msg_message_type = "ph"
+								// 			cb_msg_code = "PHN"
+								// 		}
+								// 	}
+								// case "BKG":
+								// 	if s.EqualFold(msgtype, "SMS") {
+								// 		err_grscnt++
+								// 		cb_msg_message_type = "gs"
+								// 		cb_msg_code = "GRS"
+								// 	} else if s.EqualFold(msgtype, "LMS") {
+								// 		if len(mms_file1.String) <= 0 {
+								// 			err_grscnt++
+								// 			cb_msg_message_type = "gs"
+								// 			cb_msg_code = "GRS"
+								// 		} else {
+								// 			err_grscnt++
+								// 			cb_msg_message_type = "gs"
+								// 			cb_msg_code = "GRS"
+								// 		}
+								// 	}
 								case "SMART":
 									if s.EqualFold(msgtype, "SMS") {
 										err_smtcnt++
@@ -778,54 +769,54 @@ func resProcess(wg *sync.WaitGroup) {
 											cb_msg_code = "GRS"
 										}
 									}
-								case "IMC":
-									if s.EqualFold(msgtype, "SMS") {
-										err_smtcnt++
-										cb_msg_message_type = "SM"
-										cb_msg_code = "SMT"
-									} else if s.EqualFold(msgtype, "LMS") {
-										if len(mms_file1.String) <= 0 {
-											err_imccnt++
-											cb_msg_message_type = "IM"
-											cb_msg_code = "IMC"
-										} else {
-											err_smtcnt++
-											cb_msg_message_type = "SM"
-											cb_msg_code = "SMT"
-										}
-									}
-								case "SMT_PHN", "SMT_PHN_DB":
-									if s.EqualFold(msgtype, "SMS") {
-										err_smtcnt++
-										cb_msg_message_type = "SM"
-										cb_msg_code = "SMT"
-									} else if s.EqualFold(msgtype, "LMS") {
-										if len(mms_file1.String) <= 0 {
-											err_imccnt++
-											cb_msg_message_type = "WP"
-											cb_msg_code = "SPH"
-										} else {
-											err_smtcnt++
-											cb_msg_message_type = "WP"
-											cb_msg_code = "SPH"
-										}
-									}
-								case "NASELF":
-									if s.EqualFold(msgtype, "SMS") {
-										err_smtcnt++
-										cb_msg_message_type = "SM"
-										cb_msg_code = "SMT"
-									} else if s.EqualFold(msgtype, "LMS") {
-										if len(mms_file1.String) <= 0 {
-											err_nascnt++
-											cb_msg_message_type = "ns"
-											cb_msg_code = "NAS"
-										} else {
-											err_smtcnt++
-											cb_msg_message_type = "SM"
-											cb_msg_code = "SMT"
-										}
-									}
+								// case "IMC": 250611
+								// 	if s.EqualFold(msgtype, "SMS") {
+								// 		err_smtcnt++
+								// 		cb_msg_message_type = "SM"
+								// 		cb_msg_code = "SMT"
+								// 	} else if s.EqualFold(msgtype, "LMS") {
+								// 		if len(mms_file1.String) <= 0 {
+								// 			err_imccnt++
+								// 			cb_msg_message_type = "IM"
+								// 			cb_msg_code = "IMC"
+								// 		} else {
+								// 			err_smtcnt++
+								// 			cb_msg_message_type = "SM"
+								// 			cb_msg_code = "SMT"
+								// 		}
+								// 	}
+								// case "SMT_PHN", "SMT_PHN_DB":
+								// 	if s.EqualFold(msgtype, "SMS") {
+								// 		err_smtcnt++
+								// 		cb_msg_message_type = "SM"
+								// 		cb_msg_code = "SMT"
+								// 	} else if s.EqualFold(msgtype, "LMS") {
+								// 		if len(mms_file1.String) <= 0 {
+								// 			err_imccnt++
+								// 			cb_msg_message_type = "WP"
+								// 			cb_msg_code = "SPH"
+								// 		} else {
+								// 			err_smtcnt++
+								// 			cb_msg_message_type = "WP"
+								// 			cb_msg_code = "SPH"
+								// 		}
+								// 	}
+								// case "NASELF":
+								// 	if s.EqualFold(msgtype, "SMS") {
+								// 		err_smtcnt++
+								// 		cb_msg_message_type = "SM"
+								// 		cb_msg_code = "SMT"
+								// 	} else if s.EqualFold(msgtype, "LMS") {
+								// 		if len(mms_file1.String) <= 0 {
+								// 			err_nascnt++
+								// 			cb_msg_message_type = "ns"
+								// 			cb_msg_code = "NAS"
+								// 		} else {
+								// 			err_smtcnt++
+								// 			cb_msg_message_type = "SM"
+								// 			cb_msg_code = "SMT"
+								// 		}
+								// 	}
 								case "RCS":
 									if s.EqualFold(msgtype, "SMS") {
 										err_rcscnt++
@@ -851,7 +842,7 @@ func resProcess(wg *sync.WaitGroup) {
 								cb_msg_message = "결과 수신대기"
 
 								switch mem_resend {
-								// case "015":
+								// case "015": 250611
 								// 	cb_msg_message_type = "15"
 								// 	cb_msg_code = "015"
 								// 	lms_015cnt++
@@ -884,32 +875,32 @@ func resProcess(wg *sync.WaitGroup) {
 								// 	admin_amt = cprice.B_price_phn.Float64
 								// 	memo = "폰문자"
 
-								case "BKG":
-									cb_msg_message_type = "gs"
-									cb_msg_code = "GRS"
-									lms_grscnt++
-									mmsmsgStrs = append(mmsmsgStrs, "(?,?,?,?,?,?,?,?,?,?,?)")
-									mmsmsgValues = append(mmsmsgValues, sms_lms_tit)
-									mmsmsgValues = append(mmsmsgValues, phnstr)
-									mmsmsgValues = append(mmsmsgValues, sms_sender)
-									mmsmsgValues = append(mmsmsgValues, "0")
-									mmsmsgValues = append(mmsmsgValues, msg_sms.String)
-									mmsmsgValues = append(mmsmsgValues, sms_sender)
-									mmsmsgValues = append(mmsmsgValues, "0")
-									mmsmsgValues = append(mmsmsgValues, msgid)
-									mmsmsgValues = append(mmsmsgValues, remark4)
-									mmsmsgValues = append(mmsmsgValues, mem_id)
-									if s.EqualFold(reserve_dt.String, "00000000000000") {
-										mmsmsgValues = append(mmsmsgValues, nowstr)
-									} else {
-										mmsmsgValues = append(mmsmsgValues, reserve_dt)
-									}
+								// case "BKG":
+								// 	cb_msg_message_type = "gs"
+								// 	cb_msg_code = "GRS"
+								// 	lms_grscnt++
+								// 	mmsmsgStrs = append(mmsmsgStrs, "(?,?,?,?,?,?,?,?,?,?,?)")
+								// 	mmsmsgValues = append(mmsmsgValues, sms_lms_tit)
+								// 	mmsmsgValues = append(mmsmsgValues, phnstr)
+								// 	mmsmsgValues = append(mmsmsgValues, sms_sender)
+								// 	mmsmsgValues = append(mmsmsgValues, "0")
+								// 	mmsmsgValues = append(mmsmsgValues, msg_sms.String)
+								// 	mmsmsgValues = append(mmsmsgValues, sms_sender)
+								// 	mmsmsgValues = append(mmsmsgValues, "0")
+								// 	mmsmsgValues = append(mmsmsgValues, msgid)
+								// 	mmsmsgValues = append(mmsmsgValues, remark4)
+								// 	mmsmsgValues = append(mmsmsgValues, mem_id)
+								// 	if s.EqualFold(reserve_dt.String, "00000000000000") {
+								// 		mmsmsgValues = append(mmsmsgValues, nowstr)
+								// 	} else {
+								// 		mmsmsgValues = append(mmsmsgValues, reserve_dt)
+								// 	}
 
-									kko_kind = "P"
-									amount = cprice.C_price_grs.Float64
-									payback = cprice.C_price_grs.Float64 - cprice.P_price_grs.Float64
-									admin_amt = cprice.B_price_grs.Float64
-									memo = "웹(A)"
+								// 	kko_kind = "P"
+								// 	amount = cprice.C_price_grs.Float64
+								// 	payback = cprice.C_price_grs.Float64 - cprice.P_price_grs.Float64
+								// 	admin_amt = cprice.B_price_grs.Float64
+								// 	memo = "웹(A)"
 
 								case "RCS":
 									cb_msg_message_type = "rc"
@@ -1412,7 +1403,7 @@ func resProcess(wg *sync.WaitGroup) {
 											}
 										}
 									}
-								// case "SMT_PHN":
+								// case "SMT_PHN": 250611
 								// 	cb_msg_message_type = "sm"
 								// 	cb_msg_code = "SMT"
 
@@ -1609,7 +1600,7 @@ func resProcess(wg *sync.WaitGroup) {
 				amtsValues = nil
 			}
 
-			// if len(nanoitStrs) >= 1000 {
+			// if len(nanoitStrs) >= 1000 { 250611
 			// 	stmt := fmt.Sprintf("insert into cb_nanoit_msg(msg_type, remark4, phn, cb_msg_id) values %s", s.Join(nanoitStrs, ","))
 			// 	_, err := db.Exec(stmt, nanoitValues...)
 
@@ -1705,7 +1696,7 @@ func resProcess(wg *sync.WaitGroup) {
 				rcsValues = nil
 			}
 
-			// if len(smtpStrs) >= 1000 {
+			// if len(smtpStrs) >= 1000 { 250611
 			// 	stmt := fmt.Sprintf("insert into SMT_SEND(user_id,sub_id,send_type,sender,subject,message,file_url,receivers,reserve_yn,reserve_dt,request_id,request_dt,send_status, user_acct_key,user_acct_type) values %s", s.Join(smtpStrs, ","))
 			// 	_, err := db.Exec(stmt, smtpValues...)
 
@@ -1788,7 +1779,7 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 		}
 
-		// if len(nanoitStrs) > 0 {
+		// if len(nanoitStrs) > 0 { 250611
 		// 	stmt := fmt.Sprintf("insert into cb_nanoit_msg(msg_type, remark4, phn, cb_msg_id) values %s", s.Join(nanoitStrs, ","))
 		// 	_, err := db.Exec(stmt, nanoitValues...)
 
@@ -1863,7 +1854,7 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 		}
 			
-		// if len(smtpStrs) > 0 {
+		// if len(smtpStrs) > 0 { 250611
 		// 	stmt := fmt.Sprintf("insert into SMT_SEND(user_id,sub_id,send_type,sender,subject,message,file_url,receivers,reserve_yn,reserve_dt,request_id,request_dt,send_status, user_acct_key, user_acct_type) values %s", s.Join(smtpStrs, ","))
 		// 	_, err := db.Exec(stmt, smtpValues...)
 
