@@ -76,8 +76,8 @@ func resProcess(wg *sync.WaitGroup) {
 	ftlistsStrs := []string{}
 	ftlistsValues := []interface{}{}
 
-	nanoitStrs := []string{}
-	nanoitValues := []interface{}{}
+	// nanoitStrs := []string{}
+	// nanoitValues := []interface{}{}
 
 	mmsmsgStrs := []string{}
 	mmsmsgValues := []interface{}{}
@@ -103,8 +103,9 @@ func resProcess(wg *sync.WaitGroup) {
 	rcsStrs := []string{}
 	rcsValues := []interface{}{}
 
-	smtpStrs := []string{}
-	smtpValues := []interface{}{}
+	// smtpStrs := []string{}
+	// smtpValues := []interface{}{}
+	
 	var resquery = `
 		SELECT
 			trr.REMARK4 AS ressendkey,
@@ -188,8 +189,8 @@ func resProcess(wg *sync.WaitGroup) {
 		ftlistsStrs = nil // 친구톡 성공 List 저장용
 		ftlistsValues = nil
 
-		nanoitStrs = nil // 나노IT Table Insert 용
-		nanoitValues = nil
+		// nanoitStrs = nil // 나노IT Table Insert 용
+		// nanoitValues = nil
 
 		mmsmsgStrs = nil //웹(A) Table Insert 용
 		mmsmsgValues = nil
@@ -215,8 +216,8 @@ func resProcess(wg *sync.WaitGroup) {
 		rcsStrs = nil
 		rcsValues = nil
 
-		smtpStrs = nil //스마트미 폰문자 Table Insert 용
-		smtpValues = nil
+		// smtpStrs = nil //스마트미 폰문자 Table Insert 용
+		// smtpValues = nil
 
 		var insstr = ""
 		var amtinsstr = ""
@@ -326,7 +327,7 @@ func resProcess(wg *sync.WaitGroup) {
 			var memo string
 			var payback float64
 			var admin_amt float64
-			var ph_msg_type string
+			// var ph_msg_type string
 			if cnt == 0 {
 				sendkey = ressendkey.String
 			}
@@ -396,7 +397,7 @@ func resProcess(wg *sync.WaitGroup) {
 			if s.EqualFold(msgcnt.String, "0") {
 
 				mem_resend = ""
-				ph_msg_type = ""
+				// ph_msg_type = ""
 				
 				if s.EqualFold(mst_type2.String, "AI") || s.EqualFold(mst_type2.String, "AT") {
 					if s.Contains(mst_type3.String, "s") {
@@ -423,10 +424,10 @@ func resProcess(wg *sync.WaitGroup) {
 						}						
 					}
 					
-					if s.Contains(mst_type3.String, "wp") {
-						mem_resend = "SMT_PHN"
-						ph_msg_type = mst_type3.String
-					}
+					// if s.Contains(mst_type3.String, "wp") {
+					// 	mem_resend = "SMT_PHN"
+					// 	ph_msg_type = mst_type3.String
+					// }
 
 				} else { 
 					if s.Contains(mst_type2.String, "s") {
@@ -449,10 +450,10 @@ func resProcess(wg *sync.WaitGroup) {
 						mem_resend = "RCS"				
 					}
 
-					if s.Contains(mst_type2.String, "wp") {
-						mem_resend = "SMT_PHN"
-						ph_msg_type = mst_type2.String
-					}
+					// if s.Contains(mst_type2.String, "wp") {
+					// 	mem_resend = "SMT_PHN"
+					// 	ph_msg_type = mst_type2.String
+					// }
 										
 				}
 
@@ -850,38 +851,38 @@ func resProcess(wg *sync.WaitGroup) {
 								cb_msg_message = "결과 수신대기"
 
 								switch mem_resend {
-								case "015":
-									cb_msg_message_type = "15"
-									cb_msg_code = "015"
-									lms_015cnt++
+								// case "015":
+								// 	cb_msg_message_type = "15"
+								// 	cb_msg_code = "015"
+								// 	lms_015cnt++
 
-									nanoitStrs = append(nanoitStrs, "(?,?,?,?)")
-									nanoitValues = append(nanoitValues, "015")
-									nanoitValues = append(nanoitValues, remark4.String)
-									nanoitValues = append(nanoitValues, phnstr)
-									nanoitValues = append(nanoitValues, msgid.String)
+								// 	nanoitStrs = append(nanoitStrs, "(?,?,?,?)")
+								// 	nanoitValues = append(nanoitValues, "015")
+								// 	nanoitValues = append(nanoitValues, remark4.String)
+								// 	nanoitValues = append(nanoitValues, phnstr)
+								// 	nanoitValues = append(nanoitValues, msgid.String)
 
-									kko_kind = "P"
-									amount = cprice.C_price_015.Float64
-									payback = cprice.C_price_015.Float64 - cprice.P_price_015.Float64
-									admin_amt = cprice.B_price_015.Float64
-									memo = "015저가문자"
+								// 	kko_kind = "P"
+								// 	amount = cprice.C_price_015.Float64
+								// 	payback = cprice.C_price_015.Float64 - cprice.P_price_015.Float64
+								// 	admin_amt = cprice.B_price_015.Float64
+								// 	memo = "015저가문자"
 
-								case "PHONE":
-									cb_msg_message_type = "ph"
-									cb_msg_code = "phn"
-									lms_phncnt++
-									nanoitStrs = append(nanoitStrs, "(?,?,?,?)")
-									nanoitValues = append(nanoitValues, "PHONE")
-									nanoitValues = append(nanoitValues, remark4.String)
-									nanoitValues = append(nanoitValues, phnstr)
-									nanoitValues = append(nanoitValues, msgid.String)
+								// case "PHONE":
+								// 	cb_msg_message_type = "ph"
+								// 	cb_msg_code = "phn"
+								// 	lms_phncnt++
+								// 	nanoitStrs = append(nanoitStrs, "(?,?,?,?)")
+								// 	nanoitValues = append(nanoitValues, "PHONE")
+								// 	nanoitValues = append(nanoitValues, remark4.String)
+								// 	nanoitValues = append(nanoitValues, phnstr)
+								// 	nanoitValues = append(nanoitValues, msgid.String)
 
-									kko_kind = "P"
-									amount = cprice.C_price_phn.Float64
-									payback = cprice.C_price_phn.Float64 - cprice.P_price_phn.Float64
-									admin_amt = cprice.B_price_phn.Float64
-									memo = "폰문자"
+								// 	kko_kind = "P"
+								// 	amount = cprice.C_price_phn.Float64
+								// 	payback = cprice.C_price_phn.Float64 - cprice.P_price_phn.Float64
+								// 	admin_amt = cprice.B_price_phn.Float64
+								// 	memo = "폰문자"
 
 								case "BKG":
 									cb_msg_message_type = "gs"
@@ -1411,56 +1412,56 @@ func resProcess(wg *sync.WaitGroup) {
 											}
 										}
 									}
-								case "SMT_PHN":
-									cb_msg_message_type = "sm"
-									cb_msg_code = "SMT"
+								// case "SMT_PHN":
+								// 	cb_msg_message_type = "sm"
+								// 	cb_msg_code = "SMT"
 
-									// 폰문자는 자동 성공 처리 하기 위해 대기 차감함.
-									lms_imccnt++
-									mst_waitcnt--
+								// 	// 폰문자는 자동 성공 처리 하기 위해 대기 차감함.
+								// 	lms_imccnt++
+								// 	mst_waitcnt--
 
-									cb_msg_message = "폰문자 성공"
-									result_flag = "Y"
+								// 	cb_msg_message = "폰문자 성공"
+								// 	result_flag = "Y"
 
-									smtpStrs = append(smtpStrs, "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
-									smtpValues = append(smtpValues, "dhn7985")
-									smtpValues = append(smtpValues, "")
-									smtpValues = append(smtpValues, msgtype)
-									smtpValues = append(smtpValues, sms_sender)
-									smtpValues = append(smtpValues, sms_lms_tit)
-									smtpValues = append(smtpValues, msg_sms)
-									smtpValues = append(smtpValues, "")
-									smtpValues = append(smtpValues, phnstr)
-									smtpValues = append(smtpValues, "N")
-									smtpValues = append(smtpValues, "")
-									smtpValues = append(smtpValues, remark4)
-									smtpValues = append(smtpValues, nowstr)
-									smtpValues = append(smtpValues, "READY")
-									if s.EqualFold(ph_msg_type, "wp1") {
-										smtpValues = append(smtpValues, conf.WP1)
-										smtpValues = append(smtpValues, ph_msg_type)
-									} else {
-										smtpValues = append(smtpValues, conf.WP2)
-										smtpValues = append(smtpValues, ph_msg_type)
-									}
+								// 	smtpStrs = append(smtpStrs, "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+								// 	smtpValues = append(smtpValues, "dhn7985")
+								// 	smtpValues = append(smtpValues, "")
+								// 	smtpValues = append(smtpValues, msgtype)
+								// 	smtpValues = append(smtpValues, sms_sender)
+								// 	smtpValues = append(smtpValues, sms_lms_tit)
+								// 	smtpValues = append(smtpValues, msg_sms)
+								// 	smtpValues = append(smtpValues, "")
+								// 	smtpValues = append(smtpValues, phnstr)
+								// 	smtpValues = append(smtpValues, "N")
+								// 	smtpValues = append(smtpValues, "")
+								// 	smtpValues = append(smtpValues, remark4)
+								// 	smtpValues = append(smtpValues, nowstr)
+								// 	smtpValues = append(smtpValues, "READY")
+								// 	if s.EqualFold(ph_msg_type, "wp1") {
+								// 		smtpValues = append(smtpValues, conf.WP1)
+								// 		smtpValues = append(smtpValues, ph_msg_type)
+								// 	} else {
+								// 		smtpValues = append(smtpValues, conf.WP2)
+								// 		smtpValues = append(smtpValues, ph_msg_type)
+								// 	}
 
-									kko_kind = "P"
-									if s.EqualFold(mst_sent_voucher.String, "V") {
-										amount = cprice.V_price_imc.Float64
-										payback = cprice.V_price_imc.Float64 - cprice.P_price_imc.Float64
-										admin_amt = cprice.B_price_imc.Float64
-										memo = "SMT PHN,바우처"
-									} else {
-										amount = cprice.C_price_imc.Float64
-										payback = cprice.C_price_imc.Float64 - cprice.P_price_imc.Float64
-										admin_amt = cprice.B_price_imc.Float64
-										if s.EqualFold(mst_sent_voucher.String, "B") {
-											memo = "SMT PHN,보너스"
-										} else {
-											memo = "SMT PHN"
-										}										
+								// 	kko_kind = "P"
+								// 	if s.EqualFold(mst_sent_voucher.String, "V") {
+								// 		amount = cprice.V_price_imc.Float64
+								// 		payback = cprice.V_price_imc.Float64 - cprice.P_price_imc.Float64
+								// 		admin_amt = cprice.B_price_imc.Float64
+								// 		memo = "SMT PHN,바우처"
+								// 	} else {
+								// 		amount = cprice.C_price_imc.Float64
+								// 		payback = cprice.C_price_imc.Float64 - cprice.P_price_imc.Float64
+								// 		admin_amt = cprice.B_price_imc.Float64
+								// 		if s.EqualFold(mst_sent_voucher.String, "B") {
+								// 			memo = "SMT PHN,보너스"
+								// 		} else {
+								// 			memo = "SMT PHN"
+								// 		}										
 										
-									}
+								// 	}
 
 
 								}
@@ -1608,17 +1609,17 @@ func resProcess(wg *sync.WaitGroup) {
 				amtsValues = nil
 			}
 
-			if len(nanoitStrs) >= 1000 {
-				stmt := fmt.Sprintf("insert into cb_nanoit_msg(msg_type, remark4, phn, cb_msg_id) values %s", s.Join(nanoitStrs, ","))
-				_, err := db.Exec(stmt, nanoitValues...)
+			// if len(nanoitStrs) >= 1000 {
+			// 	stmt := fmt.Sprintf("insert into cb_nanoit_msg(msg_type, remark4, phn, cb_msg_id) values %s", s.Join(nanoitStrs, ","))
+			// 	_, err := db.Exec(stmt, nanoitValues...)
 
-				if err != nil {
-					errlog.Println("Nano it Table Insert 처리 중 오류 발생 " + err.Error())
-				}
+			// 	if err != nil {
+			// 		errlog.Println("Nano it Table Insert 처리 중 오류 발생 " + err.Error())
+			// 	}
 
-				nanoitStrs = nil
-				nanoitValues = nil
-			}
+			// 	nanoitStrs = nil
+			// 	nanoitValues = nil
+			// }
 
 			if len(ossmsStrs) >= 1000 {
 				stmt := fmt.Sprintf("insert into OShotSMS(Sender,Receiver,Msg,URL,ReserveDT,TimeoutDT,SendResult,mst_id,cb_msg_id ) values %s", s.Join(ossmsStrs, ","))
@@ -1704,17 +1705,17 @@ func resProcess(wg *sync.WaitGroup) {
 				rcsValues = nil
 			}
 
-			if len(smtpStrs) >= 1000 {
-				stmt := fmt.Sprintf("insert into SMT_SEND(user_id,sub_id,send_type,sender,subject,message,file_url,receivers,reserve_yn,reserve_dt,request_id,request_dt,send_status, user_acct_key,user_acct_type) values %s", s.Join(smtpStrs, ","))
-				_, err := db.Exec(stmt, smtpValues...)
+			// if len(smtpStrs) >= 1000 {
+			// 	stmt := fmt.Sprintf("insert into SMT_SEND(user_id,sub_id,send_type,sender,subject,message,file_url,receivers,reserve_yn,reserve_dt,request_id,request_dt,send_status, user_acct_key,user_acct_type) values %s", s.Join(smtpStrs, ","))
+			// 	_, err := db.Exec(stmt, smtpValues...)
 
-				if err != nil {
-					errlog.Println("스마트미 폰문자 Table Insert 처리 중 오류 발생 " + err.Error())
-				}
+			// 	if err != nil {
+			// 		errlog.Println("스마트미 폰문자 Table Insert 처리 중 오류 발생 " + err.Error())
+			// 	}
 
-				smtpStrs = nil
-				smtpValues = nil
-			}
+			// 	smtpStrs = nil
+			// 	smtpValues = nil
+			// }
 
 		}
 		// mst_id 별 Loop 끝
@@ -1787,15 +1788,15 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 		}
 
-		if len(nanoitStrs) > 0 {
-			stmt := fmt.Sprintf("insert into cb_nanoit_msg(msg_type, remark4, phn, cb_msg_id) values %s", s.Join(nanoitStrs, ","))
-			_, err := db.Exec(stmt, nanoitValues...)
+		// if len(nanoitStrs) > 0 {
+		// 	stmt := fmt.Sprintf("insert into cb_nanoit_msg(msg_type, remark4, phn, cb_msg_id) values %s", s.Join(nanoitStrs, ","))
+		// 	_, err := db.Exec(stmt, nanoitValues...)
 
-			if err != nil {
-				errlog.Println("Nano it Table Insert 처리 중 오류 발생 " + err.Error())
-			}
+		// 	if err != nil {
+		// 		errlog.Println("Nano it Table Insert 처리 중 오류 발생 " + err.Error())
+		// 	}
 
-		}
+		// }
 
 		if len(ossmsStrs) > 0 {
 			stmt := fmt.Sprintf("insert into OShotSMS(Sender,Receiver,Msg,URL,ReserveDT,TimeoutDT,SendResult,mst_id,cb_msg_id ) values %s", s.Join(ossmsStrs, ","))
@@ -1862,14 +1863,14 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 		}
 			
-		if len(smtpStrs) > 0 {
-			stmt := fmt.Sprintf("insert into SMT_SEND(user_id,sub_id,send_type,sender,subject,message,file_url,receivers,reserve_yn,reserve_dt,request_id,request_dt,send_status, user_acct_key, user_acct_type) values %s", s.Join(smtpStrs, ","))
-			_, err := db.Exec(stmt, smtpValues...)
+		// if len(smtpStrs) > 0 {
+		// 	stmt := fmt.Sprintf("insert into SMT_SEND(user_id,sub_id,send_type,sender,subject,message,file_url,receivers,reserve_yn,reserve_dt,request_id,request_dt,send_status, user_acct_key, user_acct_type) values %s", s.Join(smtpStrs, ","))
+		// 	_, err := db.Exec(stmt, smtpValues...)
 
-			if err != nil {
-				errlog.Println("스마트미 폰문자 Table Insert 처리 중 오류 발생 " + err.Error())
-			}
-		}
+		// 	if err != nil {
+		// 		errlog.Println("스마트미 폰문자 Table Insert 처리 중 오류 발생 " + err.Error())
+		// 	}
+		// }
 
 		if len(remark4.String) > 0 {
 			var cntupdate = `update cb_wt_msg_sent 
