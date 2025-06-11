@@ -1,19 +1,16 @@
 package tblreqprocess
 
 import (
-	"webagent/src/config"
-	"database/sql"
 	"fmt"
 	"sync"
-	//"encoding/json"
-	//	"os"
-	"webagent/src/baseprice"
-	"webagent/src/databasepool"
-	//"rcs"
-	s "strings"
 	"time"
 	"context"
+	s "strings"
+	"database/sql"
 	
+	"webagent/src/config"
+	"webagent/src/baseprice"
+	"webagent/src/databasepool"
 )
 
 func Process(ctx context.Context) {
@@ -51,9 +48,7 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 		}
 	}()
-	//var name string
-	//stdlog.SetPrefix(log.Ldate|log.Ltime, "Result 처리 : ")
-	//errlog.SetPrefix(log.Ldate|log.Ltime, "Result 오류 : ")
+
 	var db = databasepool.DB
 	var conf = config.Conf
 	var stdlog = config.Stdlog
@@ -72,7 +67,6 @@ func resProcess(wg *sync.WaitGroup) {
 	msginsValues := []interface{}{}
 
 	atinsids := []interface{}{} // 알림톡 2차 발신시 2nd 테이블을 이용한 insert 용 id
-	//atdelids := []interface{}{} // 알림톡 2차 발신시 2nd 테이블 삭제를 위한 id
 
 	upmsgids := []interface{}{}
 
@@ -111,16 +105,29 @@ func resProcess(wg *sync.WaitGroup) {
 
 	smtpStrs := []string{}
 	smtpValues := []interface{}{}
-	var resquery = "SELECT trr.REMARK4 AS ressendkey, cm.mem_userid as username, cm.mem_id as user_mem_id, trr.sms_sender gsms_sender FROM " + conf.RESULTTABLE + " trr INNER JOIN cb_member cm ON trr.remark2 = cm.mem_id WHERE trr.remark3 IS NOT null and ( trr.reserve_dt < DATE_FORMAT(NOW(), '%Y%m%d%H%i%S') or trr.reserve_dt = '00000000000000') GROUP BY trr.REMARK4, cm.mem_userid"
-
-	//for {
+	var resquery = `
+		SELECT
+			trr.REMARK4 AS ressendkey,
+			cm.mem_userid as username,
+			cm.mem_id as user_mem_id,
+			trr.sms_sender gsms_sender
+		FROM 
+			` + conf.RESULTTABLE + ` trr
+		INNER JOIN 
+			cb_member cm ON trr.remark2 = cm.mem_id 
+		WHERE
+			trr.remark3 IS NOT null 
+			and ( trr.reserve_dt < DATE_FORMAT(NOW(), '%Y%m%d%H%i%S') or trr.reserve_dt = '00000000000000')
+		GROUP BY 
+			trr.REMARK4,
+			cm.mem_userid`
 
 	resrows, err := db.Query(resquery)
 
 	if err != nil {
 		errlog.Println("Result Table 처리 중 오류 발생")
 		errlog.Println(err)
-		//errlog.Fatal(resquery)
+		time.Sleep(500 * time.Millisecond)
 		panic(err)
 	}
 	defer resrows.Close()
@@ -151,31 +158,24 @@ func resProcess(wg *sync.WaitGroup) {
 			"       ,(select mst_type3 from cb_wt_msg_sent wms where wms.mst_id = a.remark4) as mst_type3" +
 			"       ,(select mst_2nd_alim from cb_wt_msg_sent wms where wms.mst_id = a.remark4) as mst_2nd_alim" +
 			"       ,(select count(1) as msgcnt from cb_msg_" + username.String + " cbmsg where cbmsg.msgid = a.msgid) as msgcnt" +
-			" ,(SELECT mi.origin1_path FROM cb_wt_msg_sent wms INNER join cb_mms_images mi ON wms.mst_mms_content = mi.mms_id  WHERE  length(mst_mms_content ) > 5 AND wms.mst_id = a.remark4 ) as mms_file1" +
-			" ,(SELECT mi.origin2_path FROM cb_wt_msg_sent wms INNER join cb_mms_images mi ON wms.mst_mms_content = mi.mms_id  WHERE  length(mst_mms_content ) > 5 AND wms.mst_id = a.remark4 ) as mms_file2" +
-			" ,(SELECT mi.origin3_path FROM cb_wt_msg_sent wms INNER join cb_mms_images mi ON wms.mst_mms_content = mi.mms_id  WHERE  length(mst_mms_content ) > 5 AND wms.mst_id = a.remark4 ) as mms_file3" +
-			" ,(select count(1) as vancnt from cb_block_lists cbl where cbl.sender = '" + gsms_sender.String + "' AND cbl.phn = CONCAT('0', SUBSTR(a.phn, 3,20))) AS vancnt " +
+			"       ,(SELECT mi.origin1_path FROM cb_wt_msg_sent wms INNER join cb_mms_images mi ON wms.mst_mms_content = mi.mms_id  WHERE  length(mst_mms_content ) > 5 AND wms.mst_id = a.remark4 ) as mms_file1" +
+			"       ,(SELECT mi.origin2_path FROM cb_wt_msg_sent wms INNER join cb_mms_images mi ON wms.mst_mms_content = mi.mms_id  WHERE  length(mst_mms_content ) > 5 AND wms.mst_id = a.remark4 ) as mms_file2" +
+			"       ,(SELECT mi.origin3_path FROM cb_wt_msg_sent wms INNER join cb_mms_images mi ON wms.mst_mms_content = mi.mms_id  WHERE  length(mst_mms_content ) > 5 AND wms.mst_id = a.remark4 ) as mms_file3" +
+			"       ,(select count(1) as vancnt from cb_block_lists cbl where cbl.sender = '" + gsms_sender.String + "' AND cbl.phn = CONCAT('0', SUBSTR(a.phn, 3,20))) AS vancnt " +
 			"       ,(select mst_sent_voucher from cb_wt_msg_sent wms where wms.mst_id = a.remark4) as mst_sent_voucher" +
 			"   from " + conf.RESULTTABLE + " a inner join cb_member b on b.mem_id = a.REMARK2" +
 			"  where a.remark4 = ? and a.remark3 is not null"
 		
-		//stdlog.Println("RCS Flag", conf.RCS)
-		
 		rows, err := db.Query(resultsql, ressendkey.String)
 		if err != nil {
-			errlog.Println(" Result Table 처리 중 오류 발생")
+			errlog.Println("Result Table 처리 중 오류 발생")
 			errlog.Println(err)
-			// errlog.Fatal(resultsql)
+			time.Sleep(500 * time.Millisecond)
+			panic(err)
 		}
 		defer rows.Close()
 
 		cnt = 0
-
-		//tx, err := db.Begin()
-		if err != nil {
-			errlog.Println(" 트랜잭션 시작 중 오류 발생")
-			// errlog.Fatal(err)
-		}
 
 		msginsStrs = nil // cb_msg Table Insert 용
 		msginsValues = nil
@@ -316,7 +316,6 @@ func resProcess(wg *sync.WaitGroup) {
 		var isPayment bool
 		var startNow = time.Now()
 		var startTime = fmt.Sprintf("%02d:%02d:%02d", startNow.Hour(), startNow.Minute(), startNow.Second())
-		// var oshotGroupId = time.Now().Format("050102150405")
 		for rows.Next() {
 
 			isPass = false
@@ -329,7 +328,6 @@ func resProcess(wg *sync.WaitGroup) {
 			var admin_amt float64
 			var ph_msg_type string
 			if cnt == 0 {
-				//stdlog.Println(ressendkey.String + " - Result 처리 시작 - ")
 				sendkey = ressendkey.String
 			}
 			cnt++
@@ -460,8 +458,6 @@ func resProcess(wg *sync.WaitGroup) {
 
 				phnstr = phn.String
 
-				//mem_resend = mem_2nd_send.String
-
 				if len(p_invoice.String) > 0 && s.EqualFold(message_type.String, "ph") {
 					
 					if len(mem_resend) <= 0 {
@@ -492,26 +488,11 @@ func resProcess(wg *sync.WaitGroup) {
 					cb_msg_message_type = message_type.String
 				}
 	
-				// if !s.EqualFold(sendkey, remark4.String) {
-				// 	var cntupdate = "update cb_wt_msg_sent set mst_ft = ifnull(mst_ft,0) + ?, mst_ft_img = ifnull(mst_ft_img,0) + ?, mst_at = ifnull(mst_at,0) + ? where mst_id = ?"
-				// 	_, err := tx.Exec(cntupdate, ftcnt, fticnt, atcnt, sendkey)
-
-				// 	if err != nil {
-				// 		errlog.Println("WT_MSG_SENT 카카오 메세지 수량 처리 중 오류 발생 " + err.Error())
-				// 	}
-				// 	ftcnt = 0
-				// 	fticnt = 0
-				// 	atcnt = 0
-				// }
-				if s.HasPrefix(s.ToUpper(message_type.String), "F") && len(mst_2nd_alim.String) > 0 && s.EqualFold(mst_2nd_alim.String, "0") == false {
-
-					//errlog.Println(result.String, msgid.String+"AT")
+				if s.HasPrefix(s.ToUpper(message_type.String), "F") && len(mst_2nd_alim.String) > 0 && mst_2nd_alim.String != "0" {
 
 					if s.EqualFold(result.String, "N") {
 						isPass = true
-
 						atinsids = append(atinsids, msgid.String+"AT")
-
 					}
 
 					if len(atinsids) >= 100 {
@@ -530,16 +511,18 @@ func resProcess(wg *sync.WaitGroup) {
 							errlog.Println("2ND 테이블에서 복사 처리 중 오류 발생 ")
 							errlog.Println(err1)
 							errlog.Println(copystr)
+							time.Sleep(500 * time.Millisecond)
+							panic(err1)
 						} else {
 							errlog.Println("2ND 테이블에서 복사 처리 완료 : ",len(atinsids))
 						}
 						atinsids = nil
- 
 					}
 
 				}
+
 				result_flag = result.String
-				//stdlog.Println("MST Type ", mem_resend, msgtype, isPass, "sms", msg_sms.String)
+
 				if isPass == false {
 					// 발신 성공 시 금액 차감 처리
 					if s.EqualFold(result.String, "Y") { // 카카오 메세지 성공시 차감 처리
@@ -688,15 +671,9 @@ func resProcess(wg *sync.WaitGroup) {
 					} else { //  카카오 메세지 실패 시 혹은 메세지 전용 일 경우 처리
 						if !s.EqualFold(message.String, "InvalidPhoneNumber") && len(mem_resend) > 0 && !s.EqualFold(mem_resend, "NONE") && len(sms_sender.String) > 0 {
 
-							//var vansql = "select count(1) as vancnt from cb_block_lists cbl where cbl.sender = '" + sms_sender.String + "' AND cbl.phn = '" + phnstr + "'"
-							//stdlog.Println(vansql)
-							//err = db.QueryRow(vansql).Scan(&vancnt)
-
 							if s.HasPrefix(phnstr, "82") {
 								phnstr = "0" + phnstr[2:len(phnstr)]
 							}
-
-							//stdlog.Println("MST Type ", mem_resend, msgtype)
 
 							if !s.EqualFold(vancnt.String, "0") { // 수신거부 List 에 있으면 수신거부 메세지 처리
 
@@ -941,14 +918,12 @@ func resProcess(wg *sync.WaitGroup) {
 									
 									if conf.RCS {
 										err = db.QueryRow("SELECT msr_template,msr_brand,msr_datetime,msr_kind,msr_content,msr_button1,msr_button2,msr_button3, msr_button4, msr_button5,msr_chatbotid,msr_button, msr_body, msr_brandkey FROM cb_wt_msg_rcs WHERE msr_mst_id = '" + ressendkey.String + "'").Scan(&rcsTemplate, &rcsBrand, &rcsDatetime, &rcsKind, &rcsContent, &rcsBtn1, &rcsBtn2, &rcsBtn3, &rcsBtn4, &rcsBtn5, &rcsChatbotID, &rcsBtns, &rcsBody, &rcsBrandkey)
-									    //stdlog.Println("RCS BTN", rcsBtns.String)
 									    if err != nil {
 									        errlog.Println("RCS Table 조회 중 중 오류 발생", err)
 									        errlog.Println("SELECT msr_template,msr_brand,msr_datetime,msr_kind,msr_content,msr_button1,msr_button2,msr_button3, msr_button4, msr_button5,msr_chatbotid,msr_button FROM cb_wt_msg_rcs WHERE msr_mst_id = '" + ressendkey.String + "'")
 									    }			
 									}									
 									
-									//var body rcs.RcsBody 
 									
 									if s.EqualFold(msgtype, "SMS") {
 										//msgbaseid = "SS000000"				
@@ -1028,9 +1003,6 @@ func resProcess(wg *sync.WaitGroup) {
 										}
 									}
 									
-									//bodyBytes, _ := json.Marshal(body)
-									//bodyJson := string(bodyBytes)
-									
 									rcsStrs = append(rcsStrs, "(?,?,'0',?,'rcs',?,?,?,?,1,'0',null,1,?,?,?)")
 									rcsValues = append(rcsValues, msgid.String)
 									rcsValues = append(rcsValues, phnstr)
@@ -1041,15 +1013,11 @@ func resProcess(wg *sync.WaitGroup) {
 									rcsValues = append(rcsValues, srv_type)
 									rcsValues = append(rcsValues, rcsBody.String)
 									rcsValues = append(rcsValues, rcsBtns.String)
-									rcsValues = append(rcsValues, rcsBrandkey.String)
-									
-									//stdlog.Println("RCS msg Infor ", rcsBtns.String)
-									
+									rcsValues = append(rcsValues, rcsBrandkey.String)									
  
 								case "SMART":
 									cb_msg_message_type = "sm"
 									cb_msg_code = "SMT"
-									//lms_smtcnt++
 
 									if s.EqualFold(msgtype, "SMS") {
 										ossmsStrs = append(ossmsStrs, "(?,?,?,?,?,null,?,?,?)")
@@ -1940,12 +1908,6 @@ func resProcess(wg *sync.WaitGroup) {
 		if cnt > 0 {
 			stdlog.Printf("( %s ) Result 처리 - %s : %d 건 처리 완료", startTime, ressendkey.String, cnt)
 		}
-
-		//err = tx.Commit()
-		
-		//if err != nil {
-		//	errlog.Println("Result Proc Commit 처리 중 오류 발생 ")
-		//}
 		
 		// 2차 알림톡 2일 지난건 삭제 함.
 		db.Exec("delete a from " + conf.REQTABLE2 + " a where  ( ( a.reserve_dt < DATE_FORMAT(ADDDATE(now(), INTERVAL -2 DAY), '%Y%m%d%H%i%S') and a.reserve_dt <> '00000000000000') or ( a.REG_DT < ADDDATE(now(), INTERVAL -2 DAY) and a.reserve_dt = '00000000000000'))");
