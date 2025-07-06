@@ -16,6 +16,8 @@ import (
 	"webagent/src/req2ndprocess"
 	"webagent/src/webamms"
 	"webagent/src/webasms"
+	"webagent/src/webbmms"
+	"webagent/src/webbsms"
 	"webagent/src/webcmms"
 	"webagent/src/webcsms"
 	"webagent/src/rcs"
@@ -26,17 +28,17 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const (
-	name        = "BizAgent_m"
-	description = "마트톡 메세지 후속 처리 프로그램"
-	port  		= ":3010"
-)
-
 // const (
-// 	name        = "BizAgent_g"
-// 	description = "올지니 메세지 후속 처리 프로그램"
-// 	port  		= ":3020"
+// 	name        = "BizAgent_m"
+// 	description = "마트톡 메세지 후속 처리 프로그램"
+// 	port  		= ":3010"
 // )
+
+const (
+	name        = "BizAgent_g"
+	description = "올지니 메세지 후속 처리 프로그램"
+	port  		= ":3020"
+)
 
 // const (
 // 	name        = "BizAgent_o"
@@ -171,6 +173,12 @@ func resultProc() {
 	go webcsms.Process(ctx)
 	go webcmms.Process(ctx)
 	//오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
+
+	//LGU 결과값 조회 및 문자 실패 환불 처리 고루틴
+	config.Stdlog.Println("LGU 결과 처리 프로세스 - 시작")
+	go webbsms.Process(ctx)
+	go webbmms.Process(ctx)
+	//LGU 결과값 조회 및 문자 실패 환불 처리 고루틴
 
 	//나노 결과값 조회 및 문자 실패 환불 처리 고루틴
 	config.Stdlog.Println("나노(일반망) 결과 처리 프로세스 - 시작")

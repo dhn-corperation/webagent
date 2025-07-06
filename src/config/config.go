@@ -36,6 +36,7 @@ type Config struct {
 	PHNURL       string
 	RCSSENDURL   string
 	RCSRESULTURL string
+	KISACODE     string
 }
 
 var Conf Config

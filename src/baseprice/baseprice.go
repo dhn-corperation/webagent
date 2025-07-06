@@ -104,6 +104,9 @@ type BasePrice struct {
 	V_price_grs      sql.NullFloat64
 	V_price_grs_sms  sql.NullFloat64
 	V_price_grs_mms  sql.NullFloat64
+	V_price_nas      sql.NullFloat64
+	V_price_nas_sms  sql.NullFloat64
+	V_price_nas_mms  sql.NullFloat64
 	
 }
 
