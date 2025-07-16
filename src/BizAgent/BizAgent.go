@@ -8,24 +8,23 @@ import (
 	"context"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
-
+	"webagent/src/rcs"
 	"webagent/src/config"
-	"webagent/src/databasepool"
-	"webagent/src/tblreqprocess"
-	"webagent/src/req2ndprocess"
 	"webagent/src/webamms"
 	"webagent/src/webasms"
 	"webagent/src/webbmms"
 	"webagent/src/webbsms"
 	"webagent/src/webcmms"
 	"webagent/src/webcsms"
-	"webagent/src/rcs"
 	"webagent/src/handler"
+	"webagent/src/databasepool"
+	"webagent/src/tblreqprocess"
+	"webagent/src/req2ndprocess"
 	
 	"github.com/takama/daemon"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // const (
@@ -46,10 +45,16 @@ import (
 // 	port  		= ":3030"
 // )
 
+// const (
+// 	name        = "BizAgent_s"
+// 	description = "싸다고 메세지 후속 처리 프로그램"
+// 	port  		= ":3040"
+// )
+
 const (
-	name        = "BizAgent_s"
-	description = "싸다고 메세지 후속 처리 프로그램"
-	port  		= ":3040"
+	name        = "BizAgent_p"
+	description = "스피드톡 메세지 후속 처리 프로그램"
+	port  		= ":3050"
 )
 
 

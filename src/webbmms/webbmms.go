@@ -140,23 +140,6 @@ func mmsProcess(wg *sync.WaitGroup) {
 					and a.ETC3 = ?
 			`
 
-			// var mmsQuery = "SELECT SQL_NO_CACHE " +
-			// 	"       a.MsgID " +
-			// 	"      ,a.SendResult" +
-			// 	"      ,a.Receiver AS PHN" +
-			// 	"      ,b.mst_id AS REMARK4" +
-			// 	"      ,(select mem_userid from cb_member cm where cm.mem_id = b.mst_mem_id) AS mem_userid " +
-			// 	"      ,b.mst_mem_id AS mem_id" +
-			// 	"      ,a.cb_msg_id " +
-			// 	"      ,a.File_Path1 as mms1 " +
-			// 	"      ,a.File_Path2 as mms2 " +
-			// 	"      ,a.File_Path3 as mms3 " +
-			// 	"      ,a.resend_flag " +
-			// 	" from " + MMSTable + " a INNER JOIN " +
-			// 	"        cb_wt_msg_sent b ON a.mst_id = b.mst_id " +
-			// 	"WHERE a.proc_flag = 'Y' " +
-			// 	" and a.mst_id = ?"
-
 			rows, err := db.Query(mmsQuery, mst_id.String)
 			if err != nil {
 				errlog.Println("LGU MMS 조회 중 오류 발생")

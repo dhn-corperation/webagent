@@ -193,6 +193,12 @@ func resProcess(wg *sync.WaitGroup) {
 		osmmsStrs = nil //스마트미 LMS/MMS Table Insert 용
 		osmmsValues = nil
 
+		lgusmsStrs = nil //LGU SMS Table Insert 용
+		lgusmsValues = nil
+
+		lgummsStrs = nil //LGU LMS/MMS Table Insert 용
+		lgummsValues = nil
+
 		nnsmsStrs = nil //나노 SMS Table Insert 용
 		nnsmsValues = nil
 
@@ -208,12 +214,6 @@ func resProcess(wg *sync.WaitGroup) {
 		rcsStrs = nil
 		rcsValues = nil
 
-		lgusmsStrs = nil //LGU SMS Table Insert 용
-		lgusmsValues = nil
-
-		lgummsStrs = nil //LGU LMS/MMS Table Insert 용
-		lgummsValues = nil
-
 		var insstr = ""
 		var amtinsstr = ""
 
@@ -223,18 +223,12 @@ func resProcess(wg *sync.WaitGroup) {
 		var atcnt = 0
 		var ftilcnt = 0
 		var ftcscnt = 0
-		var lms_015cnt = 0
-		var lms_phncnt = 0
 		var lms_smtcnt = 0
 		var lms_grscnt = 0
-		var lms_imccnt = 0
 		var lms_nascnt = 0
 
-		var err_015cnt = 0
-		var err_phncnt = 0
 		var err_smtcnt = 0
 		var err_grscnt = 0
-		var err_imccnt = 0
 		var err_nascnt = 0
 		var err_ftcnt = 0
 		var err_fticnt = 0
@@ -442,24 +436,25 @@ func resProcess(wg *sync.WaitGroup) {
 
 				phnstr = phn.String
 
-				if len(p_invoice.String) > 0 && s.EqualFold(message_type.String, "ph") {
+				// 존재 의미가 명확하지 않은 처리
+				if p_invoice.Valid && len(p_invoice.String) > 0 && s.EqualFold(message_type.String, "ph") {
 					
 					if len(mem_resend) <= 0 {
 						mem_resend = p_invoice.String
 					}
 
 					switch mem_resend {
+						case "SMART":
+							cb_msg_message_type = "sm"
+							break
+						case "LGU":
+							cb_msg_message_type = "lg"
+							break
 						case "GREEN_SHOT":
 							cb_msg_message_type = "gs"
 							break
 						case "GREEN_SHOT_G":
 							cb_msg_message_type = "nl"
-							break
-						case "LGU":
-							cb_msg_message_type = "lg"
-							break
-						case "SMART":
-							cb_msg_message_type = "sm"
 							break
 						case "RCS":
 							cb_msg_message_type = "rc"
@@ -602,9 +597,7 @@ func resProcess(wg *sync.WaitGroup) {
 							}
 
 							// 친구 List 추가
-
 							ftlistsStrs = append(ftlistsStrs, "(?, ?, now())")
-
 							ftlistsValues = append(ftlistsValues, mem_id.String)
 							ftlistsValues = append(ftlistsValues, phnstr)
 
@@ -996,7 +989,7 @@ func resProcess(wg *sync.WaitGroup) {
 											nnsmsValues = append(nnsmsValues, "0")
 											nnsmsValues = append(nnsmsValues, msgid)
 											nnsmsValues = append(nnsmsValues, remark4)
-											nnsmsValues = append(nnsmsValues, "302190001")
+											nnsmsValues = append(nnsmsValues, config.Conf.KISACODE)
 
 											kko_kind = "P"
 											if s.EqualFold(mst_sent_voucher.String, "V") {
@@ -1044,7 +1037,7 @@ func resProcess(wg *sync.WaitGroup) {
 											nnmmsValues = append(nnmmsValues, mms_file3)
 											nnmmsValues = append(nnmmsValues, msgid)
 											nnmmsValues = append(nnmmsValues, remark4)
-											nnmmsValues = append(nnmmsValues, "302190001")
+											nnmmsValues = append(nnmmsValues, config.Conf.KISACODE)
 
 											if len(mms_file1.String) <= 0 {
 												kko_kind = "P"
@@ -1098,7 +1091,7 @@ func resProcess(wg *sync.WaitGroup) {
 												nnsmsValues = append(nnsmsValues, "0")
 												nnsmsValues = append(nnsmsValues, msgid)
 												nnsmsValues = append(nnsmsValues, remark4)
-												nnsmsValues = append(nnsmsValues, "302190001")
+												nnsmsValues = append(nnsmsValues, config.Conf.KISACODE)
 
 												kko_kind = "P"
 												if s.EqualFold(mst_sent_voucher.String, "V") {
@@ -1146,7 +1139,7 @@ func resProcess(wg *sync.WaitGroup) {
 												nnmmsValues = append(nnmmsValues, mms_file3)
 												nnmmsValues = append(nnmmsValues, msgid)
 												nnmmsValues = append(nnmmsValues, remark4)
-												nnmmsValues = append(nnmmsValues, "302190001")
+												nnmmsValues = append(nnmmsValues, config.Conf.KISACODE)
 
 												if len(mms_file1.String) <= 0 {
 													kko_kind = "P"
@@ -1196,7 +1189,7 @@ func resProcess(wg *sync.WaitGroup) {
 												nnlpsmsValues = append(nnlpsmsValues, "0")
 												nnlpsmsValues = append(nnlpsmsValues, msgid)
 												nnlpsmsValues = append(nnlpsmsValues, remark4)
-												nnlpsmsValues = append(nnlpsmsValues, "302190001")
+												nnlpsmsValues = append(nnlpsmsValues, config.Conf.KISACODE)
 
 												kko_kind = "P"
 												if s.EqualFold(mst_sent_voucher.String, "V") {
@@ -1212,7 +1205,7 @@ func resProcess(wg *sync.WaitGroup) {
 														memo = "웹(A) SMS,보너스"
 													} else {
 														memo = "웹(A) SMS"
-													}										
+													}
 													
 												}
 											} else if s.EqualFold(msgtype, "LMS") {
@@ -1243,7 +1236,7 @@ func resProcess(wg *sync.WaitGroup) {
 												nnlpmmsValues = append(nnlpmmsValues, mms_file3)
 												nnlpmmsValues = append(nnlpmmsValues, msgid)
 												nnlpmmsValues = append(nnlpmmsValues, remark4)
-												nnlpmmsValues = append(nnlpmmsValues, "302190001")
+												nnlpmmsValues = append(nnlpmmsValues, config.Conf.KISACODE)
 
 												if len(mms_file1.String) <= 0 {
 													kko_kind = "P"
@@ -1260,7 +1253,7 @@ func resProcess(wg *sync.WaitGroup) {
 															memo = "웹(A) LMS,보너스"
 														} else {
 															memo = "웹(A) LMS"
-														}										
+														}
 														
 													}
 												} else {
@@ -1278,7 +1271,7 @@ func resProcess(wg *sync.WaitGroup) {
 															memo = "웹(A) MMS,보너스"
 														} else {
 															memo = "웹(A) MMS"
-														}										
+														}
 													}
 
 												}
@@ -1302,9 +1295,7 @@ func resProcess(wg *sync.WaitGroup) {
 										err_fticnt++
 									}
 								}
-							} else if s.EqualFold(message_type.String, "at") || s.EqualFold(message_type.String, "al") { // 알림톡 이면
-								err_atcnt++
-							} else if s.EqualFold(message_type.String, "ai") { // 알림톡 이미지 이면
+							} else if s.EqualFold(message_type.String, "at") || s.EqualFold(message_type.String, "al") || s.EqualFold(message_type.String, "ai") {
 								err_atcnt++
 							}
 
@@ -1314,7 +1305,7 @@ func resProcess(wg *sync.WaitGroup) {
 
 				if isPass == false {
 					// 알림톡 2 차 발신이 아니면 cb_msg 에 insert 처리
-					msginsStrs = append(msginsStrs, "	(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+					msginsStrs = append(msginsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 					msginsValues = append(msginsValues, msgid)
 					msginsValues = append(msginsValues, ad_flag)
 					msginsValues = append(msginsValues, button1)
@@ -1430,7 +1421,7 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 
 			if len(ossmsStrs) >= 1000 {
-				stmt := fmt.Sprintf("insert into OShotSMS(Sender,Receiver,Msg,URL,ReserveDT,TimeoutDT,SendResult,mst_id,cb_msg_id ) values %s", s.Join(ossmsStrs, ","))
+				stmt := fmt.Sprintf("insert into OShotSMS(Sender,Receiver,Msg,URL,ReserveDT,TimeoutDT,SendResult,mst_id,cb_msg_id) values %s", s.Join(ossmsStrs, ","))
 				_, err := db.Exec(stmt, ossmsValues...)
 
 				if err != nil {
@@ -1442,7 +1433,7 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 
 			if len(osmmsStrs) >= 1000 {
-				stmt := fmt.Sprintf("insert into OShotMMS(MsgGroupID,Sender,Receiver,Subject,Msg,ReserveDT,TimeoutDT,SendResult,File_Path1,File_Path2,File_Path3,mst_id,cb_msg_id ) values %s", s.Join(osmmsStrs, ","))
+				stmt := fmt.Sprintf("insert into OShotMMS(MsgGroupID,Sender,Receiver,Subject,Msg,ReserveDT,TimeoutDT,SendResult,File_Path1,File_Path2,File_Path3,mst_id,cb_msg_id) values %s", s.Join(osmmsStrs, ","))
 				_, err := db.Exec(stmt, osmmsValues...)
 
 				if err != nil {
@@ -1694,32 +1685,26 @@ func resProcess(wg *sync.WaitGroup) {
 				                   set mst_ft = ifnull(mst_ft,0) + ?
 								    , mst_ft_img = ifnull(mst_ft_img,0) + ?
 									, mst_at = ifnull(mst_at,0) + ? 
-									, mst_phn = ifnull(mst_phn,0) + ? 
-									, mst_015 = ifnull(mst_015,0) + ? 
 									, mst_grs = ifnull(mst_grs,0) + ? 
 									, mst_nas = ifnull(mst_nas,0) + ? 
 									, mst_smt = ifnull(mst_smt,0) + ? 
-									, mst_imc = ifnull(mst_imc,0) + ? 
 									, mst_cs = ifnull(mst_cs,0) + ? 
 									, mst_il = ifnull(mst_il,0) + ? 
 									, mst_err_ft = ifnull(mst_err_ft,0) + ?
 								    , mst_err_ft_img = ifnull(mst_err_ft_img,0) + ?
-									, mst_err_at = ifnull(mst_err_at,0) + ? 
-									, mst_err_phn = ifnull(mst_err_phn,0) + ? 
-									, mst_err_015 = ifnull(mst_err_015,0) + ? 
+									, mst_err_at = ifnull(mst_err_at,0) + ?
 									, mst_err_grs = ifnull(mst_err_grs,0) + ? 
 									, mst_err_nas = ifnull(mst_err_nas,0) + ? 
 									, mst_err_smt = ifnull(mst_err_smt,0) + ? 
-									, mst_err_imc = ifnull(mst_err_imc,0) + ?  
 									, mst_err_rcs = ifnull(mst_err_rcs,0) + ?  
 									, mst_err_cs = ifnull(mst_err_cs,0) + ?  
 									, mst_err_il = ifnull(mst_err_il,0) + ?  
 									, mst_wait = ifnull(mst_wait,0) + ?  
 								where mst_id = ?`
-			_, err := db.Exec(cntupdate, ftcnt, fticnt, atcnt, lms_phncnt, lms_015cnt, lms_grscnt, lms_nascnt, lms_smtcnt, lms_imccnt, ftcscnt, ftilcnt, err_ftcnt, err_fticnt, err_atcnt, err_phncnt, err_015cnt, err_grscnt, err_nascnt, err_smtcnt, err_imccnt, err_rcscnt, err_ftcscnt, err_ftilcnt, mst_waitcnt, sendkey)
+			_, err := db.Exec(cntupdate, ftcnt, fticnt, atcnt, lms_grscnt, lms_nascnt, lms_smtcnt, ftcscnt, ftilcnt, err_ftcnt, err_fticnt, err_atcnt, err_grscnt, err_nascnt, err_smtcnt, err_rcscnt, err_ftcscnt, err_ftilcnt, mst_waitcnt, sendkey)
 
 			if err != nil {
-				errlog.Println("WT_MSG_SENT 카카오 메세지 수량 처리 중 오류 발생 " + err.Error())
+				errlog.Println("cb_wt_msg_sent 카카오 메세지 수량 처리 중 오류 발생 " + err.Error())
 			}
 		}
 
@@ -1730,21 +1715,5 @@ func resProcess(wg *sync.WaitGroup) {
 		// 2차 알림톡 2일 지난건 삭제 함.
 		db.Exec("delete a from " + conf.REQTABLE2 + " a where  ( ( a.reserve_dt < DATE_FORMAT(ADDDATE(now(), INTERVAL -2 DAY), '%Y%m%d%H%i%S') and a.reserve_dt <> '00000000000000') or ( a.REG_DT < ADDDATE(now(), INTERVAL -2 DAY) and a.reserve_dt = '00000000000000'))");
 	}
-	//}
-}
-
-func getSubstring(str string, cnt int) string {
-	var temp, value string
-	str1 := []rune(str)
-	for _, char := range str1 {
-		temp += fmt.Sprintf("%c", char)
-
-		if len(temp) > cnt {
-			return value
-		} else {
-			value += fmt.Sprintf("%c", char)
-		}
-	}
-	return value
 }
 

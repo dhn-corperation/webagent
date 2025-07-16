@@ -330,6 +330,9 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 	, vad_price_grs
 	, vad_price_grs_sms
 	, vad_price_grs_mms
+	, vad_price_nas
+	, vad_price_nas_sms
+	, vad_price_nas_mms
 	from cb_wt_voucher_addon where vad_mem_id = '` + mem_id + "'"
 
 	rows, err = db.Query(priceSQL)
@@ -358,6 +361,9 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.V_price_grs,
 			&price.V_price_grs_sms,
 			&price.V_price_grs_mms,
+			&price.V_price_nas,
+			&price.V_price_nas_sms,
+			&price.V_price_nas_mms,
 		)
 		if err != nil {
 			errlog.Println(err)

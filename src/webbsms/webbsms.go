@@ -142,32 +142,16 @@ func smsProcess(wg *sync.WaitGroup) {
 					and a.TR_ETC3 = ?
 			`
 
-			// var smsQuery = "SELECT SQL_NO_CACHE " +
-			// 	"       a.MsgID " +
-			// 	"      ,a.SendResult" +
-			// 	"      ,a.Receiver AS PHN" +
-			// 	"      ,b.mst_id AS REMARK4" +
-			// 	"      ,(select mem_userid from cb_member cm where cm.mem_id = b.mst_mem_id) AS mem_userid " +
-			// 	"      ,b.mst_mem_id AS mem_id" +
-			// 	"      ,a.cb_msg_id " +
-			// 	"      ,a.resend_flag " +
-			// 	" from " + SMSTable + " a INNER JOIN " +
-			// 	"        cb_wt_msg_sent b ON a.mst_id = b.mst_id " +
-			// 	"WHERE a.proc_flag = 'Y' " +
-			// 	" and a.mst_id = ?"
-
 			rows, err := db.Query(smsQuery, mst_id.String)
 			if err != nil {
 				errlog.Println("스마트미 SMS 조회 중 오류 발생")
 				errlog.Println(smsQuery)
-				// errlog.Fatal(smsQuery)
 			}
 			defer rows.Close()
 
 			tx, err := db.Begin()
 			if err != nil {
 				errlog.Println(" 트랜잭션 시작 중 오류 발생")
-				// errlog.Fatal(err)
 			}
 
 			var amtinsstr = "insert into cb_amt_" + mem_userid.String + "(amt_datetime," +
