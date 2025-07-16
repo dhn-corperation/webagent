@@ -122,7 +122,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 
 			var mmsQuery = `
 				select sql_no_cache
-					a.MSGKEY
+					a.MSGKEY,
 					a.RSLT,
 					a.PHONE,
 					b.mst_id as REMARK4,

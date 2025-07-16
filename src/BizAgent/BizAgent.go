@@ -27,11 +27,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// const (
-// 	name        = "BizAgent_m"
-// 	description = "마트톡 메세지 후속 처리 프로그램"
-// 	port  		= ":3010"
-// )
+const (
+	name        = "BizAgent_m"
+	description = "마트톡 메세지 후속 처리 프로그램"
+	port  		= ":3010"
+)
 
 // const (
 // 	name        = "BizAgent_g"
@@ -51,11 +51,11 @@ import (
 // 	port  		= ":3040"
 // )
 
-const (
-	name        = "BizAgent_p"
-	description = "스피드톡 메세지 후속 처리 프로그램"
-	port  		= ":3050"
-)
+// const (
+// 	name        = "BizAgent_p"
+// 	description = "스피드톡 메세지 후속 처리 프로그램"
+// 	port  		= ":3050"
+// )
 
 
 var dependencies = []string{name+".service"}
