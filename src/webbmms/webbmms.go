@@ -69,13 +69,13 @@ func mmsProcess(wg *sync.WaitGroup) {
 	//발송 6시간 지난 메세지는 응답과 상관 없이 성공 처리 함.
 
 	//lms 성공 처리
-	err1 := db.QueryRow("SELECT count(1) as cnt from LG_MMS_MSG WHERE STATUS='2' and date_add(REQDATE, interval 6 HOUR) < now() and ETC3 is not null").Scan(&msgcnt)
+	err1 := db.QueryRow("SELECT count(1) as cnt from LG_MMS_MSG WHERE STATUS='2' and date_add(REQDATE, interval 6 HOUR) < now() and ETC3 is not null and ETC2 not like 'khug%'").Scan(&msgcnt)
 	if err1 != nil {
 	   errlog.Println("LG_MMS_MSG Table 조회 중 중 오류 발생", err1)
 	   panic(err1)
 	} else {		
 		if msgcnt.String != "0" {
-			db.Exec("UPDATE LG_MMS_MSG SET REPORTDATE=now(), STATUS='3', RSLT='1000' WHERE STATUS='2' and date_add(REQDATE, interval 6 HOUR) < now() and ETC3 is not null")
+			db.Exec("UPDATE LG_MMS_MSG SET REPORTDATE=now(), STATUS='3', RSLT='1000' WHERE STATUS='2' and date_add(REQDATE, interval 6 HOUR) < now() and ETC3 is not null and ETC2 not like 'khug%'")
 		}
     }
 	var groupQuery = `

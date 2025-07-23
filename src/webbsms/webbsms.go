@@ -69,13 +69,13 @@ func smsProcess(wg *sync.WaitGroup) {
 
 	//발송 6시간 지난 메세지는 응답과 상관 없이 성공 처리 함.
 	// sms 성공 처리
-	err1 := db.QueryRow("SELECT count(1) as cnt from LG_SC_TRAN WHERE TR_SENDSTAT='1' and date_add(TR_SENDDATE, interval 6 HOUR) < now() and TR_ETC3 is not null").Scan(&msgcnt)
+	err1 := db.QueryRow("SELECT count(1) as cnt from LG_SC_TRAN WHERE TR_SENDSTAT='1' and date_add(TR_SENDDATE, interval 6 HOUR) < now() and TR_ETC3 is not null and TR_ETC2 not like 'khug%'").Scan(&msgcnt)
 	if err1 != nil {
 	   errlog.Println("OShotMMS Table 조회 중 중 오류 발생", err1)
 	   panic(err1)
 	} else {		
 		if !s.EqualFold(msgcnt.String, "0") {	
-			db.Exec("UPDATE LG_SC_TRAN SET TR_RSLTDATE=now(), TR_SENDSTAT='2', TR_RSLTSTAT='06' WHERE TR_SENDSTAT='1' and date_add(TR_SENDDATE, interval 6 HOUR) < now() and TR_ETC3 is not null")
+			db.Exec("UPDATE LG_SC_TRAN SET TR_RSLTDATE=now(), TR_SENDSTAT='2', TR_RSLTSTAT='06' WHERE TR_SENDSTAT='1' and date_add(TR_SENDDATE, interval 6 HOUR) < now() and TR_ETC3 is not null and TR_ETC2 not like 'khug%'")
 		}
 	}
 
