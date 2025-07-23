@@ -24,14 +24,21 @@ func Process(ctx context.Context) {
 			config.Stdlog.Println("webbsms 정상적으로 종료되었습니다.")
 			return
 		default:
+			var t = time.Now()
+
+			if t.Day() <= 3 {
+				wg.Add(1)
+				go smsProcess(&wg, true)
+			}
+
 			wg.Add(1)
-			go smsProcess(&wg)
+			go smsProcess(&wg, false)
 			wg.Wait()
 		}
 	}
 }
 
-func smsProcess(wg *sync.WaitGroup) {
+func smsProcess(wg *sync.WaitGroup, pastFlag bool) {
 	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
@@ -62,6 +69,11 @@ func smsProcess(wg *sync.WaitGroup) {
 
 	var isProc = true
 	var t = time.Now()
+
+	if pastFlag {
+		t = time.Now().Add(time.Hour * -96)
+	}
+	
 	var monthStr = fmt.Sprintf("%d%02d", t.Year(), t.Month())
 
 	var SMSTable = "LG_SC_LOG_" + monthStr

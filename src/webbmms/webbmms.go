@@ -24,14 +24,21 @@ func Process(ctx context.Context) {
 			config.Stdlog.Println("webbmms 정상적으로 종료되었습니다.")
 			return
 		default:
+			var t = time.Now()
+
+			if t.Day() <= 3 {
+				wg.Add(1)
+				go mmsProcess(&wg, true)
+			}
+
 			wg.Add(1)
-			go mmsProcess(&wg)
+			go mmsProcess(&wg, false)
 			wg.Wait()
 		}
 	}
 }
 
-func mmsProcess(wg *sync.WaitGroup) {
+func mmsProcess(wg *sync.WaitGroup, pastFlag bool) {
 	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
@@ -61,7 +68,13 @@ func mmsProcess(wg *sync.WaitGroup) {
 	amtsValues := []interface{}{}
 
 	var isProc = true
+
 	var t = time.Now()
+	
+	if pastFlag {
+		t = time.Now().Add(time.Hour * -96)
+	}
+
 	var monthStr = fmt.Sprintf("%d%02d", t.Year(), t.Month())
 
 	var MMSTable = "LG_MMS_LOG_" + monthStr
