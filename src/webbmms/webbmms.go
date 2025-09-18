@@ -16,12 +16,14 @@ import (
 )
 
 func Process(ctx context.Context) {
+	config.Stdlog.Println("LGU MMS (WEB B) - 결과 처리 프로세스 시작")
 	var wg sync.WaitGroup
 	for {
 		select {
 		case <- ctx.Done():
-			time.Sleep(20 * time.Second)
-			config.Stdlog.Println("webbmms 정상적으로 종료되었습니다.")
+			config.Stdlog.Println("LGU MMS (WEB B) - process가 15초 후에 종료")
+		    time.Sleep(15 * time.Second)
+		    config.Stdlog.Println("LGU MMS (WEB B) - process 종료 완료")
 			return
 		default:
 			var t = time.Now()
@@ -42,11 +44,11 @@ func mmsProcess(wg *sync.WaitGroup, pastFlag bool) {
 	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
-			config.Stdlog.Println("webbmms panic 발생 원인 : ", r)
+			config.Stdlog.Println("LGU MMS (WEB B) - panic 발생 원인 : ", r)
 			if err, ok := r.(error); ok {
 				if s.Contains(err.Error(), "connection refused") {
 					for {
-						config.Stdlog.Println("webbmms send ping to DB")
+						config.Stdlog.Println("LGU MMS (WEB B) - send ping to DB")
 						err := databasepool.DB.Ping()
 						if err == nil {
 							break
@@ -84,13 +86,44 @@ func mmsProcess(wg *sync.WaitGroup, pastFlag bool) {
 	//lms 성공 처리
 	err1 := db.QueryRow("SELECT count(1) as cnt from LG_MMS_MSG WHERE STATUS='2' and date_add(REQDATE, interval 6 HOUR) < now() and ETC3 is not null and ETC2 not like 'khug%'").Scan(&msgcnt)
 	if err1 != nil {
-	   errlog.Println("LG_MMS_MSG Table 조회 중 중 오류 발생", err1)
+	   errlog.Println("LGU MMS (WEB B) - 조회 중 중 오류 발생 err :", err1)
 	   panic(err1)
 	} else {		
 		if msgcnt.String != "0" {
 			db.Exec("UPDATE LG_MMS_MSG SET REPORTDATE=now(), STATUS='3', RSLT='1000' WHERE STATUS='2' and date_add(REQDATE, interval 6 HOUR) < now() and ETC3 is not null and ETC2 not like 'khug%'")
 		}
     }
+
+    var tickCnt sql.NullInt64
+	var tickSql = `
+		select 
+			count(1) as cnt
+		from
+			` + MMSTable + ` a 
+		inner join
+			cb_wt_msg_sent b ON a.ETC3 = b.mst_id
+		where
+			a.status = '3'
+			and a.ETC4 is null
+		limit 1`
+
+	cnterr := databasepool.DB.QueryRow(tickSql).Scan(&tickCnt)
+
+	if cnterr != nil && cnterr != sql.ErrNoRows {
+		errlog.Println("LGU MMS (WEB B) -", MMSTable, "Table - select error : " + cnterr.Error())
+		if s.Index(cnterr.Error(), "1146") > 0 {
+			db.Exec("Create Table IF NOT EXISTS " + MMSTable + " like LG_MMS_MSG")
+			errlog.Println("LGU MMS (WEB B) -", MMSTable + " 생성 !!")
+		}
+		time.Sleep(10 * time.Second)
+		return
+	} else {
+		if tickCnt.Int64 <= 0 {
+			time.Sleep(100 * time.Millisecond)
+			return
+		}
+	}
+
 	var groupQuery = `
 		select distinct 
 			a.ETC3,
@@ -107,13 +140,13 @@ func mmsProcess(wg *sync.WaitGroup, pastFlag bool) {
 
 	groupRows, err := db.Query(groupQuery)
 	if err != nil {
-		errlog.Println("LGU MMS 조회 중 오류 발생")
+		errlog.Println("LGU MMS (WEB B) - 조회 중 오류 발생")
 		errlog.Println(groupQuery)
 		errcode := err.Error()
 
 		if s.Index(errcode, "1146") > 0 {
 			db.Exec("Create Table IF NOT EXISTS " + MMSTable + " like LG_MMS_MSG")
-			stdlog.Println(MMSTable + " 생성 !!")
+			stdlog.Println("LGU MMS (WEB B) -", MMSTable + " 생성 !!")
 		}
 
 		isProc = false
@@ -155,14 +188,14 @@ func mmsProcess(wg *sync.WaitGroup, pastFlag bool) {
 
 			rows, err := db.Query(mmsQuery, mst_id.String)
 			if err != nil {
-				errlog.Println("LGU MMS 조회 중 오류 발생")
+				errlog.Println("LGU MMS (WEB B) - 조회 중 오류 발생")
 				errlog.Println(mmsQuery)
 			}
 			defer rows.Close()
 
 			tx, err := db.Begin()
 			if err != nil {
-				errlog.Println("LGU MMS 트랜잭션 시작 중 오류 발생")
+				errlog.Println("LGU MMS (WEB B) - 트랜잭션 시작 중 오류 발생")
 			}
 
 			var amtinsstr = "insert into cb_amt_" + mem_userid.String + "(amt_datetime," +
@@ -258,7 +291,7 @@ func mmsProcess(wg *sync.WaitGroup, pastFlag bool) {
 					_, err1 := tx.Exec(commastr, upmsgids...)
 
 					if err1 != nil {
-						errlog.Println(MMSTable + " Table Update 처리 중 오류 발생 ")
+						errlog.Println("LGU MMS (WEB B) -", MMSTable + " Table Update 처리 중 오류 발생 ")
 					}
 
 					upmsgids = nil
@@ -269,7 +302,7 @@ func mmsProcess(wg *sync.WaitGroup, pastFlag bool) {
 					_, err := tx.Exec(stmt, amtsValues...)
 
 					if err != nil {
-						errlog.Println("AMT Table Insert 처리 중 오류 발생 " + err.Error())
+						errlog.Println("LGU MMS (WEB B) - AMT Table Insert 처리 중 오류 발생 " + err.Error())
 					}
 
 					amtsStrs = nil
@@ -290,7 +323,7 @@ func mmsProcess(wg *sync.WaitGroup, pastFlag bool) {
 				_, err1 := tx.Exec(commastr, upmsgids...)
 
 				if err1 != nil {
-					errlog.Println(MMSTable + " Table Update 처리 중 오류 발생 ")
+					errlog.Println("LGU MMS (WEB B) -", MMSTable + " Table Update 처리 중 오류 발생 ")
 				}
 			}
 
@@ -299,14 +332,14 @@ func mmsProcess(wg *sync.WaitGroup, pastFlag bool) {
 				_, err := tx.Exec(stmt, amtsValues...)
 
 				if err != nil {
-					errlog.Println("AMT Table Insert 처리 중 오류 발생 " + err.Error())
+					errlog.Println("LGU MMS (WEB B) - AMT Table Insert 처리 중 오류 발생 " + err.Error())
 				}
 
 			}
 
 			tx.Exec("update cb_wt_msg_sent set mst_err_nas = ifnull(mst_err_nas,0) + ?, mst_nas = ifnull(mst_nas,0) + ?, mst_wait = mst_wait - ?  where mst_id=?", mmserrcnt, ( mmscnt-mmserrcnt), mmscnt, sent_key.String)
 			tx.Commit()
-			stdlog.Printf(" ( %s ) WEB(B) MMS 처리 - %s : %d \n", startTime, sent_key.String, mmscnt)
+			stdlog.Printf("LGU MMS (WEB B) - ( %s ) WEB(B) MMS 처리 - %s : %d \n", startTime, sent_key.String, mmscnt)
 
 		}
 	}

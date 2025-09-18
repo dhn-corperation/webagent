@@ -18,18 +18,20 @@ import (
 )
 
 func Process(ctx context.Context) {
+	config.Stdlog.Println("나노 MMS(일반망) (WEB A) - 결과 처리 프로세스 시작")
 	var wg sync.WaitGroup
 	for {
 		select {
-		case <- ctx.Done():
-			time.Sleep(20 * time.Second)
-			config.Stdlog.Println("webamms 정상적으로 종료되었습니다.")
-			return
-		default:
-			wg.Add(1)
-			go mmsProcess(&wg)
-			wg.Wait()
-		}
+			case <- ctx.Done():
+				config.Stdlog.Println("나노 MMS(일반망) (WEB A) - process가 15초 후에 종료")
+			    time.Sleep(15 * time.Second)
+			    config.Stdlog.Println("나노 MMS(일반망) (WEB A) - process 종료 완료")
+				return
+			default:
+				wg.Add(1)
+				go mmsProcess(&wg)
+				wg.Wait()
+			}
 	}
 }
 
@@ -37,11 +39,11 @@ func mmsProcess(wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
-			config.Stdlog.Println("webamms panic 발생 원인 : ", r)
+			config.Stdlog.Println("나노 MMS(일반망) (WEB A) - panic 발생 원인 : ", r)
 			if err, ok := r.(error); ok {
 				if s.Contains(err.Error(), "connection refused") {
 					for {
-						config.Stdlog.Println("webamms send ping to DB")
+						config.Stdlog.Println("나노 MMS(일반망) (WEB A) - send ping to DB")
 						err := databasepool.DB.Ping()
 						if err == nil {
 							break
@@ -73,7 +75,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 	//lms 성공 처리
 	err1 := db.QueryRow("SELECT count(1) as cnt from MMS_MSG WHERE STATUS='2' and date_add(REQDATE, interval 6 HOUR) < now() and ETC10 is not null").Scan(&msgcnt)
 	if err1 != nil {
-	   errlog.Println("나노 MMS_MSG Table 조회 중 중 오류 발생", err1)
+	   errlog.Println("나노 MMS(일반망) (WEB A) - 조회 중 중 오류 발생", err1)
 	   panic(err1)
 	} else {		
 		if !s.EqualFold(msgcnt.String, "0") {
@@ -83,20 +85,47 @@ func mmsProcess(wg *sync.WaitGroup) {
 		}
     }
 
+    var tickCnt sql.NullInt64
+	var tickSql = `
+		select
+			count(1) as cnt
+		from
+			` + MMSTable + ` a
+		inner join
+			cb_wt_msg_sent b on a.ETC10 = b.mst_id
+		where
+			a.status = '3'
+			and a.ETC8 = 'Y'
+		limit 1`
+
+	cnterr := databasepool.DB.QueryRow(tickSql).Scan(&tickCnt)
+
+	if cnterr != nil && cnterr != sql.ErrNoRows {
+		errlog.Println("나노 MMS(일반망) (WEB A) -", MMSTable, "Table - select error : " + cnterr.Error())
+		if s.Index(cnterr.Error(), "1146") > 0 {
+			db.Exec("Create Table IF NOT EXISTS " + MMSTable + " like MMS_LOG")
+			errlog.Println("나노 MMS(일반망) (WEB A) -", MMSTable + " 생성 !!")
+		}
+		time.Sleep(10 * time.Second)
+		return
+	} else {
+		if tickCnt.Int64 <= 0 {
+			time.Sleep(100 * time.Millisecond)
+			return
+		}
+	}
+
 	var groupQuery = "select distinct a.ETC10 as mst_id, b.mst_mem_id as mem_id, (select mem_userid from cb_member cm where cm.mem_id = b.mst_mem_id) AS mem_userid, b.mst_sent_voucher from " + MMSTable + " a inner join cb_wt_msg_sent b on a.ETC10 = b.mst_id where a.status = '3' and a.ETC8 = 'Y' "
 
 	groupRows, err := db.Query(groupQuery)
 	if err != nil {
 		errcode := err.Error()
-		errlog.Println("나노 MMS 조회 중 오류 발생", groupQuery, errcode)
+		errlog.Println("나노 MMS(일반망) (WEB A) - 조회 중 오류 발생", groupQuery, errcode)
 
 		if s.Index(errcode, "1146") > 0 {
 			db.Exec("Create Table IF NOT EXISTS " + MMSTable + " like MMS_LOG")
-			errlog.Println(MMSTable + " 생성 !!")
-		} else {
-			//errlog.Fatal(groupQuery)
+			errlog.Println("나노 MMS(일반망) (WEB A) -", MMSTable + " 생성 !!")
 		}
-
 		isProc = false
 		return
 	}
@@ -131,7 +160,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 
 			rows, err := db.Query(mmsQuery, mst_id.String)
 			if err != nil {
-				errlog.Println("나노 MMS 조회 중 오류 발생")
+				errlog.Println("나노 MMS(일반망) (WEB A) - 조회 중 오류 발생")
 				errlog.Println(mmsQuery)
 				// errlog.Fatal(mmsQuery)
 			}
@@ -139,7 +168,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 
 			tx, err := db.Begin()
 			if err != nil {
-				errlog.Println("나노 MMS 트랜잭션 시작 중 오류 발생")
+				errlog.Println("나노 MMS(일반망) (WEB A) - 트랜잭션 시작 중 오류 발생")
 				// errlog.Fatal(err)
 			}
 
@@ -242,7 +271,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 					_, err1 := tx.Exec(commastr, upmsgids...)
 
 					if err1 != nil {
-						errlog.Println(MMSTable + " Table Update 처리 중 오류 발생 ")
+						errlog.Println("나노 MMS(일반망) (WEB A) -", MMSTable + " Table Update 처리 중 오류 발생 ")
 					}
 
 					upmsgids = nil
@@ -253,7 +282,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 					_, err := tx.Exec(stmt, amtsValues...)
 
 					if err != nil {
-						errlog.Println("나노 MMS AMT Table Insert 처리 중 오류 발생 " + err.Error())
+						errlog.Println("나노 MMS(일반망) (WEB A) - AMT Table Insert 처리 중 오류 발생 " + err.Error())
 					}
 
 					amtsStrs = nil
@@ -275,7 +304,7 @@ func mmsProcess(wg *sync.WaitGroup) {
 				_, err1 := tx.Exec(commastr, upmsgids...)
 
 				if err1 != nil {
-					errlog.Println(MMSTable + " Table Update 처리 중 오류 발생 ")
+					errlog.Println("나노 MMS(일반망) (WEB A) -", MMSTable + " Table Update 처리 중 오류 발생 ")
 				}
 			}
 
@@ -284,14 +313,14 @@ func mmsProcess(wg *sync.WaitGroup) {
 				_, err := tx.Exec(stmt, amtsValues...)
 
 				if err != nil {
-					errlog.Println("나노 SMS AMT Table Insert 처리 중 오류 발생 " + err.Error())
+					errlog.Println("나노 MMS(일반망) (WEB A) - AMT Table Insert 처리 중 오류 발생 " + err.Error())
 				}
 
 			}
 
 			tx.Exec("update cb_wt_msg_sent set mst_err_grs = ifnull(mst_err_grs,0) + ?, mst_grs = ifnull(mst_grs,0) + ?, mst_wait = mst_wait - ?  where mst_id=?", mmserrcnt, ( mmscnt-mmserrcnt), mmscnt, sent_key.String)
 			tx.Commit()
-			stdlog.Printf(" ( %s ) WEB(A) MMS 처리 - %s : %d \n", startTime, sent_key.String, mmscnt)
+			stdlog.Printf("나노 MMS(일반망) (WEB A) - ( %s ) WEB(A) MMS 처리 - %s : %d \n", startTime, sent_key.String, mmscnt)
 
 		}
 	}

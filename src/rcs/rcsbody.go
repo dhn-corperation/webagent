@@ -141,5 +141,4 @@ type RcsResultInfo struct {
 	StatusInfo[]	RcsResultStatus  	`json:"statusInfo,omitempty"`
 	QueryId			string        		`json:"queryId,omitempty"`
 	MoreToSend		string        		`json:"moreToSend,omitempty"`
-
 }

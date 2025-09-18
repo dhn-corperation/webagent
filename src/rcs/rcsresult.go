@@ -27,17 +27,19 @@ var Interval int32 = 1000
 var Interval2 int32 = 60000
 
 func ResultProcess(ctx context.Context) {
+	config.Stdlog.Println("(구) Rcs - 결과 처리 프로세스 시작")
 	var wg sync.WaitGroup
 	for {
 		select {
-		case <- ctx.Done():
-			time.Sleep(20 * time.Second)
-			config.Stdlog.Println("rcsresult_ResultProcess 정상적으로 종료되었습니다.")
-			return
-		default:
-			wg.Add(1)
-			go resultProcess(&wg)
-			wg.Wait()
+			case <- ctx.Done():
+				config.Stdlog.Println("(구) Rcs - Result Process가 15초 후에 종료")
+				time.Sleep(15 * time.Second)
+				config.Stdlog.Println("(구) Rcs - Result Process 종료 완료")
+				return
+			default:
+				wg.Add(1)
+				go resultProcess(&wg)
+				wg.Wait()
 		}
 	}
 }
@@ -85,7 +87,7 @@ set rmr.result_status = 'success'
 
 	_, execErr := databasepool.DB.Exec(resAfter6)
 	if execErr != nil {
-		config.Stdlog.Println("RCS 메시지 결과 6시간 성공 처리 에러 : ", execErr)
+		config.Stdlog.Println("(구) Rcs - 메시지 결과 6시간 성공 처리 에러 : ", execErr)
 		panic(execErr)
 	}
 
@@ -99,7 +101,7 @@ set rmr.result_status = 'success'
 	//fmt.Println(resp)
 
 	if err != nil {
-		config.Stdlog.Println("RCS 메시지 결과 서버 호출 오류 : ", err)
+		config.Stdlog.Println("(구) Rcs - 메시지 결과 서버 호출 오류 : ", err)
 		//	return nil
 	} else {
 		var resultInfo RcsResultInfo
@@ -140,7 +142,7 @@ timestamp ) values %s`
 				_, err := databasepool.DB.Exec(stmt, resinsValues...)
 
 				if err != nil {
-					stdlog.Println("RCS_MESSAGE_STATUS Table Insert 처리 중 오류 발생 " + err.Error())
+					stdlog.Println("(구) Rcs - RCS_MESSAGE_STATUS Table Insert 처리 중 오류 발생 " + err.Error())
 				}
 
 				resinsStrs = nil
@@ -162,7 +164,7 @@ set rmr.result_status = '` + si.Status + `'
 			_, err := databasepool.DB.Exec(stmt, resinsValues...)
 
 			if err != nil {
-				stdlog.Println("RCS_MESSAGE_STATUS Table Insert 처리 중 오류 발생 " + err.Error())
+				stdlog.Println("(구) Rcs - RCS_MESSAGE_STATUS Table Insert 처리 중 오류 발생 " + err.Error())
 			}
 
 			resinsStrs = nil
@@ -184,7 +186,7 @@ set rmr.result_status = '` + si.Status + `'
 
 		grows, err := db.Query(groupsql)
 		if err != nil {
-			stdlog.Println("RCS_MESSAGE_RESULT select 오류 ", err)
+			stdlog.Println("(구) Rcs - RCS_MESSAGE_RESULT select 오류 ", err)
 		} else {
 			defer grows.Close()
 
@@ -248,7 +250,7 @@ and rmr.msg_group_id = ?
 
 				resrows, err := db.Query(ressql, mst_id.String)
 				if err != nil {
-					stdlog.Println("결과 처리 Select 오류 ", err)
+					stdlog.Println("(구) Rcs - 결과 처리 Select 오류 ", err)
 				} else {
 					defer resrows.Close()
 
@@ -365,7 +367,7 @@ and rmr.msg_group_id = ?
 							json.Unmarshal([]byte(body.String), &rcsBody)
 							if s.Contains(mst_type3.String, "wc") && s.EqualFold(msr_exptime.String, "Y") {
 
-								stdlog.Println("RCS 실패 -> WEB(C) 발송 처리 ", mst_type3.String, msr_exptime.String, msgid.String)
+								stdlog.Println("(구) Rcs - 발송 실패 -> WEB(C) 발송 처리 ", mst_type3.String, msr_exptime.String, msgid.String)
 
 								db.Exec("update cb_msg_"+userid.String+" set CODE = 'SMT', MESSAGE_TYPE='sm' where remark4=? and msgid = ?", remark4.String, msgid.String)
 
@@ -473,7 +475,7 @@ and rmr.msg_group_id = ?
 								}
 							} else if s.Contains(mst_type3.String, "wa") && s.EqualFold(msr_exptime.String, "Y") {
 
-								stdlog.Println("RCS 실패 -> WEB(A) 발송 처리 ", mst_type3.String, msr_exptime.String, msgid.String)
+								stdlog.Println("(구) Rcs - 발송 실패 -> WEB(A) 발송 처리 ", mst_type3.String, msr_exptime.String, msgid.String)
 
 								db.Exec("update cb_msg_"+userid.String+" set CODE = 'GRS', MESSAGE_TYPE='gr' where remark4=? and msgid = ?", remark4.String, msgid.String)
 
@@ -488,7 +490,7 @@ and rmr.msg_group_id = ?
 									nnsmsValues = append(nnsmsValues, "0")
 									nnsmsValues = append(nnsmsValues, msgid.String)
 									nnsmsValues = append(nnsmsValues, remark4.String)
-									nnsmsValues = append(nnsmsValues, "302190001")
+									nnsmsValues = append(nnsmsValues, config.Conf.KISACODE)
 
 									if s.EqualFold(mst_sent_voucher.String, "V") {
 										amount = cprice.V_price_smt_sms.Float64
@@ -544,7 +546,7 @@ and rmr.msg_group_id = ?
 									nnmmsValues = append(nnmmsValues, mms_file3)
 									nnmmsValues = append(nnmmsValues, msgid.String)
 									nnmmsValues = append(nnmmsValues, remark4.String)
-									nnmmsValues = append(nnmmsValues, "302190001")
+									nnmmsValues = append(nnmmsValues, config.Conf.KISACODE)
 
 									if len(mms_file1.String) <= 0 {
 										if s.EqualFold(mst_sent_voucher.String, "V") {
@@ -605,7 +607,7 @@ and rmr.msg_group_id = ?
 						_, err := db.Exec(stmt, ossmsValues...)
 
 						if err != nil {
-							stdlog.Println("스마트미 SMS Table Insert 처리 중 오류 발생 " + err.Error())
+							stdlog.Println("(구) Rcs - 스마트미 SMS Table Insert 처리 중 오류 발생 " + err.Error())
 						}
 
 						ossmsStrs = nil
@@ -617,7 +619,7 @@ and rmr.msg_group_id = ?
 						_, err := db.Exec(stmt, osmmsValues...)
 
 						if err != nil {
-							stdlog.Println("스마트미 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+							stdlog.Println("(구) Rcs - 스마트미 LMS Table Insert 처리 중 오류 발생 " + err.Error())
 						}
 
 						osmmsStrs = nil
@@ -629,7 +631,7 @@ and rmr.msg_group_id = ?
 						_, err := db.Exec(stmt, nnsmsValues...)
 
 						if err != nil {
-							stdlog.Println("나노 SMS Table Insert 처리 중 오류 발생 " + err.Error())
+							stdlog.Println("(구) Rcs - 나노 SMS Table Insert 처리 중 오류 발생 " + err.Error())
 						}
 
 						nnsmsStrs = nil
@@ -641,7 +643,7 @@ and rmr.msg_group_id = ?
 						_, err := db.Exec(stmt, nnmmsValues...)
 
 						if err != nil {
-							stdlog.Println("나노 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+							stdlog.Println("(구) Rcs - 나노 LMS Table Insert 처리 중 오류 발생 " + err.Error())
 						}
 
 						nnmmsStrs = nil
@@ -653,7 +655,7 @@ and rmr.msg_group_id = ?
 						_, err := db.Exec(stmt, amtsValues...)
 
 						if err != nil {
-							stdlog.Println("AMT Table Insert 처리 중 오류 발생 " + err.Error())
+							stdlog.Println("(구) Rcs - AMT Table Insert 처리 중 오류 발생 " + err.Error())
 						}
 
 						amtsStrs = nil
@@ -662,7 +664,7 @@ and rmr.msg_group_id = ?
 
 					db.Exec("update cb_wt_msg_sent set mst_rcs = ifnull(mst_rcs,0) + ?,mst_err_rcs = ifnull(mst_err_rcs,0) + ?, mst_wait = mst_wait - ?  where mst_id=?", scnt, ecnt, (ecnt + scnt), mst_id.String)
 
-					stdlog.Println("RCS 처리 : (", mst_id.String, " ) 성공 : ", scnt, " / 실패 : ", ecnt)
+					stdlog.Println("(구) Rcs - 처리 끝 : (", mst_id.String, " ) 성공 : ", scnt, " / 실패 : ", ecnt)
 				}
 			}
 
@@ -683,16 +685,16 @@ func RetryProcess(ctx context.Context) {
 	var wg sync.WaitGroup
 	for {
 		select {
-		case <- ctx.Done():
-			time.Sleep(20 * time.Second)
-			config.Stdlog.Println("rcsresult_RetryProcess 정상적으로 종료되었습니다.")
-			return
-		default:
-			wg.Add(1)
-			go retryProc(&wg)
-			wg.Wait()
-		}
-		
+			case <- ctx.Done():
+				config.Stdlog.Println("(구) Rcs - Retry Process가 15초 후에 종료")
+				time.Sleep(15 * time.Second)
+				config.Stdlog.Println("(구) Rcs - Retry Process 종료 완료")
+				return
+			default:
+				wg.Add(1)
+				go retryProc(&wg)
+				wg.Wait()
+			}
 	}
 }
 
@@ -720,7 +722,7 @@ func retryProc(wg *sync.WaitGroup) {
 
 	retryrows, err := db.Query(sqlStr)
 	if err != nil {
-		stdlog.Println("RCS_MESSAGE_RESULT 수작업 select 오류", err)
+		stdlog.Println("(구) Rcs - RCS_MESSAGE_RESULT 수작업 select 오류", err)
 	}
 	defer retryrows.Close()
 
@@ -748,7 +750,7 @@ func retryProc(wg *sync.WaitGroup) {
 		//fmt.Println(resp, resultReq)
 
 		if err != nil {
-			config.Stdlog.Println("RCS 메시지 결과 서버 호출 오류 : ", err)
+			config.Stdlog.Println("(구) Rcs - 메시지 결과 서버 호출 오류 : ", err)
 			//	return nil
 		} else {
 			var resultInfo RcsResultInfo

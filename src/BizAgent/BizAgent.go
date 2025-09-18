@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"os/signal"
+	"fmt"
+	"time"
 	"syscall"
 	"context"
-	"time"
+	"reflect"
+	"os/signal"
 
 	"webagent/src/rcs"
 	"webagent/src/config"
@@ -16,6 +17,8 @@ import (
 	"webagent/src/webbsms"
 	"webagent/src/webcmms"
 	"webagent/src/webcsms"
+	"webagent/src/webdmsg"
+	"webagent/src/webrcs"
 	"webagent/src/handler"
 	"webagent/src/databasepool"
 	"webagent/src/tblreqprocess"
@@ -28,42 +31,32 @@ import (
 )
 
 const (
-	name        = "BizAgent_m"
-	description = "마트톡 메세지 후속 처리 프로그램"
-	port  		= ":3010"
+	// name        = "BizAgent_m"
+	// description = "마트톡 메세지 후속 처리 프로그램"
+	// port  		= ":3010"
+
+	// name        = "BizAgent_g"
+	// description = "올지니 메세지 후속 처리 프로그램"
+	// port  		= ":3020"
+
+	// name        = "BizAgent_o"
+	// description = "오투오 메세지 후속 처리 프로그램"
+	// port  		= ":3030"
+
+	// name        = "BizAgent_p"
+	// description = "스피드톡 메세지 후속 처리 프로그램"
+	// port  		= ":3040"
+
+	name        = "BizAgent_s"
+	description = "싸다고 메세지 후속 처리 프로그램"
+	port  		= ":3050"
 )
-
-// const (
-// 	name        = "BizAgent_g"
-// 	description = "올지니 메세지 후속 처리 프로그램"
-// 	port  		= ":3020"
-// )
-
-// const (
-// 	name        = "BizAgent_o"
-// 	description = "오투오 메세지 후속 처리 프로그램"
-// 	port  		= ":3030"
-// )
-
-// const (
-// 	name        = "BizAgent_s"
-// 	description = "싸다고 메세지 후속 처리 프로그램"
-// 	port  		= ":3040"
-// )
-
-// const (
-// 	name        = "BizAgent_p"
-// 	description = "스피드톡 메세지 후속 처리 프로그램"
-// 	port  		= ":3050"
-// )
-
 
 var dependencies = []string{name+".service"}
 
 var resultTable string
 
 var rcc context.CancelFunc
-
 var cc context.CancelFunc
 
 type Service struct {
@@ -91,6 +84,7 @@ func (service *Service) Manage() (string, error) {
 			return usage, nil
 		}
 	}
+
 	resultProc()
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, os.Kill, syscall.SIGTERM)
@@ -111,7 +105,6 @@ func (service *Service) Manage() (string, error) {
 
 func main() {
 	config.InitConfig()	
-
 	databasepool.InitDatabase()
 
 	var rLimit syscall.Rlimit
@@ -149,11 +142,21 @@ func main() {
 
 func resultProc() {
 
-	config.Stdlog.Println(name, " 시작")
-	config.Stdlog.Println("---------------------------------------")
 	var conf = config.Conf
-	config.Stdlog.Println(conf)
-	config.Stdlog.Println("---------------------------------------")
+
+	val := reflect.ValueOf(conf)
+	typ := reflect.TypeOf(conf)
+
+	config.Stdlog.Println(name, " 시작")
+	config.Stdlog.Println("------------------------------------------------------------------------------")
+
+	for i := 0; i < val.NumField(); i++ {
+		field := typ.Field(i)
+		value := val.Field(i)
+		config.Stdlog.Println(fmt.Sprintf("%s: %v", field.Name, value.Interface()))
+	}
+
+	config.Stdlog.Println("------------------------------------------------------------------------------")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cc = cancel
@@ -162,46 +165,48 @@ func resultProc() {
 	go req2ndprocess.Process(ctx)
 
 	if conf.RCS {
-		config.Stdlog.Println("RCS 사용 - 시작")
-		config.Stdlog.Println("RCS ID :",config.RCSID)
-		config.Stdlog.Println("RCS PW :",config.RCSPW)
-		
+		// (구) Rcs
 		go rcs.ResultProcess(ctx)
 		go rcs.RetryProcess(ctx)
 		go rcs.Process(ctx)
+
+		// (신) Rcs
+		webrcs.SetAuthRequest()
+		go webrcs.RcsProc(ctx)
+		go webrcs.ResultProcess(ctx)
 	}
 
 	//결과 처리이기 때문에 항상 실행되어 있어야 함.
 
-	//오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
-	config.Stdlog.Println("오샷 결과 처리 프로세스 - 시작")
-	go webcsms.Process(ctx)
-	go webcmms.Process(ctx)
-	//오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
-
-	//LGU 결과값 조회 및 문자 실패 환불 처리 고루틴
-	config.Stdlog.Println("LGU 결과 처리 프로세스 - 시작")
-	go webbsms.Process(ctx)
-	go webbmms.Process(ctx)
-	//LGU 결과값 조회 및 문자 실패 환불 처리 고루틴
-
 	//나노 결과값 조회 및 문자 실패 환불 처리 고루틴
-	config.Stdlog.Println("나노(일반망) 결과 처리 프로세스 - 시작")
 	go webasms.Process(ctx)
 	go webamms.Process(ctx)
 	//나노 결과값 조회 및 문자 실패 환불 처리 고루틴
 
 	//나노 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
-	config.Stdlog.Println("나노(저가망) 결과 처리 프로세스 - 시작")
 	go webasms.Process_g(ctx)
 	go webamms.Process_g(ctx)
 	//나노 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
+
+	//LGU 결과값 조회 및 문자 실패 환불 처리 고루틴
+	go webbsms.Process(ctx)
+	go webbmms.Process(ctx)
+	//LGU 결과값 조회 및 문자 실패 환불 처리 고루틴
+
+	//오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
+	go webcsms.Process(ctx)
+	go webcmms.Process(ctx)
+	//오샷 결과값 조회 및 문자 실패 환불 처리 고루틴
+
+	//SMTNT 결과값 조회 및 문자 실패 환불 처리 고루틴
+	go webdmsg.Process(ctx)
+	//SMTNT 결과값 조회 및 문자 실패 환불 처리 고루틴
 
 	r := gin.New()
 	r.Use(gin.Recovery())
 
 	r.GET("/", func(c *gin.Context) {
-		c.String(200, `----------------------------------------------------------------
+	c.String(200, `----------------------------------------------------------------
 `+name+` API 리스트
 /resendrun?target=XXX&sd=XXXXXXXXXXXXXX     description : 임시 재발송
 /resendstop?uid=XXXX                        description : 임시 재발송 종료

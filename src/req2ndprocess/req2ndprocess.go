@@ -10,19 +10,64 @@ import (
 	"context"
 )
 
+var insColumn string = `
+	MSGID,
+	AD_FLAG,
+	BUTTON1,
+	BUTTON2,
+	BUTTON3,
+	BUTTON4,
+	BUTTON5,
+	IMAGE_LINK,
+	IMAGE_URL,
+	MESSAGE_TYPE,
+	MSG,
+	MSG_SMS,
+	ONLY_SMS,
+	P_COM,
+	P_INVOICE,
+	PHN,
+	PROFILE,
+	REG_DT,
+	REMARK1,
+	REMARK2,
+	REMARK3,
+	REMARK4,
+	REMARK5,
+	RESERVE_DT,
+	S_CODE,
+	SMS_KIND,
+	SMS_LMS_TIT,
+	SMS_SENDER,
+	TMPL_ID,
+	WIDE,
+	SUPPLEMENT,
+	PRICE,
+	CURRENCY_TYPE,
+	group_no,
+	TITLE,
+	HEADER,
+	ATT_ITEMS,
+	CAROUSEL,
+	ATT_COUPON,
+	KIND,
+	ATTACHMENTS`
+
 func Process(ctx context.Context) {
+	config.Stdlog.Println("req2ndprocess - 프로세스 시작")
 	var wg sync.WaitGroup
 	for {
 		select {
-		case <- ctx.Done():
-			time.Sleep(20 * time.Second)
-			config.Stdlog.Println("req2ndprocess 정상적으로 종료되었습니다.")
-			return
-		default:
-			wg.Add(1)
-			go resProcess(&wg)
-			wg.Wait()
-		}
+			case <- ctx.Done():
+				config.Stdlog.Println("req2ndprocess - process가 15초 후에 종료")
+			    time.Sleep(15 * time.Second)
+			    config.Stdlog.Println("req2ndprocess - process 종료 완료")
+				return
+			default:
+				wg.Add(1)
+				go resProcess(&wg)
+				wg.Wait()
+			}
 	}
 }
 
@@ -30,11 +75,11 @@ func resProcess(wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
-			config.Stdlog.Println("req2ndprocess panic 발생 원인 : ", r)
+			config.Stdlog.Println("req2ndprocess - panic 발생 원인 : ", r)
 			if err, ok := r.(error); ok {
 				if s.Contains(err.Error(), "connection refused") {
 					for {
-						config.Stdlog.Println("req2ndprocess send ping to DB")
+						config.Stdlog.Println("req2ndprocess - send ping to DB")
 						err := databasepool.DB.Ping()
 						if err == nil {
 							break
@@ -56,32 +101,39 @@ func resProcess(wg *sync.WaitGroup) {
 	err := db.QueryRow(reqquery).Scan(&cnt)
 
 	if err != nil {
-		stdlog.Println("Result Table2 처리 중 오류 발생")
+		stdlog.Println("req2ndprocess - Result Table2 처리 중 오류 발생")
 		stdlog.Println(err)
 		// stdlog.Fatal(reqquery)
 		panic(err)
 	}
 	 
-	if !s.EqualFold(cnt.String, "0") { 
-		stdlog.Println("2ND 테이블에서 Req 로 복사 시작 - ", cnt)
+	if cnt.String != "0" { 
+		stdlog.Println("req2ndprocess - 2ND 테이블에서 Req 로 복사 시작 - ", cnt)
 		
 		resp, _ := db.Exec("update " + conf.REQTABLE2 + " as t2 set t2.remark3 = 'P' where t2.remark3 = 'Y' and not exists (select 1 from " + conf.REQTABLE1 + " as t1 where t1.msgid = replace(t2.msgid,'AT', '') )")
 		
 		upp, _ := resp.RowsAffected()
+
+		insSql := `
+			insert into ` + conf.REQTABLE1 + `(` + insColumn + `)
+			select
+				` + insColumn + `
+			from
+				` + conf.REQTABLE2 + ` where remark3 = 'P'`
 		
-		resins, err2 := db.Exec("insert into " + conf.REQTABLE1 + " select * from " + conf.REQTABLE2 + " as t2 where remark3 = 'P'")
+		resins, err2 := db.Exec(insSql)
 		
 		if err2 != nil {
-			stdlog.Println("2ND 테이블에서 Req 로 복사 중 오류 발생 - Update P : ", upp)
+			stdlog.Println("req2ndprocess - 2ND 테이블에서 Req 로 복사 중 오류 발생 - Update P : ", upp)
 		} else {
 		
 			insp, _ := resins.RowsAffected()
 			
 			resn, _ :=db.Exec("update " + conf.REQTABLE2 + " set remark3 = 'N' where remark3 = 'P'")
 			upn, _ := resn.RowsAffected()
-			stdlog.Println("2ND 테이블에서 Req 로 복사 끝 - Update P / Insert / Update N : ", upp, insp, upn)
+			stdlog.Println("req2ndprocess - 2ND 테이블에서 Req 로 복사 끝 - Update P / Insert / Update N : ", upp, insp, upn)
 		}
-		
-		
+	} else {
+		time.Sleep(100 * time.Millisecond)
 	}
 }

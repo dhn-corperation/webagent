@@ -7,35 +7,30 @@ import (
 	"time"
 	"path/filepath"
 
+	"github.com/go-resty/resty/v2"
 	ini "github.com/BurntSushi/toml"
 	rotatelogs "github.com/lestrrat/go-file-rotatelogs"
-	"github.com/go-resty/resty/v2"
 )
 
 type Config struct {
 	DB           string
 	DBURL        string
-	GRS          bool
-	IMC          bool
-	NAS          bool
-	SMTPHN       bool
-	SMT          bool
-	PMS          bool
-	FUN          bool
-	BKG          bool
+
 	REFUND       bool
-	SMTPHNDB     bool
 	RCS          bool
+	
 	RESULTTABLE  string
 	REQTABLE1    string
 	REQTABLE2    string
-	WP1          string
-	WP2          string
+
+	PHNURL       string
+
 	RCSID        string
 	RCSPW        string
-	PHNURL       string
 	RCSSENDURL   string
 	RCSRESULTURL string
+	RCSTABLE     string
+
 	KISACODE     string
 }
 
@@ -72,7 +67,7 @@ func InitConfig() {
 	stdlog := log.New(os.Stdout, "INFO -> ", log.Ldate|log.Ltime)
 	stdlog.SetOutput(writer)
 	Stdlog = stdlog
-
+	
 	Conf = readConfig()
 
 	RCSID = Conf.RCSID

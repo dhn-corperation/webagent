@@ -30,12 +30,14 @@ type resultStr struct {
 }
 
 func Process(ctx context.Context) {
+	config.Stdlog.Println("(구) Rcs - 발송 프로세스 시작")
 	var wg sync.WaitGroup
 	for {
 		select {
 		case <- ctx.Done():
-			time.Sleep(20 * time.Second)
-			config.Stdlog.Println("ressend 정상적으로 종료되었습니다.")
+			config.Stdlog.Println("(구) Rcs - process가 15초 후에 종료")
+			time.Sleep(15 * time.Second)
+			config.Stdlog.Println("(구) Rcs - process 종료 완료")
 			return
 		default:
 			wg.Add(1)
@@ -117,12 +119,6 @@ proc  ) values %s`
 	delrcsids := []interface{}{}
 
 	for reqrows.Next() {
-
-		if procCount == 0 {
-			var startNow = time.Now()
-			var startTime = fmt.Sprintf("%02d:%02d:%02d", startNow.Hour(), startNow.Minute(), startNow.Second())
-			stdlog.Printf(" ( %s ) 처리 시작 ", startTime)
-		}
 
 		if len(Token) < 10 {
 			Token = getTokenInfo()
@@ -278,7 +274,7 @@ proc  ) values %s`
 	}
 
 	if procCount > 0 {
-		stdlog.Println("RCS 발송 요청 : ", procCount, " 건 처리 완료 ")
+		stdlog.Println("(구) Rcs - 발송 요청 : ", procCount, " 건 처리 완료 ")
 	}
 	procCount = 0
 	reswg.Wait()
@@ -336,7 +332,7 @@ proc  ) values %s`
 		_, err := db.Exec(stmt, resinsValues...)
 
 		if err != nil {
-			stdlog.Println("RCS Result Table Insert 처리 중 오류 발생 " + err.Error())
+			stdlog.Println("(구) Rcs - Result Table Insert 처리 중 오류 발생 " + err.Error())
 		}
 	}
 
@@ -357,7 +353,7 @@ proc  ) values %s`
 		}
 	}
 	if procCount > 0 {
-		stdlog.Println("RCS 발송 : ", procCount, " 건 처리 완료 ")
+		stdlog.Println("(구) Rcs - 발송 : ", procCount, " 건 처리 완료 ")
 		SendInterval = 1
 	} else {
 		SendInterval = 1000
@@ -387,7 +383,7 @@ func getTokenInfo() string {
 		json.Unmarshal(resp.Body(), &authResp)
 		return authResp.Data.TokenInfo.AccessToken
 	} else {
-		config.Stdlog.Println("Teken receipt fail. - ", resp, err)
+		config.Stdlog.Println("(구) Rcs - Teken receipt fail. - ", resp, err)
 	}
 
 	return ""
@@ -407,7 +403,7 @@ func sendRcs(reswg *sync.WaitGroup, c chan<- resultStr, msg MessageInfo, temp re
 	//fmt.Println("SEND :", resp, err)
 
 	if err != nil {
-		config.Stdlog.Println("RCS 메시지 서버 호출 오류 : ", err)
+		config.Stdlog.Println("(구) Rcs - 메시지 서버 호출 오류 : ", err)
 		temp.Statuscode = 499
 		temp.BodyData = []byte("{\"status\": \"499\", \"error\": { \"code\": \"99999\", \"message\": \"Send Server Error\" } }")
 	} else {
