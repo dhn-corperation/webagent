@@ -282,7 +282,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 								amtsValues = append(amtsValues, ((cprice.V_price_tnt.Float64 - cprice.P_price_tnt.Float64) * -1))
 								amtsValues = append(amtsValues, cprice.B_price_tnt.Float64*-1)
 							} else {
-								amtsValues = append(amtsValues, cprice.C_price_nas.Float64)
+								amtsValues = append(amtsValues, cprice.C_price_tnt.Float64)
 								if s.EqualFold(mst_sent_voucher.String, "B") {
 									amtsValues = append(amtsValues, "웹(D) 발송실패 환불,보너스")
 								} else {
