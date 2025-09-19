@@ -204,6 +204,12 @@ set rmr.result_status = '` + si.Status + `'
 			nnmmsStrs := []string{}
 			nnmmsValues := []interface{}{}
 
+			tntsmsStrs := []string{}
+			tntsmsValues := []interface{}{}
+
+			tntmmsStrs := []string{}
+			tntmmsValues := []interface{}{}
+
 			for grows.Next() {
 
 				ossmsStrs = nil //스마트미 SMS Table Insert 용
@@ -217,6 +223,12 @@ set rmr.result_status = '` + si.Status + `'
 
 				nnmmsStrs = nil //스마트미 LMS/MMS Table Insert 용
 				nnmmsValues = nil
+
+				tntsmsStrs = nil //SMTNT SMS Table Insert 용
+				tntsmsValues = nil
+
+				tntmmsStrs = nil //SMTNT LMS/MMS Table Insert 용
+				tntmmsValues = nil
 
 				var scnt int = 0
 				var ecnt int = 0
@@ -592,6 +604,118 @@ and rmr.msg_group_id = ?
 									amtsValues = append(amtsValues, admin_amt)
 								}
 
+							} else if s.Contains(mst_type3.String, "wd") && s.EqualFold(msr_exptime.String, "Y") {
+								stdlog.Println("(구) Rcs - 발송 실패 -> WEB(D) 발송 처리 ", mst_type3.String, msr_exptime.String, msgid.String)
+
+								db.Exec("update cb_msg_"+userid.String+" set CODE = 'TNT', MESSAGE_TYPE='tn' where remark4=? and msgid = ?", remark4.String, msgid.String)
+
+								smtntTime := time.Now().Format("2006-01-02 15:04:05")
+								if s.EqualFold(mst_type3.String, "wds") {
+									tntsmsStrs = append(tntsmsStrs, "(?,?,?,?,?,?,?,?,?,?)")
+									tntsmsValues = append(tntsmsValues, phnstr) // Phone_No 1
+									tntsmsValues = append(tntsmsValues, sms_sender) // Callback_No 2
+									tntsmsValues = append(tntsmsValues, "4") // Msg_Type 3
+									tntsmsValues = append(tntsmsValues, smtntTime) // Send_Time 4
+									tntsmsValues = append(tntsmsValues, smtntTime) // Save_Time 5
+									tntsmsValues = append(tntsmsValues, mst_lms_content.String) // Message 6
+									tntsmsValues = append(tntsmsValues, config.Conf.KISACODE) // Reseller_Code 7
+
+									tntsmsValues = append(tntsmsValues, msgid.String) // Etc1 8
+									tntsmsValues = append(tntsmsValues, userid.String) // Etc2 9
+									tntsmsValues = append(tntsmsValues, remark4.String) // Etc3 10
+
+									admin_amt = cprice.B_price_tnt_sms.Float64
+									if s.EqualFold(mst_sent_voucher.String, "V") {
+										amount = cprice.V_price_tnt_sms.Float64
+										payback = cprice.V_price_tnt_sms.Float64 - cprice.P_price_tnt_sms.Float64
+										memo = "웹(D) SMS,바우처"
+									} else {
+										amount = cprice.C_price_tnt_sms.Float64
+										payback = cprice.C_price_tnt_sms.Float64 - cprice.P_price_tnt_sms.Float64
+										if s.EqualFold(mst_sent_voucher.String, "B") {
+											memo = "웹(D) SMS,보너스"
+										} else {
+											memo = "웹(D) SMS"
+										}
+									}
+
+									amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
+									amtsValues = append(amtsValues, "P")
+									amtsValues = append(amtsValues, amount)
+									amtsValues = append(amtsValues, memo)
+									amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
+									amtsValues = append(amtsValues, payback)
+									amtsValues = append(amtsValues, admin_amt)
+								} else if s.EqualFold(mst_type3.String, "wd") {
+									fileCnt  := 0
+									fileType1 := ""
+									fileType2 := ""
+									fileType3 := ""
+									if len(mms_file1.String) > 0 {
+										fileCnt++
+										fileType1 = "IMG"
+									}
+									if len(mms_file2.String) > 0 {
+										fileCnt++
+										fileType2 = "IMG"
+									}
+									if len(mms_file3.String) > 0 {
+										fileCnt++
+										fileType3 = "IMG"
+									}
+									tntmmsStrs = append(tntmmsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?,?)")
+									tntmmsValues = append(tntmmsValues, phnstr) // Phone_No 1
+									tntmmsValues = append(tntmmsValues, sms_sender) // Callback_No 2
+									tntmmsValues = append(tntmmsValues, "6") // Msg_Type 3
+									tntmmsValues = append(tntmmsValues, smtntTime) // Send_Time 4
+									tntmmsValues = append(tntmmsValues, smtntTime) // Save_Time 5
+									tntmmsValues = append(tntmmsValues, rcsBody.Title) // Subject 6
+									tntmmsValues = append(tntmmsValues, mst_lms_content.String) // Message 7
+									tntmmsValues = append(tntmmsValues, fileCnt) // File_Count 8
+									tntmmsValues = append(tntmmsValues, fileType1) // File_Type1 9 
+									tntmmsValues = append(tntmmsValues, fileType2) // File_Type2 10
+									tntmmsValues = append(tntmmsValues, fileType3) // File_Type3 11
+									tntmmsValues = append(tntmmsValues, mms_file1) // File_Name1 12
+									tntmmsValues = append(tntmmsValues, mms_file2) // File_Name2 13
+									tntmmsValues = append(tntmmsValues, mms_file3) // File_Name3 14
+									tntmmsValues = append(tntmmsValues, config.Conf.KISACODE) // Reseller_Code 15
+
+									tntmmsValues = append(tntmmsValues, msgid.String) // Etc1 16
+									tntmmsValues = append(tntmmsValues, userid.String) // Etc2 17
+									tntmmsValues = append(tntmmsValues, remark4.String) // Etc3 18
+
+									if len(mms_file1.String) <= 0 {
+										admin_amt = cprice.B_price_tnt.Float64
+										if s.EqualFold(mst_sent_voucher.String, "V") {
+											amount = cprice.V_price_tnt.Float64
+											payback = cprice.V_price_tnt.Float64 - cprice.P_price_tnt.Float64
+											memo = "웹(D) LMS,바우처"
+										} else {
+											amount = cprice.C_price_tnt.Float64
+											payback = cprice.C_price_tnt.Float64 - cprice.P_price_tnt.Float64
+											if s.EqualFold(mst_sent_voucher.String, "B") {
+												memo = "웹(D) LMS,보너스"
+											} else {
+												memo = "웹(D) LMS"
+											}
+										}
+									} else {
+										admin_amt = cprice.B_price_tnt_mms.Float64
+										if s.EqualFold(mst_sent_voucher.String, "V") {
+											amount = cprice.V_price_tnt_mms.Float64
+											payback = cprice.V_price_tnt_mms.Float64 - cprice.P_price_tnt_mms.Float64
+											memo = "웹(D) MMS,바우처"
+										} else {
+											amount = cprice.C_price_tnt_mms.Float64
+											payback = cprice.C_price_tnt_mms.Float64 - cprice.P_price_tnt_mms.Float64
+											if s.EqualFold(mst_sent_voucher.String, "B") {
+												memo = "웹(D) MMS,보너스"
+											} else {
+												memo = "웹(D) MMS"
+											}
+										}
+									}
+								}
 							} else {
 								ecnt++
 								db.Exec("update cb_msg_"+userid.String+" set CODE = 'RCS', MESSAGE_TYPE='rc', MESSAGE = ?, RESULT = ? where remark4=? and msgid = ?", res_error.String, "N", remark4.String, msgid.String)

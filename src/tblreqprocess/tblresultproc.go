@@ -2147,15 +2147,15 @@ func resProcess(wg *sync.WaitGroup) {
 											fileType1 := ""
 											fileType2 := ""
 											fileType3 := ""
-											if mms_file1.String != "" {
+											if len(mms_file1.String) > 0 {
 												fileCnt++
 												fileType1 = "IMG"
 											}
-											if mms_file2.String != "" {
+											if len(mms_file2.String) > 0 {
 												fileCnt++
 												fileType2 = "IMG"
 											}
-											if mms_file3.String != "" {
+											if len(mms_file3.String) > 0 {
 												fileCnt++
 												fileType3 = "IMG"
 											}
