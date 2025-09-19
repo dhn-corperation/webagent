@@ -18,7 +18,7 @@ import (
 	"webagent/src/webcmms"
 	"webagent/src/webcsms"
 	"webagent/src/webdmsg"
-	"webagent/src/webrcs"
+	// "webagent/src/webrcs"
 	"webagent/src/handler"
 	"webagent/src/databasepool"
 	"webagent/src/tblreqprocess"
@@ -31,9 +31,9 @@ import (
 )
 
 const (
-	name        = "BizAgent_m"
-	description = "마트톡 메세지 후속 처리 프로그램"
-	port  		= ":3010"
+	// name        = "BizAgent_m"
+	// description = "마트톡 메세지 후속 처리 프로그램"
+	// port  		= ":3010"
 
 	// name        = "BizAgent_g"
 	// description = "올지니 메세지 후속 처리 프로그램"
@@ -47,9 +47,9 @@ const (
 	// description = "스피드톡 메세지 후속 처리 프로그램"
 	// port  		= ":3040"
 
-	// name        = "BizAgent_s"
-	// description = "싸다고 메세지 후속 처리 프로그램"
-	// port  		= ":3050"
+	name        = "BizAgent_s"
+	description = "싸다고 메세지 후속 처리 프로그램"
+	port  		= ":3050"
 )
 
 var dependencies = []string{name+".service"}
@@ -171,9 +171,9 @@ func resultProc() {
 		go rcs.Process(ctx)
 
 		// (신) Rcs
-		webrcs.SetAuthRequest()
-		go webrcs.RcsProc(ctx)
-		go webrcs.ResultProcess(ctx)
+		// webrcs.SetAuthRequest()
+		// go webrcs.RcsProc(ctx)
+		// go webrcs.ResultProcess(ctx)
 	}
 
 	//결과 처리이기 때문에 항상 실행되어 있어야 함.
