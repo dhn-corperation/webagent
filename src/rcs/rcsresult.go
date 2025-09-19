@@ -663,7 +663,7 @@ and rmr.msg_group_id = ?
 										fileCnt++
 										fileType3 = "IMG"
 									}
-									tntmmsStrs = append(tntmmsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?,?)")
+									tntmmsStrs = append(tntmmsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 									tntmmsValues = append(tntmmsValues, phnstr) // Phone_No 1
 									tntmmsValues = append(tntmmsValues, sms_sender) // Callback_No 2
 									tntmmsValues = append(tntmmsValues, "6") // Msg_Type 3
@@ -772,6 +772,30 @@ and rmr.msg_group_id = ?
 
 						nnmmsStrs = nil
 						nnmmsValues = nil
+					}
+
+					if len(tntsmsStrs) > 0 {
+						stmt := fmt.Sprintf("insert into Msg_Tran(Phone_No,Callback_No,Msg_Type,Send_Time,Save_Time,Message,Reseller_Code,Etc1,Etc2,Etc3) values %s", s.Join(tntsmsStrs, ","))
+						_, err := db.Exec(stmt, tntsmsValues...)
+
+						if err != nil {
+							stdlog.Println("(구) Rcs - SMTNT SMS Table Insert 처리 중 오류 발생 " + err.Error())
+						}
+
+						tntsmsStrs = nil
+						tntsmsValues = nil
+					}
+
+					if len(tntmmsStrs) > 0 {
+						stmt := fmt.Sprintf("insert into Msg_Tran(Phone_No,Callback_No,Msg_Type,Send_Time,Save_Time,Subject,Message,File_Count,File_Type1,File_Type2,File_Type3,File_Name1,File_Name2,File_Name3,Reseller_Code,Etc1,Etc2,Etc3) values %s", s.Join(tntmmsStrs, ","))
+						_, err := db.Exec(stmt, tntmmsValues...)
+
+						if err != nil {
+							stdlog.Println("(구) Rcs - SMTNT LMS Table Insert 처리 중 오류 발생 " + err.Error())
+						}
+
+						tntmmsStrs = nil
+						tntmmsValues = nil
 					}
 
 					if len(amtsStrs) > 0 {

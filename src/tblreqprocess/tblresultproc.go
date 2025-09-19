@@ -2159,7 +2159,7 @@ func resProcess(wg *sync.WaitGroup) {
 												fileCnt++
 												fileType3 = "IMG"
 											}
-											tntmmsStrs = append(tntmmsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?,?)")
+											tntmmsStrs = append(tntmmsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 											tntmmsValues = append(tntmmsValues, phnstr) // Phone_No 1
 											tntmmsValues = append(tntmmsValues, sms_sender) // Callback_No 2
 											tntmmsValues = append(tntmmsValues, "6") // Msg_Type 3
@@ -2653,22 +2653,22 @@ func resProcess(wg *sync.WaitGroup) {
 		}
 
 		if len(tntsmsStrs) > 0 {
-				stmt := fmt.Sprintf("insert into Msg_Tran(Phone_No,Callback_No,Msg_Type,Send_Time,Save_Time,Message,Reseller_Code,Etc1,Etc2,Etc3) values %s", s.Join(tntsmsStrs, ","))
-				_, err := db.Exec(stmt, tntsmsValues...)
+			stmt := fmt.Sprintf("insert into Msg_Tran(Phone_No,Callback_No,Msg_Type,Send_Time,Save_Time,Message,Reseller_Code,Etc1,Etc2,Etc3) values %s", s.Join(tntsmsStrs, ","))
+			_, err := db.Exec(stmt, tntsmsValues...)
 
-				if err != nil {
-					errlog.Println("tblresultproc - SMTNT SMS Table Insert 처리 중 오류 발생 " + err.Error())
-				}
+			if err != nil {
+				errlog.Println("tblresultproc - SMTNT SMS Table Insert 처리 중 오류 발생 " + err.Error())
 			}
+		}
 
-			if len(tntmmsStrs) > 0 {
-				stmt := fmt.Sprintf("insert into Msg_Tran(Phone_No,Callback_No,Msg_Type,Send_Time,Save_Time,Subject,Message,File_Count,File_Type1,File_Type2,File_Type3,File_Name1,File_Name2,File_Name3,Reseller_Code,Etc1,Etc2,Etc3) values %s", s.Join(tntmmsStrs, ","))
-				_, err := db.Exec(stmt, tntmmsValues...)
+		if len(tntmmsStrs) > 0 {
+			stmt := fmt.Sprintf("insert into Msg_Tran(Phone_No,Callback_No,Msg_Type,Send_Time,Save_Time,Subject,Message,File_Count,File_Type1,File_Type2,File_Type3,File_Name1,File_Name2,File_Name3,Reseller_Code,Etc1,Etc2,Etc3) values %s", s.Join(tntmmsStrs, ","))
+			_, err := db.Exec(stmt, tntmmsValues...)
 
-				if err != nil {
-					errlog.Println("tblresultproc - SMTNT LMS Table Insert 처리 중 오류 발생 " + err.Error())
-				}
+			if err != nil {
+				errlog.Println("tblresultproc - SMTNT LMS Table Insert 처리 중 오류 발생 " + err.Error())
 			}
+		}
 	
 		if len(rcsStrs) > 0 {
 			stmt := fmt.Sprintf("insert into RCS_MESSAGE(msg_id,user_contact ,schedule_type,msg_group_id,msg_service_type ,chatbot_id,agency_id ,messagebase_id ,service_type ,expiry_option ,header  ,footer  ,copy_allowed ,body ,buttons, brand_key) values %s", s.Join(rcsStrs, ","))

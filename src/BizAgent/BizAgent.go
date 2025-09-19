@@ -31,9 +31,9 @@ import (
 )
 
 const (
-	// name        = "BizAgent_m"
-	// description = "마트톡 메세지 후속 처리 프로그램"
-	// port  		= ":3010"
+	name        = "BizAgent_m"
+	description = "마트톡 메세지 후속 처리 프로그램"
+	port  		= ":3010"
 
 	// name        = "BizAgent_g"
 	// description = "올지니 메세지 후속 처리 프로그램"
@@ -47,9 +47,9 @@ const (
 	// description = "스피드톡 메세지 후속 처리 프로그램"
 	// port  		= ":3040"
 
-	name        = "BizAgent_s"
-	description = "싸다고 메세지 후속 처리 프로그램"
-	port  		= ":3050"
+	// name        = "BizAgent_s"
+	// description = "싸다고 메세지 후속 처리 프로그램"
+	// port  		= ":3050"
 )
 
 var dependencies = []string{name+".service"}
