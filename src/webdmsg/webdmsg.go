@@ -89,7 +89,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 	   panic(err1)
 	} else {		
 		if !s.EqualFold(msgcnt.String, "0") {	
-			db.Exec("UPDATE Msg_Tran SET Status=3, Tran_Time=now(), Result=0, Telecom='ETC', Delivery_Time=now(), Result_Time=now() WHERE Status='2' and date_add(Send_Time, interval 6 HOUR) < now() and Etc3 is not null and Etc2 not like 'khug%'")
+			db.Exec("UPDATE Msg_Tran SET Status=3, Result=0, Telecom='000', Delivery_Time=now(), Result_Time=now() WHERE Status='2' and date_add(Send_Time, interval 6 HOUR) < now() and Etc3 is not null and Etc2 not like 'khug%'")
 		}
 	}
 
