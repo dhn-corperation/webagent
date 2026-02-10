@@ -31,9 +31,9 @@ import (
 )
 
 const (
-	name        = "BizAgent_m"
-	description = "마트톡 메세지 후속 처리 프로그램"
-	port  		= ":3010"
+	name        = "BizAgent_callbs"
+	description = "콜비 메세지 후속 처리 프로그램"
+	port  		= ":4010"
 
 	// name        = "BizAgent_g"
 	// description = "올지니 메세지 후속 처리 프로그램"
