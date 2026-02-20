@@ -241,59 +241,59 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 
 					if msgType.String == "4" {
 						if s.EqualFold(mst_sent_voucher.String, "V") {
-							amtsValues = append(amtsValues, cprice.V_price_tnt_sms.Float64)
+							amtsValues = append(amtsValues, cprice.V_price_smt_sms.Float64)
 							amtsValues = append(amtsValues, "웹(D) 발송실패 환불,바우처")
 							amtsValues = append(amtsValues, cb_msg_id.String+phoneNo.String)
-							amtsValues = append(amtsValues, ((cprice.V_price_tnt_sms.Float64 - cprice.P_price_tnt_sms.Float64) * -1))
-							amtsValues = append(amtsValues, cprice.B_price_tnt_sms.Float64*-1)
+							amtsValues = append(amtsValues, ((cprice.V_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64) * -1))
+							amtsValues = append(amtsValues, cprice.B_price_smt_sms.Float64*-1)
 						} else {
-							amtsValues = append(amtsValues, cprice.C_price_tnt_sms.Float64)
+							amtsValues = append(amtsValues, cprice.C_price_smt_sms.Float64)
 							if s.EqualFold(mst_sent_voucher.String, "B") {
 								amtsValues = append(amtsValues, "웹(D) 발송실패 환불,보너스")
 							} else {
 								amtsValues = append(amtsValues, "웹(D) 발송실패 환불")
 							}										
 							amtsValues = append(amtsValues, cb_msg_id.String+phoneNo.String)
-							amtsValues = append(amtsValues, ((cprice.C_price_tnt_sms.Float64 - cprice.P_price_tnt_sms.Float64) * -1))
-							amtsValues = append(amtsValues, cprice.B_price_tnt_sms.Float64*-1)
+							amtsValues = append(amtsValues, ((cprice.C_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64) * -1))
+							amtsValues = append(amtsValues, cprice.B_price_smt_sms.Float64*-1)
 						}
 					} else {
 						if fileCount.Int16 > 0 {
 							if s.EqualFold(mst_sent_voucher.String, "V") {
-								amtsValues = append(amtsValues, cprice.V_price_tnt_mms.Float64)
+								amtsValues = append(amtsValues, cprice.V_price_smt_mms.Float64)
 								amtsValues = append(amtsValues, "웹(D) 발송실패 환불,바우처")
 								amtsValues = append(amtsValues, cb_msg_id.String+phoneNo.String)
-								amtsValues = append(amtsValues, ((cprice.V_price_tnt_mms.Float64 - cprice.P_price_tnt_mms.Float64) * -1))
-								amtsValues = append(amtsValues, cprice.B_price_tnt_mms.Float64*-1)
+								amtsValues = append(amtsValues, ((cprice.V_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64) * -1))
+								amtsValues = append(amtsValues, cprice.B_price_smt_mms.Float64*-1)
 							} else {
-								amtsValues = append(amtsValues, cprice.C_price_tnt_mms.Float64)
+								amtsValues = append(amtsValues, cprice.C_price_smt_mms.Float64)
 								if s.EqualFold(mst_sent_voucher.String, "B") {
 									amtsValues = append(amtsValues, "웹(D) 발송실패 환불,보너스")
 								} else {
 									amtsValues = append(amtsValues, "웹(D) 발송실패 환불")
 								}										
 								amtsValues = append(amtsValues, cb_msg_id.String+phoneNo.String)
-								amtsValues = append(amtsValues, ((cprice.C_price_tnt_mms.Float64 - cprice.P_price_tnt_mms.Float64) * -1))
-								amtsValues = append(amtsValues, cprice.B_price_tnt_mms.Float64*-1)
+								amtsValues = append(amtsValues, ((cprice.C_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64) * -1))
+								amtsValues = append(amtsValues, cprice.B_price_smt_mms.Float64*-1)
 							}
 
 						} else {
 							if s.EqualFold(mst_sent_voucher.String, "V") {
-								amtsValues = append(amtsValues, cprice.V_price_tnt.Float64)
+								amtsValues = append(amtsValues, cprice.V_price_smt.Float64)
 								amtsValues = append(amtsValues, "웹(D) 발송실패 환불,바우처")
 								amtsValues = append(amtsValues, cb_msg_id.String+phoneNo.String)
-								amtsValues = append(amtsValues, ((cprice.V_price_tnt.Float64 - cprice.P_price_tnt.Float64) * -1))
-								amtsValues = append(amtsValues, cprice.B_price_tnt.Float64*-1)
+								amtsValues = append(amtsValues, ((cprice.V_price_smt.Float64 - cprice.P_price_smt.Float64) * -1))
+								amtsValues = append(amtsValues, cprice.B_price_smt.Float64*-1)
 							} else {
-								amtsValues = append(amtsValues, cprice.C_price_tnt.Float64)
+								amtsValues = append(amtsValues, cprice.C_price_smt.Float64)
 								if s.EqualFold(mst_sent_voucher.String, "B") {
 									amtsValues = append(amtsValues, "웹(D) 발송실패 환불,보너스")
 								} else {
 									amtsValues = append(amtsValues, "웹(D) 발송실패 환불")
 								}										
 								amtsValues = append(amtsValues, cb_msg_id.String+phoneNo.String)
-								amtsValues = append(amtsValues, ((cprice.C_price_tnt.Float64 - cprice.P_price_tnt.Float64) * -1))
-								amtsValues = append(amtsValues, cprice.B_price_tnt.Float64*-1)
+								amtsValues = append(amtsValues, ((cprice.C_price_smt.Float64 - cprice.P_price_smt.Float64) * -1))
+								amtsValues = append(amtsValues, cprice.B_price_smt.Float64*-1)
 							}
 						}
 					}
@@ -367,7 +367,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 
 			}
 
-			tx.Exec("update cb_wt_msg_sent set mst_err_tnt = ifnull(mst_err_tnt,0) + ?, mst_tnt = ifnull(mst_tnt,0) + ?, mst_wait = mst_wait - ?  where mst_id=?", msgerrcnt, (msgcnt-msgerrcnt), msgcnt, sent_key.String)
+			tx.Exec("update cb_wt_msg_sent set mst_err_smt = ifnull(mst_err_smt,0) + ?, mst_smt = ifnull(mst_smt,0) + ?, mst_wait = mst_wait - ?  where mst_id=?", msgerrcnt, (msgcnt-msgerrcnt), msgcnt, sent_key.String)
 			tx.Commit()
 			stdlog.Printf("SMTNT MSG (WEB D) - ( %s ) WEB(D) MSG 처리 - %s : %d \n", startTime, sent_key.String, msgcnt)
 		}

@@ -619,14 +619,14 @@ set rmr.result_status = '` + si.Status + `'
 									lgusmsValues = append(lgusmsValues, remark4.String)
 									lgusmsValues = append(lgusmsValues, config.Conf.KISACODE)
 
-									admin_amt = cprice.B_price_nas_sms.Float64
+									admin_amt = cprice.B_price_smt_sms.Float64
 									if s.EqualFold(mst_sent_voucher.String, "V") {
-										amount = cprice.V_price_nas_sms.Float64
-										payback = cprice.V_price_nas_sms.Float64 - cprice.P_price_nas_sms.Float64
+										amount = cprice.V_price_smt_sms.Float64
+										payback = cprice.V_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
 										memo = "웹(B) SMS,바우처"
 									} else {
-										amount = cprice.C_price_nas_sms.Float64
-										payback = cprice.C_price_nas_sms.Float64 - cprice.P_price_nas_sms.Float64
+										amount = cprice.C_price_smt_sms.Float64
+										payback = cprice.C_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
 										if s.EqualFold(mst_sent_voucher.String, "B") {
 											memo = "웹(B) SMS,보너스"
 										} else {
@@ -669,14 +669,14 @@ set rmr.result_status = '` + si.Status + `'
 
 									if len(mms_file1.String) <= 0 {
 
-										admin_amt = cprice.B_price_nas.Float64
+										admin_amt = cprice.B_price_smt.Float64
 										if s.EqualFold(mst_sent_voucher.String, "V") {
-											amount = cprice.V_price_nas.Float64
-											payback = cprice.V_price_nas.Float64 - cprice.P_price_nas.Float64
+											amount = cprice.V_price_smt.Float64
+											payback = cprice.V_price_smt.Float64 - cprice.P_price_smt.Float64
 											memo = "웹(B) LMS,바우처"
 										} else {
-											amount = cprice.C_price_nas.Float64
-											payback = cprice.C_price_nas.Float64 - cprice.P_price_nas.Float64
+											amount = cprice.C_price_smt.Float64
+											payback = cprice.C_price_smt.Float64 - cprice.P_price_smt.Float64
 											if s.EqualFold(mst_sent_voucher.String, "B") {
 												memo = "웹(B) LMS,보너스"
 											} else {
@@ -685,14 +685,14 @@ set rmr.result_status = '` + si.Status + `'
 										}
 									} else {
 
-										admin_amt = cprice.B_price_nas_mms.Float64
+										admin_amt = cprice.B_price_smt_mms.Float64
 										if s.EqualFold(mst_sent_voucher.String, "V") {
-											amount = cprice.V_price_nas_mms.Float64
-											payback = cprice.V_price_nas_mms.Float64 - cprice.P_price_nas_mms.Float64
+											amount = cprice.V_price_smt_mms.Float64
+											payback = cprice.V_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
 											memo = "웹(B) MMS,바우처"
 										} else {
-											amount = cprice.C_price_nas_mms.Float64
-											payback = cprice.C_price_nas_mms.Float64 - cprice.P_price_nas_mms.Float64
+											amount = cprice.C_price_smt_mms.Float64
+											payback = cprice.C_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
 											if s.EqualFold(mst_sent_voucher.String, "B") {
 												memo = "웹(B) MMS,보너스"
 											} else {
@@ -729,14 +729,14 @@ set rmr.result_status = '` + si.Status + `'
 									tntsmsValues = append(tntsmsValues, userid.String) // Etc2 9
 									tntsmsValues = append(tntsmsValues, remark4.String) // Etc3 10
 
-									admin_amt = cprice.B_price_tnt_sms.Float64
+									admin_amt = cprice.B_price_smt_sms.Float64
 									if s.EqualFold(mst_sent_voucher.String, "V") {
-										amount = cprice.V_price_tnt_sms.Float64
-										payback = cprice.V_price_tnt_sms.Float64 - cprice.P_price_tnt_sms.Float64
+										amount = cprice.V_price_smt_sms.Float64
+										payback = cprice.V_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
 										memo = "웹(D) SMS,바우처"
 									} else {
-										amount = cprice.C_price_tnt_sms.Float64
-										payback = cprice.C_price_tnt_sms.Float64 - cprice.P_price_tnt_sms.Float64
+										amount = cprice.C_price_smt_sms.Float64
+										payback = cprice.C_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
 										if s.EqualFold(mst_sent_voucher.String, "B") {
 											memo = "웹(D) SMS,보너스"
 										} else {
@@ -790,14 +790,14 @@ set rmr.result_status = '` + si.Status + `'
 									tntmmsValues = append(tntmmsValues, remark4.String) // Etc3 18
 
 									if len(mms_file1.String) <= 0 {
-										admin_amt = cprice.B_price_tnt.Float64
+										admin_amt = cprice.B_price_smt.Float64
 										if s.EqualFold(mst_sent_voucher.String, "V") {
-											amount = cprice.V_price_tnt.Float64
-											payback = cprice.V_price_tnt.Float64 - cprice.P_price_tnt.Float64
+											amount = cprice.V_price_smt.Float64
+											payback = cprice.V_price_smt.Float64 - cprice.P_price_smt.Float64
 											memo = "웹(D) LMS,바우처"
 										} else {
-											amount = cprice.C_price_tnt.Float64
-											payback = cprice.C_price_tnt.Float64 - cprice.P_price_tnt.Float64
+											amount = cprice.C_price_smt.Float64
+											payback = cprice.C_price_smt.Float64 - cprice.P_price_smt.Float64
 											if s.EqualFold(mst_sent_voucher.String, "B") {
 												memo = "웹(D) LMS,보너스"
 											} else {
@@ -805,14 +805,14 @@ set rmr.result_status = '` + si.Status + `'
 											}
 										}
 									} else {
-										admin_amt = cprice.B_price_tnt_mms.Float64
+										admin_amt = cprice.B_price_smt_mms.Float64
 										if s.EqualFold(mst_sent_voucher.String, "V") {
-											amount = cprice.V_price_tnt_mms.Float64
-											payback = cprice.V_price_tnt_mms.Float64 - cprice.P_price_tnt_mms.Float64
+											amount = cprice.V_price_smt_mms.Float64
+											payback = cprice.V_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
 											memo = "웹(D) MMS,바우처"
 										} else {
-											amount = cprice.C_price_tnt_mms.Float64
-											payback = cprice.C_price_tnt_mms.Float64 - cprice.P_price_tnt_mms.Float64
+											amount = cprice.C_price_smt_mms.Float64
+											payback = cprice.C_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
 											if s.EqualFold(mst_sent_voucher.String, "B") {
 												memo = "웹(D) MMS,보너스"
 											} else {

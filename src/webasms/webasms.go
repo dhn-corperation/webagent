@@ -212,21 +212,21 @@ func smsProcess(wg *sync.WaitGroup) {
 						amtsValues = append(amtsValues, "3")
 					}
 					if s.EqualFold(mst_sent_voucher.String, "V") {
-						amtsValues = append(amtsValues, cprice.V_price_grs_sms.Float64)
+						amtsValues = append(amtsValues, cprice.V_price_smt_sms.Float64)
 						amtsValues = append(amtsValues, "웹(A) 발송실패 환불,바우처")
 						amtsValues = append(amtsValues, cb_msg_id.String+phn.String)
-						amtsValues = append(amtsValues, ((cprice.V_price_grs_sms.Float64 - cprice.P_price_grs_sms.Float64) * -1))
-						amtsValues = append(amtsValues, cprice.B_price_grs_sms.Float64*-1)
+						amtsValues = append(amtsValues, ((cprice.V_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64) * -1))
+						amtsValues = append(amtsValues, cprice.B_price_smt_sms.Float64*-1)
 					} else {
-						amtsValues = append(amtsValues, cprice.C_price_grs_sms.Float64)
+						amtsValues = append(amtsValues, cprice.C_price_smt_sms.Float64)
 						if s.EqualFold(mst_sent_voucher.String, "B") {
 							amtsValues = append(amtsValues, "웹(A) 발송실패 환불,보너스")
 						} else {
 							amtsValues = append(amtsValues, "웹(A) 발송실패 환불")
 						}										
 						amtsValues = append(amtsValues, cb_msg_id.String+phn.String)
-						amtsValues = append(amtsValues, ((cprice.C_price_grs_sms.Float64 - cprice.P_price_grs_sms.Float64) * -1))
-						amtsValues = append(amtsValues, cprice.B_price_grs_sms.Float64*-1)
+						amtsValues = append(amtsValues, ((cprice.C_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64) * -1))
+						amtsValues = append(amtsValues, cprice.B_price_smt_sms.Float64*-1)
 					}
 				} else {
 					message = "웹(A) 성공"
@@ -297,7 +297,7 @@ func smsProcess(wg *sync.WaitGroup) {
 
 			}
 
-			tx.Exec("update cb_wt_msg_sent set mst_err_grs = ifnull(mst_err_grs,0) + ?, mst_grs = ifnull(mst_grs,0) + ?, mst_wait = mst_wait - ?  where mst_id=?", smserrcnt, (smscnt-smserrcnt), smscnt, sent_key.String)
+			tx.Exec("update cb_wt_msg_sent set mst_err_smt = ifnull(mst_err_smt,0) + ?, mst_smt = ifnull(mst_smt,0) + ?, mst_wait = mst_wait - ?  where mst_id=?", smserrcnt, (smscnt-smserrcnt), smscnt, sent_key.String)
 			tx.Commit()
 			stdlog.Printf("나노 SMS(일반망) (WEB A) - ( %s ) WEB(A) SMS 처리 - %s : %d \n", startTime, sent_key.String, smscnt)
 		}
