@@ -31,13 +31,13 @@ import (
 )
 
 const (
-	name        = "BizAgent_m"
-	description = "마트톡 메세지 후속 처리 프로그램"
-	port  		= ":3010"
+	// name        = "BizAgent_m"
+	// description = "마트톡 메세지 후속 처리 프로그램"
+	// port  		= ":3010"
 
-	// name        = "BizAgent_g"
-	// description = "올지니 메세지 후속 처리 프로그램"
-	// port  		= ":3020"
+	name        = "BizAgent_g"
+	description = "올지니 메세지 후속 처리 프로그램"
+	port  		= ":3020"
 
 	// name        = "BizAgent_o"
 	// description = "오투오 메세지 후속 처리 프로그램"
@@ -165,15 +165,14 @@ func resultProc() {
 	go req2ndprocess.Process(ctx)
 
 	if conf.RCS {
-		// (구) Rcs
+		// Rcs KT
 		go rcs.ResultProcess(ctx)
 		go rcs.RetryProcess(ctx)
 		go rcs.Process(ctx)
 
-		// (신) Rcs
-		// webrcs.SetAuthRequest()
-		// go webrcs.RcsProc(ctx)
-		// go webrcs.ResultProcess(ctx)
+		go rcs.ProcessSmtnt(ctx)
+		go rcs.ResultProcessSmtnt(ctx)
+
 	}
 
 	//결과 처리이기 때문에 항상 실행되어 있어야 함.

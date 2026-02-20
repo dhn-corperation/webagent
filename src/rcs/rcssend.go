@@ -1,23 +1,17 @@
 package rcs
 
 import (
-	//"bytes"
-	"database/sql"
-	"webagent/src/config"
-	"webagent/src/databasepool"
-
-	"encoding/json"
 	"fmt"
-
-	//"io/ioutil"
-
-	//"net/http"
-	c "strconv"
-	s "strings"
-
 	"sync"
 	"time"
 	"context"
+	c "strconv"
+	s "strings"
+	"encoding/json"
+
+	"database/sql"
+	"webagent/src/config"
+	"webagent/src/databasepool"
 )
 
 var Token string
@@ -30,14 +24,14 @@ type resultStr struct {
 }
 
 func Process(ctx context.Context) {
-	config.Stdlog.Println("(구) Rcs - 발송 프로세스 시작")
+	config.Stdlog.Println("Rcs KT - 발송 프로세스 시작")
 	var wg sync.WaitGroup
 	for {
 		select {
 		case <- ctx.Done():
-			config.Stdlog.Println("(구) Rcs - process가 15초 후에 종료")
+			config.Stdlog.Println("Rcs KT - process가 15초 후에 종료")
 			time.Sleep(15 * time.Second)
-			config.Stdlog.Println("(구) Rcs - process 종료 완료")
+			config.Stdlog.Println("Rcs KT - process 종료 완료")
 			return
 		default:
 			wg.Add(1)
@@ -52,11 +46,11 @@ func rcsProcess(wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
-			config.Stdlog.Println("rcssend panic 발생 원인 : ", r)
+			config.Stdlog.Println("Rcs KT - rcssend panic 발생 원인 : ", r)
 			if err, ok := r.(error); ok {
 				if s.Contains(err.Error(), "connection refused") {
 					for {
-						config.Stdlog.Println("rcssend send ping to DB")
+						config.Stdlog.Println("Rcs KT - rcssend send ping to DB")
 						err := databasepool.DB.Ping()
 						if err == nil {
 							break
@@ -70,11 +64,10 @@ func rcsProcess(wg *sync.WaitGroup) {
 	var db = databasepool.DB
 	var stdlog = config.Stdlog
 
-	reqsql := "SELECT * FROM RCS_MESSAGE ORDER BY rcs_id LIMIT 0, 500"
+	reqsql := "SELECT * FROM RCS_MESSAGE WHERE platform = 'KT' ORDER BY rcs_id LIMIT 0, 500"
 
 	reqrows, err := db.Query(reqsql)
 	if err != nil {
-		// stdlog.Fatal(err)
 		panic(err)
 	}
 	defer reqrows.Close()
@@ -114,7 +107,8 @@ status ,
 sentTime ,
 timestamp ,
 error,
-proc  ) values %s`
+proc,
+platform) values %s`
 
 	delrcsids := []interface{}{}
 
@@ -274,7 +268,7 @@ proc  ) values %s`
 	}
 
 	if procCount > 0 {
-		stdlog.Println("(구) Rcs - 발송 요청 : ", procCount, " 건 처리 완료 ")
+		stdlog.Println("Rcs KT - 발송 요청 : ", procCount, " 건 처리 완료 ")
 	}
 	procCount = 0
 	reswg.Wait()
@@ -302,7 +296,7 @@ proc  ) values %s`
 			status = "fail"
 		}
 
-		resinsStrs = append(resinsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),now(),?,?)")
+		resinsStrs = append(resinsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),now(),?,?,?)")
 		resinsValues = append(resinsValues, result["rcs_id"])
 		resinsValues = append(resinsValues, result["msg_id"])
 		resinsValues = append(resinsValues, result["user_contact"])
@@ -322,6 +316,7 @@ proc  ) values %s`
 		resinsValues = append(resinsValues, status)
 		resinsValues = append(resinsValues, rcsResp.Error.Message)
 		resinsValues = append(resinsValues, proc)
+		resinsValues = append(resinsValues, "KT")
 
 		delrcsids = append(delrcsids, result["rcs_id"])
 		procCount++
@@ -332,7 +327,7 @@ proc  ) values %s`
 		_, err := db.Exec(stmt, resinsValues...)
 
 		if err != nil {
-			stdlog.Println("(구) Rcs - Result Table Insert 처리 중 오류 발생 " + err.Error())
+			stdlog.Println("Rcs KT - Result Table Insert 처리 중 오류 발생 " + err.Error())
 		}
 	}
 
@@ -353,7 +348,7 @@ proc  ) values %s`
 		}
 	}
 	if procCount > 0 {
-		stdlog.Println("(구) Rcs - 발송 : ", procCount, " 건 처리 완료 ")
+		stdlog.Println("Rcs KT - 발송 : ", procCount, " 건 처리 완료 ")
 		SendInterval = 1
 	} else {
 		SendInterval = 1000
@@ -383,7 +378,7 @@ func getTokenInfo() string {
 		json.Unmarshal(resp.Body(), &authResp)
 		return authResp.Data.TokenInfo.AccessToken
 	} else {
-		config.Stdlog.Println("(구) Rcs - Teken receipt fail. - ", resp, err)
+		config.Stdlog.Println("Rcs KT - Teken receipt fail. - ", resp, err)
 	}
 
 	return ""
@@ -403,7 +398,7 @@ func sendRcs(reswg *sync.WaitGroup, c chan<- resultStr, msg MessageInfo, temp re
 	//fmt.Println("SEND :", resp, err)
 
 	if err != nil {
-		config.Stdlog.Println("(구) Rcs - 메시지 서버 호출 오류 : ", err)
+		config.Stdlog.Println("Rcs KT - 메시지 서버 호출 오류 : ", err)
 		temp.Statuscode = 499
 		temp.BodyData = []byte("{\"status\": \"499\", \"error\": { \"code\": \"99999\", \"message\": \"Send Server Error\" } }")
 	} else {

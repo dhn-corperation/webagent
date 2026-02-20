@@ -83,13 +83,13 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 
 	//발송 6시간 지난 메세지는 응답과 상관 없이 성공 처리 함.
 	// sms 성공 처리
-	err1 := db.QueryRow("SELECT count(1) as cnt from Msg_Tran WHERE Status='2' and date_add(Send_Time, interval 6 HOUR) < now() and Etc3 is not null and Etc2 not like 'khug%'").Scan(&msgcnt)
+	err1 := db.QueryRow("SELECT count(1) as cnt from Msg_Tran WHERE Status='2' and Msg_Type in (4, 6) and date_add(Send_Time, interval 6 HOUR) < now() and Etc3 is not null and Etc2 not like 'khug%'").Scan(&msgcnt)
 	if err1 != nil {
 	   errlog.Println("SMTNT MSG (WEB D) - 조회 중 오류 발생", err1)
 	   panic(err1)
 	} else {		
 		if !s.EqualFold(msgcnt.String, "0") {	
-			db.Exec("UPDATE Msg_Tran SET Status=3, Result=0, Telecom='000', Delivery_Time=now(), Result_Time=now() WHERE Status='2' and date_add(Send_Time, interval 6 HOUR) < now() and Etc3 is not null and Etc2 not like 'khug%'")
+			db.Exec("UPDATE Msg_Tran SET Status=3, Result=0, Telecom='000', Delivery_Time=now(), Result_Time=now() WHERE Status='2' and Msg_Type in (4, 6) and date_add(Send_Time, interval 6 HOUR) < now() and Etc3 is not null and Etc2 not like 'khug%'")
 		}
 	}
 
@@ -103,6 +103,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 			cb_wt_msg_sent b ON a.Etc3 = b.mst_id
 		where
 			a.Status = '3'
+			and a.Msg_Type in (4, 6)
 			and a.Etc4 is null
 		limit 1`
 
@@ -135,6 +136,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 			cb_wt_msg_sent b ON a.Etc3 = b.mst_id
 		where
 			a.Status = '3'
+			and a.Msg_Type in (4, 6)
 			and a.Etc4 is null
 	`
 
@@ -184,6 +186,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 					cb_wt_msg_sent b ON a.Etc3 = b.mst_id
 				where
 					a.Status = '3'
+					and a.Msg_Type in (4, 6)
 					and a.Etc4 is null
 					and a.Etc3 = ?
 			`

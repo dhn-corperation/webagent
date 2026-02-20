@@ -93,6 +93,7 @@ func resProcess(wg *sync.WaitGroup) {
 	var msg, msg_sms, only_sms, p_com, p_invoice, phn, profile, reg_dt, remark1, remark2, remark3, remark4, remark5, res_dt, reserve_dt sql.NullString
 	var result, s_code, sms_kind, sms_lms_tit, sms_sender, sync, tmpl_id, wide, supplement, price, currency_type, mem_userid, mem_id sql.NullString
 	var mem_level, mem_phn_agent, mem_sms_agent, mem_2nd_send, mms_id, mst_type2, mst_type3, mst_2nd_alim, msgcnt, vancnt, mst_sent_voucher sql.NullString
+	var mem_rcs_send, mem_rcs_send2, mem_rcs_send3, mem_rcs_send4 sql.NullString
 	var mem_lp_flag, mms_file1, mms_file2, mms_file3 sql.NullString
 	var cprice baseprice.BasePrice
 	var msgtype, phnstr /*, mem_2nd_type*/ string
@@ -142,21 +143,11 @@ func resProcess(wg *sync.WaitGroup) {
 	lgummsStrs := []string{}
 	lgummsValues := []interface{}{}
 
-	//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
 	tntsmsStrs := []string{}
 	tntsmsValues := []interface{}{}
 
 	tntmmsStrs := []string{}
 	tntmmsValues := []interface{}{}
-	//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
-
-	//////////////////////////////////////////////////////// RCS송 ////////////////////////////////////////////////////////
-	updRcsStrs := []string{}
-	updRcsValues := []interface{}{}
-
-	delRcsStrs := []string{}
-	delRcsValues := []interface{}{}
-	//////////////////////////////////////////////////////// RCS송 ////////////////////////////////////////////////////////
 
 	var tickCnt sql.NullInt64
 	var tickSql = `
@@ -277,6 +268,10 @@ func resProcess(wg *sync.WaitGroup) {
 			  , (SELECT mi.origin3_path FROM cb_wt_msg_sent wms INNER join cb_mms_images mi ON wms.mst_mms_content = mi.mms_id  WHERE  length(mst_mms_content ) > 5 AND wms.mst_id = a.remark4 ) as mms_file3
 			  , (select count(1) as vancnt from cb_block_lists cbl where cbl.sender = '` + gsms_sender.String + `' AND cbl.phn = CONCAT('0', SUBSTR(a.phn, 3,20))) AS vancnt
 			  , (select mst_sent_voucher from cb_wt_msg_sent wms where wms.mst_id = a.remark4) as mst_sent_voucher
+			  , b.mem_rcs_send
+			  , b.mem_rcs_send2
+			  , b.mem_rcs_send3
+			  , b.mem_rcs_send4
 			from
 				` + conf.RESULTTABLE + ` a 
 			inner join
@@ -334,55 +329,38 @@ func resProcess(wg *sync.WaitGroup) {
 		rcsStrs = nil
 		rcsValues = nil
 
-		//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
 		tntsmsStrs = nil //SMTNT SMS Table Insert 용
 		tntsmsValues = nil
 
 		tntmmsStrs = nil //SMTNT LMS/MMS Table Insert 용
 		tntmmsValues = nil
-		//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
-
-		//////////////////////////////////////////////////////// RCS송 ////////////////////////////////////////////////////////
-		updRcsStrs = nil
-		updRcsValues = nil
-
-		delRcsStrs = nil
-		delRcsValues = nil
-		//////////////////////////////////////////////////////// RCS송 ////////////////////////////////////////////////////////
 
 		var insstr = ""
 		var amtinsstr = ""
 
 		// mst msg sent 에 발송 수량 Count 용 변수들
+		var atcnt = 0
 		var ftcnt = 0
 		var ftncnt = 0
 		var fticnt = 0
-		var atcnt = 0
+		var bcCnt = 0
 		var ftilcnt = 0
 		var ftcscnt = 0
 		var lms_smtcnt = 0
 		var lms_grscnt = 0
 		var lms_nascnt = 0
-		//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
 		var lms_tntcnt = 0
-		//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
 
-		//////////////////////////////////////////////////////// BM송 ////////////////////////////////////////////////////////
-		var bcCnt = 0
-		//////////////////////////////////////////////////////// BM송 ////////////////////////////////////////////////////////
-
+		var err_atcnt = 0
+		var err_ftcnt = 0
+		var err_fticnt = 0
+		var err_ftilcnt = 0
+		var err_ftcscnt = 0
 		var err_smtcnt = 0
 		var err_grscnt = 0
 		var err_nascnt = 0
-		//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
 		var err_tntcnt = 0
-		//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
-		var err_ftcnt = 0
-		var err_fticnt = 0
-		var err_atcnt = 0
 		var err_rcscnt = 0
-		var err_ftilcnt = 0
-		var err_ftcscnt = 0
 
 		var mst_waitcnt = 0
 
@@ -479,7 +457,8 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 			cnt++
 
-			rows.Scan(&msgid,
+			rows.Scan(
+				&msgid,
 				&ad_flag,
 				&button1,
 				&button2,
@@ -534,7 +513,11 @@ func resProcess(wg *sync.WaitGroup) {
 				&mms_file2,
 				&mms_file3,
 				&vancnt,
-				&mst_sent_voucher)
+				&mst_sent_voucher,
+				&mem_rcs_send,
+				&mem_rcs_send2,
+				&mem_rcs_send3,
+				&mem_rcs_send4)
 
 			cb_msg_code = code.String
 			cb_msg_message_type = message_type.String
@@ -565,11 +548,9 @@ func resProcess(wg *sync.WaitGroup) {
 						mem_resend = "SMART"
 					}
 
-					//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
 					if s.Contains(mst_type3.String, "wd") {
 						mem_resend = "SMTNT"
 					}
-					//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
 
 					if s.Contains(mst_type3.String, "rc") {
 						mem_resend = "RCS"
@@ -599,20 +580,18 @@ func resProcess(wg *sync.WaitGroup) {
 						mem_resend = "SMART"
 					}
 
-					//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
 					if s.Contains(mst_type2.String, "wd") {
 						mem_resend = "SMTNT"
 					}
-					//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
 
 					if s.Contains(mst_type2.String, "rc") {
 						mem_resend = "RCS"
+						if s.EqualFold(mst_type2.String, "rcm") {
+							msgtype = "MMS"
+						} else if s.EqualFold(mst_type2.String, "rct") {
+							msgtype = "TEM"
+						}
 					}
-					//////////////////////////////////////////////////////// RCS송 ////////////////////////////////////////////////////////
-					if s.Contains(mst_type2.String, "nr") {
-						mem_resend = "NRC"
-					}
-					//////////////////////////////////////////////////////// RCS송 ////////////////////////////////////////////////////////
 				}
 
 				phnstr = phn.String
@@ -637,19 +616,12 @@ func resProcess(wg *sync.WaitGroup) {
 					case "GREEN_SHOT_G":
 						cb_msg_message_type = "nl"
 						break
-						//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
 					case "SMTNT":
 						cb_msg_message_type = "tn"
 						break
-						//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
 					case "RCS":
 						cb_msg_message_type = "rc"
 						break
-						//////////////////////////////////////////////////////// RCS송 ////////////////////////////////////////////////////////
-					case "NRC":
-						cb_msg_message_type = "nr"
-						break
-						//////////////////////////////////////////////////////// RCS송 ////////////////////////////////////////////////////////
 					}
 				} else {
 					cb_msg_message_type = message_type.String
@@ -1368,14 +1340,6 @@ func resProcess(wg *sync.WaitGroup) {
 								}
 							}
 						}
-						//////////////////////////////////////////////////////// RCS송 ////////////////////////////////////////////////////////
-
-						if mem_resend == "NRC" {
-							delRcsStrs = append(delRcsStrs, "?")
-							delRcsValues = append(delRcsValues, msgid.String)
-						}
-
-						//////////////////////////////////////////////////////// RCS송 ////////////////////////////////////////////////////////
 
 					} else { // 카카오 메세지 실패 시 혹은 메세지 전용 일 경우 처리
 						if !s.EqualFold(message.String, "InvalidPhoneNumber") && len(mem_resend) > 0 && !s.EqualFold(mem_resend, "NONE") && len(sms_sender.String) > 0 {
@@ -1414,31 +1378,18 @@ func resProcess(wg *sync.WaitGroup) {
 										cb_msg_message_type = "NL"
 										cb_msg_code = "GRS"
 									}
-									//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
 								case "SMTNT":
 									if s.EqualFold(msgtype, "SMS") || s.EqualFold(msgtype, "LMS") {
 										err_tntcnt++
 										cb_msg_message_type = "TN"
 										cb_msg_code = "TNT"
 									}
-									//////////////////////////////////////////////////////// SMTNT송 ////////////////////////////////////////////////////////
 								case "RCS":
-									if s.EqualFold(msgtype, "SMS") || s.EqualFold(msgtype, "LMS") {
+									if s.EqualFold(msgtype, "SMS") || s.EqualFold(msgtype, "LMS") || s.EqualFold(msgtype, "MMS") || s.EqualFold(msgtype, "TEM") {
 										err_rcscnt++
 										cb_msg_message_type = "RC"
 										cb_msg_code = "RCS"
 									}
-									//////////////////////////////////////////////////////// RCS송 ////////////////////////////////////////////////////////
-								case "NRC":
-									if s.EqualFold(msgtype, "SMS") || s.EqualFold(msgtype, "LMS") {
-										err_rcscnt++
-										cb_msg_message_type = "NR"
-										cb_msg_code = "RCS"
-
-										delRcsStrs = append(delRcsStrs, "?")
-										delRcsValues = append(delRcsValues, msgid.String)
-									}
-									//////////////////////////////////////////////////////// RCS송 ////////////////////////////////////////////////////////
 								}
 							} else { // 수신거부 처리 끝
 								// 2차 발신 처리 시작
@@ -1447,7 +1398,7 @@ func resProcess(wg *sync.WaitGroup) {
 								cb_msg_message = "결과 수신대기"
 								switch mem_resend {
 								case "RCS":
-									var rcsTemplate, rcsBrand, rcsDatetime, rcsKind, rcsContent, rcsBtn1, rcsBtn2, rcsBtn3, rcsBtn4, rcsBtn5, rcsChatbotID, rcsBtns, rcsBody, rcsBrandkey sql.NullString
+									var rcsTemplate, rcsBrand, rcsDatetime, rcsKind, rcsContent, rcsBtn1, rcsBtn2, rcsBtn3, rcsBtn4, rcsBtn5, rcsChatbotID, rcsBtns, rcsBody, rcsBrandkey, rcsPlatform sql.NullString
 
 									cb_msg_message_type = "rc"
 									cb_msg_code = "RCS"
@@ -1470,26 +1421,36 @@ func resProcess(wg *sync.WaitGroup) {
 											  , msr_button
 											  , msr_body
 											  , msr_brandkey
+											  , msr_platform
 											FROM
 												cb_wt_msg_rcs
 											WHERE
 												msr_mst_id = ?`
 
 									if conf.RCS {
-										err = db.QueryRow(rcsRowSql, ressendkey.String).Scan(&rcsTemplate, &rcsBrand, &rcsDatetime, &rcsKind, &rcsContent, &rcsBtn1, &rcsBtn2, &rcsBtn3, &rcsBtn4, &rcsBtn5, &rcsChatbotID, &rcsBtns, &rcsBody, &rcsBrandkey)
+										err = db.QueryRow(rcsRowSql, ressendkey.String).Scan(&rcsTemplate, &rcsBrand, &rcsDatetime, &rcsKind, &rcsContent, &rcsBtn1, &rcsBtn2, &rcsBtn3, &rcsBtn4, &rcsBtn5, &rcsChatbotID, &rcsBtns, &rcsBody, &rcsBrandkey, &rcsPlatform)
 										if err != nil {
 											errlog.Println("tblresultproc - RCS Table 조회 중 중 오류 발생 err : ", err)
 											errlog.Println("tblresultproc - msr_mst_id : ", ressendkey.String, " / sql : ", rcsRowSql)
 										}
 									}
 
-									if s.EqualFold(msgtype, "SMS") {
-										msgbaseid = rcsTemplate.String //"UBR.0Uv12uh7R4-GG000F"
-										srv_type = rcsKind.String      //"RCSTMPL"
-									} else if s.EqualFold(msgtype, "LMS") {
-										srv_type = rcsKind.String      //"RCSLMS"
-										msgbaseid = rcsTemplate.String //"SL000000"
-									}
+									srv_type = rcsKind.String
+									msgbaseid = rcsTemplate.String
+
+									// if s.EqualFold(msgtype, "SMS") {
+									// 	srv_type = rcsKind.String      //"RCSTMPL"
+									// 	msgbaseid = rcsTemplate.String //"UBR.0Uv12uh7R4-GG000F"
+									// } else if s.EqualFold(msgtype, "LMS") {
+									// 	srv_type = rcsKind.String      //"RCSLMS"
+									// 	msgbaseid = rcsTemplate.String //"SL000000"
+									// } else if s.EqualFold(msgtype, "MMS") {
+									// 	srv_type = rcsKind.String      //"RCMMS"
+									// 	msgbaseid = rcsTemplate.String
+									// } else if s.EqualFold(msgtype, "TEM") {
+									// 	srv_type = rcsKind.String      //"RCSTMPL"
+									// 	msgbaseid = rcsTemplate.String
+									// }
 
 									kko_kind = "R"
 									if s.EqualFold(mst_sent_voucher.String, "V") {
@@ -1556,91 +1517,18 @@ func resProcess(wg *sync.WaitGroup) {
 										}
 									}
 
-									rcsStrs = append(rcsStrs, "(?,?,'0',?,'rcs',?,?,?,?,1,'0',null,1,?,?,?)")
+									rcsStrs = append(rcsStrs, "(?,?,'0',?,'rcs',?,?,?,?,1,'0',null,1,?,?,?,?)")
 									rcsValues = append(rcsValues, msgid.String)
 									rcsValues = append(rcsValues, phnstr)
 									rcsValues = append(rcsValues, remark4.String)
 									rcsValues = append(rcsValues, s.Replace(sms_sender.String, "-", "", -1)) // 발신자 전화 번호
-									rcsValues = append(rcsValues, "dhn2021g")                                // Agency ID -> 대행사라는데...나중에 다른걸로 변경 해야 할지..
+									rcsValues = append(rcsValues, "dhn2021g")
 									rcsValues = append(rcsValues, msgbaseid)
 									rcsValues = append(rcsValues, srv_type)
 									rcsValues = append(rcsValues, rcsBody.String)
 									rcsValues = append(rcsValues, rcsBtns.String)
 									rcsValues = append(rcsValues, rcsBrandkey.String)
-									//////////////////////////////////////////////////////// RCS송 ////////////////////////////////////////////////////////
-								case "NRC":
-									cb_msg_message_type = "nr"
-									cb_msg_code = "RCS"
-
-									updRcsStrs = append(updRcsStrs, "?")
-									updRcsValues = append(updRcsValues, msgid.String)
-
-									if s.EqualFold(mst_sent_voucher.String, "V") {
-										kko_kind = "R"
-										switch s.ToLower(mst_type2.String) {
-										case "nrs":
-											amount = cprice.V_price_rcs_sms.Float64
-											payback = cprice.V_price_rcs_sms.Float64 - cprice.P_price_rcs_sms.Float64
-											admin_amt = cprice.B_price_rcs_sms.Float64
-											memo = "RCS SMS,바우처"
-										case "nr":
-											amount = cprice.V_price_rcs.Float64
-											payback = cprice.V_price_rcs.Float64 - cprice.P_price_rcs.Float64
-											admin_amt = cprice.B_price_rcs.Float64
-											memo = "RCS LMS,바우처"
-										case "nrm":
-											amount = cprice.V_price_rcs_mms.Float64
-											payback = cprice.V_price_rcs_mms.Float64 - cprice.P_price_rcs_mms.Float64
-											admin_amt = cprice.B_price_rcs_mms.Float64
-											memo = "RCS MMS,바우처"
-										case "nrt":
-											amount = cprice.V_price_rcs_tem.Float64
-											payback = cprice.V_price_rcs_tem.Float64 - cprice.P_price_rcs_tem.Float64
-											admin_amt = cprice.B_price_rcs_tem.Float64
-											memo = "RCS TMPL,바우처"
-										}
-									} else {
-										kko_kind = "R"
-										switch s.ToLower(mst_type2.String) {
-										case "nrs":
-											amount = cprice.C_price_rcs_sms.Float64
-											payback = cprice.C_price_rcs_sms.Float64 - cprice.P_price_rcs_sms.Float64
-											admin_amt = cprice.B_price_rcs_sms.Float64
-											if s.EqualFold(mst_sent_voucher.String, "B") {
-												memo = "RCS SMS,보너스"
-											} else {
-												memo = "RCS SMS"
-											}
-										case "nr":
-											amount = cprice.C_price_rcs.Float64
-											payback = cprice.C_price_rcs.Float64 - cprice.P_price_rcs.Float64
-											admin_amt = cprice.B_price_rcs.Float64
-											if s.EqualFold(mst_sent_voucher.String, "B") {
-												memo = "RCS LMS,보너스"
-											} else {
-												memo = "RCS LMS"
-											}
-										case "nrm":
-											amount = cprice.C_price_rcs_mms.Float64
-											payback = cprice.C_price_rcs_mms.Float64 - cprice.P_price_rcs_mms.Float64
-											admin_amt = cprice.B_price_rcs_mms.Float64
-											if s.EqualFold(mst_sent_voucher.String, "B") {
-												memo = "RCS MMS,보너스"
-											} else {
-												memo = "RCS MMS"
-											}
-										case "nrt":
-											amount = cprice.C_price_rcs_tem.Float64
-											payback = cprice.C_price_rcs_tem.Float64 - cprice.P_price_rcs_tem.Float64
-											admin_amt = cprice.B_price_rcs_tem.Float64
-											if s.EqualFold(mst_sent_voucher.String, "B") {
-												memo = "RCS TMPL,보너스"
-											} else {
-												memo = "RCS TMPL"
-											}
-										}
-									}
-									//////////////////////////////////////////////////////// RCS송 ////////////////////////////////////////////////////////
+									rcsValues = append(rcsValues, rcsPlatform.String)
 								case "SMART":
 									cb_msg_message_type = "sm"
 									cb_msg_code = "SMT"
@@ -2511,7 +2399,7 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 
 			if len(rcsStrs) >= 1000 {
-				stmt := fmt.Sprintf("insert into RCS_MESSAGE(msg_id,user_contact ,schedule_type,msg_group_id,msg_service_type ,chatbot_id,agency_id ,messagebase_id ,service_type ,expiry_option ,header  ,footer  ,copy_allowed ,body ,buttons,brand_key) values %s", s.Join(rcsStrs, ","))
+				stmt := fmt.Sprintf("insert into RCS_MESSAGE(msg_id, user_contact, schedule_type, msg_group_id, msg_service_type, chatbot_id,agency_id, messagebase_id, service_type, expiry_option ,header  ,footer  ,copy_allowed ,body, buttons, brand_key, platform) values %s", s.Join(rcsStrs, ","))
 				_, err := db.Exec(stmt, rcsValues...)
 
 				if err != nil {
@@ -2520,30 +2408,6 @@ func resProcess(wg *sync.WaitGroup) {
 
 				rcsStrs = nil
 				rcsValues = nil
-			}
-
-			if len(updRcsStrs) >= 1000 {
-				stmt := fmt.Sprintf("update "+config.Conf.RCSTABLE+" set status = 1 where msg_id in (%s)", s.Join(updRcsStrs, ","))
-				_, err := db.Exec(stmt, updRcsValues...)
-
-				if err != nil {
-					errlog.Println("tblresultproc - (신) Rcs Table Update 처리 중 오류 발생 " + err.Error())
-				}
-
-				updRcsStrs = nil
-				updRcsValues = nil
-			}
-
-			if len(delRcsStrs) >= 1000 {
-				stmt := fmt.Sprintf("delete from "+config.Conf.RCSTABLE+" where msg_id in (%s)", s.Join(delRcsStrs, ","))
-				_, err := db.Exec(stmt, delRcsValues...)
-
-				if err != nil {
-					errlog.Println("tblresultproc - (신) Rcs Table Delete 처리 중 오류 발생 " + err.Error())
-				}
-
-				delRcsStrs = nil
-				delRcsValues = nil
 			}
 
 		}
@@ -2703,29 +2567,11 @@ func resProcess(wg *sync.WaitGroup) {
 		}
 
 		if len(rcsStrs) > 0 {
-			stmt := fmt.Sprintf("insert into RCS_MESSAGE(msg_id,user_contact ,schedule_type,msg_group_id,msg_service_type ,chatbot_id,agency_id ,messagebase_id ,service_type ,expiry_option ,header  ,footer  ,copy_allowed ,body ,buttons, brand_key) values %s", s.Join(rcsStrs, ","))
+			stmt := fmt.Sprintf("insert into RCS_MESSAGE(msg_id, user_contact, schedule_type, msg_group_id, msg_service_type, chatbot_id,agency_id, messagebase_id, service_type, expiry_option ,header  ,footer  ,copy_allowed ,body, buttons, brand_key, platform) values %s", s.Join(rcsStrs, ","))
 			_, err := db.Exec(stmt, rcsValues...)
 
 			if err != nil {
 				errlog.Println("tblresultproc - (구) Rcs Table Insert 처리 중 오류 발생 " + err.Error())
-			}
-		}
-
-		if len(updRcsStrs) > 0 {
-			stmt := fmt.Sprintf("update "+config.Conf.RCSTABLE+" set status = 1 where msg_id in (%s)", s.Join(updRcsStrs, ","))
-			_, err := db.Exec(stmt, updRcsValues...)
-
-			if err != nil {
-				errlog.Println("tblresultproc - (신) Rcs Table Update 처리 중 오류 발생 " + err.Error())
-			}
-		}
-
-		if len(delRcsStrs) > 0 {
-			stmt := fmt.Sprintf("delete from "+config.Conf.RCSTABLE+" where msg_id in (%s)", s.Join(delRcsStrs, ","))
-			_, err := db.Exec(stmt, delRcsValues...)
-
-			if err != nil {
-				errlog.Println("tblresultproc - (신) Rcs Table Delete 처리 중 오류 발생 " + err.Error())
 			}
 		}
 

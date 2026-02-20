@@ -1,24 +1,17 @@
 package rcs
 
 import (
-	//"bytes"
-	"database/sql"
-	"webagent/src/config"
-	"webagent/src/databasepool"
-
-	"encoding/json"
 	"fmt"
-	"webagent/src/baseprice"
-
-	//"io/ioutil"
-
-	//"net/http"
-	s "strings"
-	//c "strconv"
-
 	"sync"
 	"time"
 	"context"
+	s "strings"
+	"encoding/json"
+	"webagent/src/baseprice"
+	
+	"database/sql"
+	"webagent/src/config"
+	"webagent/src/databasepool"
 )
 
 var RToken string
@@ -27,14 +20,14 @@ var Interval int32 = 1000
 var Interval2 int32 = 60000
 
 func ResultProcess(ctx context.Context) {
-	config.Stdlog.Println("(구) Rcs - 결과 처리 프로세스 시작")
+	config.Stdlog.Println("Rcs KT - 결과 처리 프로세스 시작")
 	var wg sync.WaitGroup
 	for {
 		select {
 			case <- ctx.Done():
-				config.Stdlog.Println("(구) Rcs - Result Process가 15초 후에 종료")
+				config.Stdlog.Println("Rcs KT - Result Process가 15초 후에 종료")
 				time.Sleep(15 * time.Second)
-				config.Stdlog.Println("(구) Rcs - Result Process 종료 완료")
+				config.Stdlog.Println("Rcs KT - Result Process 종료 완료")
 				return
 			default:
 				wg.Add(1)
@@ -83,11 +76,11 @@ func resultProcess(wg *sync.WaitGroup) {
 set rmr.result_status = 'success' 
    ,rmr.status = 'success'
    ,rmr.proc = 'P'
- where date_add(STR_TO_DATE(rmr.sentTime, '%Y-%m-%d %H:%i:%s'), interval 6 HOUR) < NOW() AND rmr.proc = 'N'`
+ where date_add(STR_TO_DATE(rmr.sentTime, '%Y-%m-%d %H:%i:%s'), interval 6 HOUR) < NOW() AND rmr.proc = 'N' and platform = 'KT'`
 
 	_, execErr := databasepool.DB.Exec(resAfter6)
 	if execErr != nil {
-		config.Stdlog.Println("(구) Rcs - 메시지 결과 6시간 성공 처리 에러 : ", execErr)
+		config.Stdlog.Println("Rcs KT - 메시지 결과 6시간 성공 처리 에러 : ", execErr)
 		panic(execErr)
 	}
 
@@ -101,7 +94,7 @@ set rmr.result_status = 'success'
 	//fmt.Println(resp)
 
 	if err != nil {
-		config.Stdlog.Println("(구) Rcs - 메시지 결과 서버 호출 오류 : ", err)
+		config.Stdlog.Println("Rcs KT - 메시지 결과 서버 호출 오류 : ", err)
 		//	return nil
 	} else {
 		var resultInfo RcsResultInfo
@@ -142,7 +135,7 @@ timestamp ) values %s`
 				_, err := databasepool.DB.Exec(stmt, resinsValues...)
 
 				if err != nil {
-					stdlog.Println("(구) Rcs - RCS_MESSAGE_STATUS Table Insert 처리 중 오류 발생 " + err.Error())
+					stdlog.Println("Rcs KT - RCS_MESSAGE_STATUS Table Insert 처리 중 오류 발생 " + err.Error())
 				}
 
 				resinsStrs = nil
@@ -152,7 +145,7 @@ timestamp ) values %s`
 set rmr.result_status = '` + si.Status + `' 
    ,rmr.result_error = '` + si.Error.Message + `'
    ,rmr.proc = 'P'
- where rmr.proc = 'N' and rmr.msg_id='` + si.MsgId + `' and rmr.user_contact = '` + si.UserContact + `'`
+ where rmr.proc = 'N' and rmr.msg_id='` + si.MsgId + `' and rmr.user_contact = '` + si.UserContact + `' and platform = 'KT'`
 
 			//stdlog.Println("RCS_MESSAGE_STATUS Table 수정 Query : " + resUpdatestr)
 			databasepool.DB.Exec(resUpdatestr)
@@ -164,29 +157,18 @@ set rmr.result_status = '` + si.Status + `'
 			_, err := databasepool.DB.Exec(stmt, resinsValues...)
 
 			if err != nil {
-				stdlog.Println("(구) Rcs - RCS_MESSAGE_STATUS Table Insert 처리 중 오류 발생 " + err.Error())
+				stdlog.Println("Rcs KT - RCS_MESSAGE_STATUS Table Insert 처리 중 오류 발생 " + err.Error())
 			}
 
 			resinsStrs = nil
 			resinsValues = nil
 		}
-		/*
-						resUpdatestr := `update RCS_MESSAGE_RESULT rmr
-			set rmr.result_status = (select r.status from RCS_MESSAGE_STATUS   r where r.msg_id = rmr.msg_id and r.user_contact = rmr.user_contact limit 1)
-			   ,rmr.result_error = (select r.error from RCS_MESSAGE_STATUS  r where r.msg_id = rmr.msg_id and r.user_contact = rmr.user_contact limit 1)
-			   ,rmr.proc = 'P'
-			 where rmr.proc = 'N'
-			   and exists
-			 (select 1 from RCS_MESSAGE_STATUS  r where r.msg_id = rmr.msg_id and r.user_contact = rmr.user_contact and r.status is not null)`
 
-						db.Exec(resUpdatestr)
-		*/
-
-		groupsql := "select distinct msg_group_id as mst_id, wms.send_mem_id as usermem_id from RCS_MESSAGE_RESULT rmr inner join cb_wt_msg_sent wms on rmr.msg_group_id = wms.mst_id where rmr.proc = 'P'"
+		groupsql := "select distinct msg_group_id as mst_id, wms.send_mem_id as usermem_id from RCS_MESSAGE_RESULT rmr inner join cb_wt_msg_sent wms on rmr.msg_group_id = wms.mst_id where rmr.proc = 'P' and rmr.platform = 'KT'"
 
 		grows, err := db.Query(groupsql)
 		if err != nil {
-			stdlog.Println("(구) Rcs - RCS_MESSAGE_RESULT select 오류 ", err)
+			stdlog.Println("Rcs KT - RCS_MESSAGE_RESULT select 오류 ", err)
 		} else {
 			defer grows.Close()
 
@@ -197,6 +179,12 @@ set rmr.result_status = '` + si.Status + `'
 
 			osmmsStrs := []string{}
 			osmmsValues := []interface{}{}
+
+			lgusmsStrs := []string{}
+			lgusmsValues := []interface{}{}
+
+			lgummsStrs := []string{}
+			lgummsValues := []interface{}{}
 
 			nnsmsStrs := []string{}
 			nnsmsValues := []interface{}{}
@@ -218,6 +206,12 @@ set rmr.result_status = '` + si.Status + `'
 				osmmsStrs = nil //스마트미 LMS/MMS Table Insert 용
 				osmmsValues = nil
 
+				lgusmsStrs = nil //LGU SMS Table Insert 용
+				lgusmsValues = nil
+
+				lgummsStrs = nil //LGU LMS/MMS Table Insert 용
+				lgummsValues = nil
+
 				nnsmsStrs = nil //스마트미 SMS Table Insert 용
 				nnsmsValues = nil
 
@@ -235,34 +229,39 @@ set rmr.result_status = '` + si.Status + `'
 
 				grows.Scan(&mst_id, &usermem_id)
 
-				ressql := `SELECT rmr.msg_id as msgid
-,rmr.user_contact as phnstr
-,rmr.chatbot_id as  sms_sender
-,rmr.body
-,rmr.msg_group_id as remark4
-,'00000000000000' as reserve_dt
-,(select mem_userid from cb_member cm where cm.mem_id = wms.mst_mem_id) as userid
-,ifnull(rmr.result_status, rmr.status)  as res_status
-,ifnull(rmr.result_error,rmr.error) as res_error
-,rmr.service_type
-,(SELECT mi.origin1_path FROM cb_mms_images mi where wms.mst_mms_content = mi.mms_id and length(mst_mms_content ) > 5 ) as mms_file1
-,(SELECT mi.origin2_path FROM cb_mms_images mi where wms.mst_mms_content = mi.mms_id and length(mst_mms_content ) > 5 ) as mms_file2
-,(SELECT mi.origin3_path FROM cb_mms_images mi where wms.mst_mms_content = mi.mms_id and length(mst_mms_content ) > 5 ) as mms_file3
-,wms.mst_sent_voucher  
-,wms.mst_mem_id as send_mem_id
-,wms.mst_type2
-,wms.mst_type3
-,(select ( case when rcs.msr_exptime < NOW() then 'N' WHEn rcs.msr_exptime IS NULL then 'N' else 'Y' END) from cb_wt_msg_rcs rcs where rcs.msr_mst_id = rmr.msg_group_id) as msr_exptime
-,wms.mst_lms_content 
-FROM RCS_MESSAGE_RESULT rmr 
-     inner join cb_wt_msg_sent wms on rmr.msg_group_id = wms.mst_id 
-where rmr.proc = 'P'
-and rmr.msg_group_id = ?
-`
+				ressql := `
+					SELECT
+						rmr.msg_id as msgid
+						,rmr.user_contact as phnstr
+						,rmr.chatbot_id as  sms_sender
+						,rmr.body
+						,rmr.msg_group_id as remark4
+						,'00000000000000' as reserve_dt
+						,(select mem_userid from cb_member cm where cm.mem_id = wms.mst_mem_id) as userid
+						,ifnull(rmr.result_status, rmr.status)  as res_status
+						,ifnull(rmr.result_error,rmr.error) as res_error
+						,rmr.service_type
+						,(SELECT mi.origin1_path FROM cb_mms_images mi where wms.mst_mms_content = mi.mms_id and length(mst_mms_content ) > 5 ) as mms_file1
+						,(SELECT mi.origin2_path FROM cb_mms_images mi where wms.mst_mms_content = mi.mms_id and length(mst_mms_content ) > 5 ) as mms_file2
+						,(SELECT mi.origin3_path FROM cb_mms_images mi where wms.mst_mms_content = mi.mms_id and length(mst_mms_content ) > 5 ) as mms_file3
+						,wms.mst_sent_voucher  
+						,wms.mst_mem_id as send_mem_id
+						,wms.mst_type2
+						,wms.mst_type3
+						,(select ( case when rcs.msr_exptime < NOW() then 'N' WHEn rcs.msr_exptime IS NULL then 'N' else 'Y' END) from cb_wt_msg_rcs rcs where rcs.msr_mst_id = rmr.msg_group_id) as msr_exptime
+						,wms.mst_lms_content 
+					FROM
+						RCS_MESSAGE_RESULT rmr 
+				   inner join
+				   	cb_wt_msg_sent wms on rmr.msg_group_id = wms.mst_id 
+					where
+						rmr.proc = 'P'
+						and rmr.msg_group_id = ?
+						and rmr.platform = 'KT'`
 
 				resrows, err := db.Query(ressql, mst_id.String)
 				if err != nil {
-					stdlog.Println("(구) Rcs - 결과 처리 Select 오류 ", err)
+					stdlog.Println("Rcs KT - 결과 처리 Select 오류 ", err)
 				} else {
 					defer resrows.Close()
 
@@ -379,7 +378,7 @@ and rmr.msg_group_id = ?
 							json.Unmarshal([]byte(body.String), &rcsBody)
 							if s.Contains(mst_type3.String, "wc") && s.EqualFold(msr_exptime.String, "Y") {
 
-								stdlog.Println("(구) Rcs - 발송 실패 -> WEB(C) 발송 처리 ", mst_type3.String, msr_exptime.String, msgid.String)
+								stdlog.Println("Rcs KT - 발송 실패 -> WEB(C) 발송 처리 ", mst_type3.String, msr_exptime.String, msgid.String)
 
 								db.Exec("update cb_msg_"+userid.String+" set CODE = 'SMT', MESSAGE_TYPE='sm' where remark4=? and msgid = ?", remark4.String, msgid.String)
 
@@ -487,7 +486,7 @@ and rmr.msg_group_id = ?
 								}
 							} else if s.Contains(mst_type3.String, "wa") && s.EqualFold(msr_exptime.String, "Y") {
 
-								stdlog.Println("(구) Rcs - 발송 실패 -> WEB(A) 발송 처리 ", mst_type3.String, msr_exptime.String, msgid.String)
+								stdlog.Println("Rcs KT - 발송 실패 -> WEB(A) 발송 처리 ", mst_type3.String, msr_exptime.String, msgid.String)
 
 								db.Exec("update cb_msg_"+userid.String+" set CODE = 'GRS', MESSAGE_TYPE='gr' where remark4=? and msgid = ?", remark4.String, msgid.String)
 
@@ -603,9 +602,115 @@ and rmr.msg_group_id = ?
 									amtsValues = append(amtsValues, payback)
 									amtsValues = append(amtsValues, admin_amt)
 								}
+							} else if s.Contains(mst_type3.String, "wb") && s.EqualFold(msr_exptime.String, "Y") {
+
+								stdlog.Println("Rcs KT - 발송 실패 -> WEB(B) 발송 처리 ", mst_type3.String, msr_exptime.String, msgid.String)
+
+								db.Exec("update cb_msg_"+userid.String+" set CODE = 'LGU', MESSAGE_TYPE='lg' where remark4=? and msgid = ?", remark4.String, msgid.String)
+
+								if s.EqualFold(mst_type3.String, "wbs") {
+									lgusmsStrs = append(lgusmsStrs, "(?,?,?,?,?,?,?,?)")
+									lgusmsValues = append(lgusmsValues, time.Now().Format("2006-01-02 15:04:05"))
+									lgusmsValues = append(lgusmsValues, phnstr)
+									lgusmsValues = append(lgusmsValues, sms_sender)
+									lgusmsValues = append(lgusmsValues, mst_lms_content.String)
+									lgusmsValues = append(lgusmsValues, msgid.String)
+									lgusmsValues = append(lgusmsValues, userid.String)
+									lgusmsValues = append(lgusmsValues, remark4.String)
+									lgusmsValues = append(lgusmsValues, config.Conf.KISACODE)
+
+									admin_amt = cprice.B_price_nas_sms.Float64
+									if s.EqualFold(mst_sent_voucher.String, "V") {
+										amount = cprice.V_price_nas_sms.Float64
+										payback = cprice.V_price_nas_sms.Float64 - cprice.P_price_nas_sms.Float64
+										memo = "웹(B) SMS,바우처"
+									} else {
+										amount = cprice.C_price_nas_sms.Float64
+										payback = cprice.C_price_nas_sms.Float64 - cprice.P_price_nas_sms.Float64
+										if s.EqualFold(mst_sent_voucher.String, "B") {
+											memo = "웹(B) SMS,보너스"
+										} else {
+											memo = "웹(B) SMS"
+										}
+									}
+
+									amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
+									amtsValues = append(amtsValues, "P")
+									amtsValues = append(amtsValues, amount)
+									amtsValues = append(amtsValues, memo)
+									amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
+									amtsValues = append(amtsValues, payback)
+									amtsValues = append(amtsValues, admin_amt)
+								} else if s.EqualFold(mst_type3.String, "wb") {
+									file_cnt := 0
+									if mms_file1.String != "" {
+										file_cnt++
+									}
+									if mms_file2.String != "" {
+										file_cnt++
+									}
+									if mms_file3.String != "" {
+										file_cnt++
+									}
+									lgummsStrs = append(lgummsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?,?)")
+									lgummsValues = append(lgummsValues, rcsBody.Title)
+									lgummsValues = append(lgummsValues, phnstr)
+									lgummsValues = append(lgummsValues, sms_sender)
+									lgummsValues = append(lgummsValues, time.Now().Format("2006-01-02 15:04:05"))
+									lgummsValues = append(lgummsValues, mst_lms_content.String)
+									lgummsValues = append(lgummsValues, file_cnt)
+									lgummsValues = append(lgummsValues, mms_file1)
+									lgummsValues = append(lgummsValues, mms_file2)
+									lgummsValues = append(lgummsValues, mms_file3)
+									lgummsValues = append(lgummsValues, msgid.String)
+									lgummsValues = append(lgummsValues, userid.String)
+									lgummsValues = append(lgummsValues, remark4.String)
+									lgummsValues = append(lgummsValues, config.Conf.KISACODE)
+
+									if len(mms_file1.String) <= 0 {
+
+										admin_amt = cprice.B_price_nas.Float64
+										if s.EqualFold(mst_sent_voucher.String, "V") {
+											amount = cprice.V_price_nas.Float64
+											payback = cprice.V_price_nas.Float64 - cprice.P_price_nas.Float64
+											memo = "웹(B) LMS,바우처"
+										} else {
+											amount = cprice.C_price_nas.Float64
+											payback = cprice.C_price_nas.Float64 - cprice.P_price_nas.Float64
+											if s.EqualFold(mst_sent_voucher.String, "B") {
+												memo = "웹(B) LMS,보너스"
+											} else {
+												memo = "웹(B) LMS"
+											}
+										}
+									} else {
+
+										admin_amt = cprice.B_price_nas_mms.Float64
+										if s.EqualFold(mst_sent_voucher.String, "V") {
+											amount = cprice.V_price_nas_mms.Float64
+											payback = cprice.V_price_nas_mms.Float64 - cprice.P_price_nas_mms.Float64
+											memo = "웹(B) MMS,바우처"
+										} else {
+											amount = cprice.C_price_nas_mms.Float64
+											payback = cprice.C_price_nas_mms.Float64 - cprice.P_price_nas_mms.Float64
+											if s.EqualFold(mst_sent_voucher.String, "B") {
+												memo = "웹(B) MMS,보너스"
+											} else {
+												memo = "웹(B) MMS"
+											}
+										}
+									}
+									amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
+									amtsValues = append(amtsValues, "P")
+									amtsValues = append(amtsValues, amount)
+									amtsValues = append(amtsValues, memo)
+									amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
+									amtsValues = append(amtsValues, payback)
+									amtsValues = append(amtsValues, admin_amt)
+								}
 
 							} else if s.Contains(mst_type3.String, "wd") && s.EqualFold(msr_exptime.String, "Y") {
-								stdlog.Println("(구) Rcs - 발송 실패 -> WEB(D) 발송 처리 ", mst_type3.String, msr_exptime.String, msgid.String)
+								stdlog.Println("Rcs KT - 발송 실패 -> WEB(D) 발송 처리 ", mst_type3.String, msr_exptime.String, msgid.String)
 
 								db.Exec("update cb_msg_"+userid.String+" set CODE = 'TNT', MESSAGE_TYPE='tn' where remark4=? and msgid = ?", remark4.String, msgid.String)
 
@@ -715,6 +820,14 @@ and rmr.msg_group_id = ?
 											}
 										}
 									}
+
+									amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
+									amtsValues = append(amtsValues, "P")
+									amtsValues = append(amtsValues, amount)
+									amtsValues = append(amtsValues, memo)
+									amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
+									amtsValues = append(amtsValues, payback)
+									amtsValues = append(amtsValues, admin_amt)
 								}
 							} else {
 								ecnt++
@@ -731,7 +844,7 @@ and rmr.msg_group_id = ?
 						_, err := db.Exec(stmt, ossmsValues...)
 
 						if err != nil {
-							stdlog.Println("(구) Rcs - 스마트미 SMS Table Insert 처리 중 오류 발생 " + err.Error())
+							stdlog.Println("Rcs KT - 스마트미 SMS Table Insert 처리 중 오류 발생 " + err.Error())
 						}
 
 						ossmsStrs = nil
@@ -743,11 +856,35 @@ and rmr.msg_group_id = ?
 						_, err := db.Exec(stmt, osmmsValues...)
 
 						if err != nil {
-							stdlog.Println("(구) Rcs - 스마트미 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+							stdlog.Println("Rcs KT - 스마트미 LMS Table Insert 처리 중 오류 발생 " + err.Error())
 						}
 
 						osmmsStrs = nil
 						osmmsValues = nil
+					}
+
+					if len(lgusmsStrs) >= 1000 {
+						stmt := fmt.Sprintf("insert into LG_SC_TRAN(TR_SENDDATE,TR_PHONE,TR_CALLBACK, TR_MSG, TR_ETC1, TR_ETC2, TR_ETC3, TR_KISAORIGCODE) values %s", s.Join(lgusmsStrs, ","))
+						_, err := db.Exec(stmt, lgusmsValues...)
+
+						if err != nil {
+							stdlog.Println("Rcs KT - LGU SMS Table Insert 처리 중 오류 발생 " + err.Error())
+						}
+
+						lgusmsStrs = nil
+						lgusmsValues = nil
+					}
+
+					if len(lgummsStrs) >= 1000 {
+						stmt := fmt.Sprintf("insert into LG_MMS_MSG(SUBJECT, PHONE, CALLBACK, REQDATE, MSG, FILE_CNT, FILE_PATH1, FILE_PATH2, FILE_PATH3, ETC1, ETC2, ETC3, KISA_ORIGCODE) values %s", s.Join(lgummsStrs, ","))
+						_, err := db.Exec(stmt, lgummsValues...)
+
+						if err != nil {
+							stdlog.Println("Rcs KT - LGU LMS Table Insert 처리 중 오류 발생 " + err.Error())
+						}
+
+						lgummsStrs = nil
+						lgummsValues = nil
 					}
 
 					if len(nnsmsStrs) > 0 {
@@ -755,7 +892,7 @@ and rmr.msg_group_id = ?
 						_, err := db.Exec(stmt, nnsmsValues...)
 
 						if err != nil {
-							stdlog.Println("(구) Rcs - 나노 SMS Table Insert 처리 중 오류 발생 " + err.Error())
+							stdlog.Println("Rcs KT - 나노 SMS Table Insert 처리 중 오류 발생 " + err.Error())
 						}
 
 						nnsmsStrs = nil
@@ -767,7 +904,7 @@ and rmr.msg_group_id = ?
 						_, err := db.Exec(stmt, nnmmsValues...)
 
 						if err != nil {
-							stdlog.Println("(구) Rcs - 나노 LMS Table Insert 처리 중 오류 발생 " + err.Error())
+							stdlog.Println("Rcs KT - 나노 LMS Table Insert 처리 중 오류 발생 " + err.Error())
 						}
 
 						nnmmsStrs = nil
@@ -779,7 +916,7 @@ and rmr.msg_group_id = ?
 						_, err := db.Exec(stmt, tntsmsValues...)
 
 						if err != nil {
-							stdlog.Println("(구) Rcs - SMTNT SMS Table Insert 처리 중 오류 발생 " + err.Error())
+							stdlog.Println("Rcs KT - SMTNT SMS Table Insert 처리 중 오류 발생 " + err.Error())
 						}
 
 						tntsmsStrs = nil
@@ -791,7 +928,7 @@ and rmr.msg_group_id = ?
 						_, err := db.Exec(stmt, tntmmsValues...)
 
 						if err != nil {
-							stdlog.Println("(구) Rcs - SMTNT LMS Table Insert 처리 중 오류 발생 " + err.Error())
+							stdlog.Println("Rcs KT - SMTNT LMS Table Insert 처리 중 오류 발생 " + err.Error())
 						}
 
 						tntmmsStrs = nil
@@ -803,7 +940,7 @@ and rmr.msg_group_id = ?
 						_, err := db.Exec(stmt, amtsValues...)
 
 						if err != nil {
-							stdlog.Println("(구) Rcs - AMT Table Insert 처리 중 오류 발생 " + err.Error())
+							stdlog.Println("Rcs KT - AMT Table Insert 처리 중 오류 발생 " + err.Error())
 						}
 
 						amtsStrs = nil
@@ -812,7 +949,7 @@ and rmr.msg_group_id = ?
 
 					db.Exec("update cb_wt_msg_sent set mst_rcs = ifnull(mst_rcs,0) + ?,mst_err_rcs = ifnull(mst_err_rcs,0) + ?, mst_wait = mst_wait - ?  where mst_id=?", scnt, ecnt, (ecnt + scnt), mst_id.String)
 
-					stdlog.Println("(구) Rcs - 처리 끝 : (", mst_id.String, " ) 성공 : ", scnt, " / 실패 : ", ecnt)
+					stdlog.Println("Rcs KT - 처리 끝 : (", mst_id.String, " ) 성공 : ", scnt, " / 실패 : ", ecnt)
 				}
 			}
 
@@ -822,9 +959,6 @@ and rmr.msg_group_id = ?
 				Interval = 1000
 			}
 		}
-		//} else {
-		//	Interval = 1000
-		//}
 	}
 	time.Sleep(time.Millisecond * time.Duration(Interval))
 }
@@ -834,9 +968,9 @@ func RetryProcess(ctx context.Context) {
 	for {
 		select {
 			case <- ctx.Done():
-				config.Stdlog.Println("(구) Rcs - Retry Process가 15초 후에 종료")
+				config.Stdlog.Println("Rcs KT - Retry Process가 15초 후에 종료")
 				time.Sleep(15 * time.Second)
-				config.Stdlog.Println("(구) Rcs - Retry Process 종료 완료")
+				config.Stdlog.Println("Rcs KT - Retry Process 종료 완료")
 				return
 			default:
 				wg.Add(1)
@@ -870,7 +1004,7 @@ func retryProc(wg *sync.WaitGroup) {
 
 	retryrows, err := db.Query(sqlStr)
 	if err != nil {
-		stdlog.Println("(구) Rcs - RCS_MESSAGE_RESULT 수작업 select 오류", err)
+		stdlog.Println("Rcs KT - RCS_MESSAGE_RESULT 수작업 select 오류", err)
 	}
 	defer retryrows.Close()
 
@@ -898,7 +1032,7 @@ func retryProc(wg *sync.WaitGroup) {
 		//fmt.Println(resp, resultReq)
 
 		if err != nil {
-			config.Stdlog.Println("(구) Rcs - 메시지 결과 서버 호출 오류 : ", err)
+			config.Stdlog.Println("Rcs KT - 메시지 결과 서버 호출 오류 : ", err)
 			//	return nil
 		} else {
 			var resultInfo RcsResultInfo
