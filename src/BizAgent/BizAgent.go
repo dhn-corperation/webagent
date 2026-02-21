@@ -42,14 +42,6 @@ const (
 	// name        = "BizAgent_o"
 	// description = "오투오 메세지 후속 처리 프로그램"
 	// port  		= ":3030"
-
-	// name        = "BizAgent_p"
-	// description = "스피드톡 메세지 후속 처리 프로그램"
-	// port  		= ":3040"
-
-	// name        = "BizAgent_s"
-	// description = "싸다고 메세지 후속 처리 프로그램"
-	// port  		= ":3050"
 )
 
 var dependencies = []string{name+".service"}
