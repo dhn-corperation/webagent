@@ -178,6 +178,12 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 		tntmmsStrs := []string{}
 		tntmmsValues := []interface{}{}
 
+		jjsmsStrs := []string{}
+		jjsmsValues := []interface{}{}
+
+		jjmmsStrs := []string{}
+		jjmmsValues := []interface{}{}
+
 		for groupRows.Next() {
 			var mst_id sql.NullString
 			var mem_id sql.NullString
@@ -209,6 +215,12 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 
 			tntmmsStrs = nil //SMTNT LMS/MMS Table Insert 용
 			tntmmsValues = nil
+
+			jjsmsStrs = nil //JJ SMS Table Insert 용
+			jjsmsValues = nil
+
+			jjmmsStrs = nil //JJ LMS/MMS Table Insert 용
+			jjmmsValues = nil
 
 			var scnt int = 0
 			var ecnt int = 0
@@ -816,6 +828,124 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 								amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
 								amtsValues = append(amtsValues, payback)
 								amtsValues = append(amtsValues, admin_amt)
+							} else if s.Contains(mst_type3.String, "we") {
+
+								stdlog.Println("Rcs SMTNT - 발송 실패 -> WEB(E) 발송 처리 ", mst_type3.String, msgid.String)
+
+								db.Exec("update cb_msg_"+userid.String+" set CODE = 'JJ', MESSAGE_TYPE='jj' where remark4=? and msgid = ?", remark4.String, msgid.String)
+
+								if s.EqualFold(mst_type3.String, "wes") {
+									jjsmsStrs = append(jjsmsStrs, "(?,?,?,?,?,?,?,?,?)")
+									jjsmsValues = append(jjsmsValues, sms_sender.String)
+									jjsmsValues = append(jjsmsValues, phnstr.String)
+									jjsmsValues = append(jjsmsValues, "SMS")
+									jjsmsValues = append(jjsmsValues, rcsBody.Title)
+									jjsmsValues = append(jjsmsValues, mst_lms_content.String)
+									jjsmsValues = append(jjsmsValues, config.Conf.KISACODE)
+									jjsmsValues = append(jjsmsValues, msgid.String)
+									jjsmsValues = append(jjsmsValues, userid)
+									jjsmsValues = append(jjsmsValues, remark4.String)
+
+									if s.EqualFold(mst_sent_voucher.String, "V") {
+										amount = cprice.V_price_smt_sms.Float64
+										payback = cprice.V_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
+										admin_amt = cprice.B_price_smt_sms.Float64
+										memo = "웹(E) SMS,바우처"
+									} else {
+										amount = cprice.C_price_smt_sms.Float64
+										payback = cprice.C_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
+										admin_amt = cprice.B_price_smt_sms.Float64
+										if s.EqualFold(mst_sent_voucher.String, "B") {
+											memo = "웹(E) SMS,보너스"
+										} else {
+											memo = "웹(E) SMS"
+										}
+									}
+
+									amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
+									amtsValues = append(amtsValues, "P")
+									amtsValues = append(amtsValues, amount)
+									amtsValues = append(amtsValues, memo)
+									amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
+									amtsValues = append(amtsValues, payback)
+									amtsValues = append(amtsValues, admin_amt)
+
+								} else if s.EqualFold(mst_type3.String, "we") {
+									jjMsgType := "LMS"
+									if (mms_file1.Valid && mms_file1.String != "" && len(mms_file1.String) > 0) ||
+									   (mms_file2.Valid && mms_file2.String != "" && len(mms_file2.String) > 0) ||
+									   (mms_file3.Valid && mms_file3.String != "" && len(mms_file3.String) > 0) {
+										jjMsgType = "MMS"
+									}
+
+									jjmmsStrs = append(jjmmsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?)")
+									jjmmsValues = append(jjmmsValues, sms_sender.String)
+									jjmmsValues = append(jjmmsValues, phnstr.String)
+									jjmmsValues = append(jjmmsValues, jjMsgType)
+									jjmmsValues = append(jjmmsValues, rcsBody.Title)
+									jjmmsValues = append(jjmmsValues, mst_lms_content.String)
+									if mms_file1.Valid && mms_file1.String != "" && len(mms_file1.String) > 0 {
+										jjmmsValues = append(jjmmsValues, mms_file1.String)
+									} else {
+										jjmmsValues = append(jjmmsValues, sql.NullString{})
+									}
+									if mms_file2.Valid && mms_file2.String != "" && len(mms_file2.String) > 0 {
+										jjmmsValues = append(jjmmsValues, mms_file2.String)
+									} else {
+										jjmmsValues = append(jjmmsValues, sql.NullString{})
+									}
+									if mms_file3.Valid && mms_file3.String != "" && len(mms_file3.String) > 0 {
+										jjmmsValues = append(jjmmsValues, mms_file3.String)
+									} else {
+										jjmmsValues = append(jjmmsValues, sql.NullString{})
+									}
+									jjmmsValues = append(jjmmsValues, config.Conf.KISACODE)
+									jjmmsValues = append(jjmmsValues, msgid.String)
+									jjmmsValues = append(jjmmsValues, userid)
+									jjmmsValues = append(jjmmsValues, remark4.String)
+
+									if len(mms_file1.String) <= 0 {
+										if s.EqualFold(mst_sent_voucher.String, "V") {
+											amount = cprice.V_price_smt.Float64
+											payback = cprice.V_price_smt.Float64 - cprice.P_price_smt.Float64
+											admin_amt = cprice.B_price_smt.Float64
+											memo = "웹(E) LMS,바우처"
+										} else {
+											amount = cprice.C_price_smt.Float64
+											payback = cprice.C_price_smt.Float64 - cprice.P_price_smt.Float64
+											admin_amt = cprice.B_price_smt.Float64
+											if s.EqualFold(mst_sent_voucher.String, "B") {
+												memo = "웹(E) LMS,보너스"
+											} else {
+												memo = "웹(E) LMS"
+											}
+										}
+									} else {
+										if s.EqualFold(mst_sent_voucher.String, "V") {
+											amount = cprice.V_price_smt_mms.Float64
+											payback = cprice.V_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
+											admin_amt = cprice.B_price_smt_mms.Float64
+											memo = "웹(E) MMS,바우처"
+										} else {
+											amount = cprice.C_price_smt_mms.Float64
+											payback = cprice.C_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
+											admin_amt = cprice.B_price_smt_mms.Float64
+											if s.EqualFold(mst_sent_voucher.String, "B") {
+												memo = "웹(E) MMS,보너스"
+											} else {
+												memo = "웹(E) MMS"
+											}
+										}
+									}
+
+									amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
+									amtsValues = append(amtsValues, "P")
+									amtsValues = append(amtsValues, amount)
+									amtsValues = append(amtsValues, memo)
+									amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
+									amtsValues = append(amtsValues, payback)
+									amtsValues = append(amtsValues, admin_amt)
+								}
 							}
 						} else {
 							ecnt++
@@ -850,7 +980,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 					osmmsValues = nil
 				}
 
-				if len(lgusmsStrs) >= 1000 {
+				if len(lgusmsStrs) > 0 {
 					stmt := fmt.Sprintf("insert into LG_SC_TRAN(TR_SENDDATE,TR_PHONE,TR_CALLBACK, TR_MSG, TR_ETC1, TR_ETC2, TR_ETC3, TR_KISAORIGCODE) values %s", s.Join(lgusmsStrs, ","))
 					_, err := db.Exec(stmt, lgusmsValues...)
 
@@ -862,7 +992,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 					lgusmsValues = nil
 				}
 
-				if len(lgummsStrs) >= 1000 {
+				if len(lgummsStrs) > 0 {
 					stmt := fmt.Sprintf("insert into LG_MMS_MSG(SUBJECT, PHONE, CALLBACK, REQDATE, MSG, FILE_CNT, FILE_PATH1, FILE_PATH2, FILE_PATH3, ETC1, ETC2, ETC3, KISA_ORIGCODE) values %s", s.Join(lgummsStrs, ","))
 					_, err := db.Exec(stmt, lgummsValues...)
 
@@ -920,6 +1050,30 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 
 					tntmmsStrs = nil
 					tntmmsValues = nil
+				}
+
+				if len(jjsmsStrs) > 0 {
+					stmt := fmt.Sprintf("insert into MTMSG_DATA(CALL_TO,CALL_FROM,MSG_TYPE,SUBJECT,MESSAGE,IDENTIFIER,DHN_ETC1,DHN_ETC2,DHN_ETC3) values %s", s.Join(jjsmsStrs, ","))
+					_, err := db.Exec(stmt, jjsmsValues...)
+
+					if err != nil {
+						stdlog.Println("Rcs SMTNT - JJ SMS Table Insert 처리 중 오류 발생 " + err.Error())
+					}
+
+					jjsmsStrs = nil
+					jjsmsValues = nil
+				}
+
+				if len(jjmmsStrs) > 0 {
+					stmt := fmt.Sprintf("insert into MTMSG_DATA(CALL_TO,CALL_FROM,MSG_TYPE,SUBJECT,MESSAGE,FILE_NAME1,FILE_NAME2,FILE_NAME3,IDENTIFIER,DHN_ETC1,DHN_ETC2,DHN_ETC3) values %s", s.Join(jjmmsStrs, ","))
+					_, err := db.Exec(stmt, jjmmsValues...)
+
+					if err != nil {
+						stdlog.Println("Rcs SMTNT - JJ LMS Table Insert 처리 중 오류 발생 " + err.Error())
+					}
+
+					jjmmsStrs = nil
+					jjmmsValues = nil
 				}
 
 				if len(amtsStrs) > 0 {
