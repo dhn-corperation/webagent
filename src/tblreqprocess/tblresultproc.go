@@ -600,7 +600,7 @@ func resProcess(wg *sync.WaitGroup) {
 						mem_resend = "SMTNT"
 					}
 
-					if s.Contains(mst_type3.String, "we") {
+					if s.Contains(mst_type2.String, "we") {
 						mem_resend = "JJ"
 					}
 
