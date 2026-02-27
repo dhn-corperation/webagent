@@ -2758,7 +2758,9 @@ func resProcess(wg *sync.WaitGroup) {
 				  , mst_err_rcs = ifnull(mst_err_rcs,0) + ?  
 				  , mst_err_cs = ifnull(mst_err_cs,0) + ?  
 				  , mst_err_il = ifnull(mst_err_il,0) + ?  
-				  , mst_wait = ifnull(mst_wait,0) + ? 
+				  , mst_wait = ifnull(mst_wait,0) + ?
+				  , mst_015 = ifnull(mst_015,0) + ?
+				  , mst_phn = ifnull(mst_phn,0) + ?
 				where
 					mst_id = ?`
 			_, err := db.Exec(cntupdate, ftcnt, fticnt, atcnt, ftcscnt, ftilcnt, err_ftcnt, err_fticnt, err_atcnt, err_smtcnt, err_rcscnt, err_ftcscnt, err_ftilcnt, mst_waitcnt, bcCnt, ftncnt, sendkey)

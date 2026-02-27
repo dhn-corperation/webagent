@@ -91,8 +91,6 @@ set rmr.result_status = 'success'
 		SetBody(resultReq).
 		Post(config.Conf.RCSRESULTURL + "/corp/v1/querymsgstatus")
 
-	//fmt.Println(resp)
-
 	if err != nil {
 		config.Stdlog.Println("Rcs KT - 메시지 결과 서버 호출 오류 : ", err)
 		//	return nil
@@ -100,7 +98,7 @@ set rmr.result_status = 'success'
 		var resultInfo RcsResultInfo
 		json.Unmarshal(resp.Body(), &resultInfo)
 
-		//fmt.Println(len(resultInfo.StatusInfo), resultInfo.StatusInfo)
+		// fmt.Println(len(resultInfo.StatusInfo), resultInfo.StatusInfo)
 		//if len(resultInfo.StatusInfo) > 0 {
 		resinsStrs := []string{}
 		resinsValues := []interface{}{}
@@ -863,7 +861,7 @@ set rmr.result_status = '` + si.Status + `'
 						osmmsValues = nil
 					}
 
-					if len(lgusmsStrs) >= 1000 {
+					if len(lgusmsStrs) > 0 {
 						stmt := fmt.Sprintf("insert into LG_SC_TRAN(TR_SENDDATE,TR_PHONE,TR_CALLBACK, TR_MSG, TR_ETC1, TR_ETC2, TR_ETC3, TR_KISAORIGCODE) values %s", s.Join(lgusmsStrs, ","))
 						_, err := db.Exec(stmt, lgusmsValues...)
 
@@ -875,7 +873,7 @@ set rmr.result_status = '` + si.Status + `'
 						lgusmsValues = nil
 					}
 
-					if len(lgummsStrs) >= 1000 {
+					if len(lgummsStrs) > 0 {
 						stmt := fmt.Sprintf("insert into LG_MMS_MSG(SUBJECT, PHONE, CALLBACK, REQDATE, MSG, FILE_CNT, FILE_PATH1, FILE_PATH2, FILE_PATH3, ETC1, ETC2, ETC3, KISA_ORIGCODE) values %s", s.Join(lgummsStrs, ","))
 						_, err := db.Exec(stmt, lgummsValues...)
 
