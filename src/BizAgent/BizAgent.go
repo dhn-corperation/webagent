@@ -35,13 +35,17 @@ const (
 	// description = "마트톡 메세지 후속 처리 프로그램"
 	// port  		= ":3010"
 
-	name        = "BizAgent_g"
-	description = "올지니 메세지 후속 처리 프로그램"
-	port  		= ":3020"
+	// name        = "BizAgent_g"
+	// description = "올지니 메세지 후속 처리 프로그램"
+	// port  		= ":3020"
 
 	// name        = "BizAgent_o"
 	// description = "오투오 메세지 후속 처리 프로그램"
 	// port  		= ":3030"
+
+	name        = "BizAgent_e"
+	description = "당선 메세지 후속 처리 프로그램"
+	port  		= ":3060"
 )
 
 var dependencies = []string{name+".service"}
