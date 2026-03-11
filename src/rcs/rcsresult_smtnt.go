@@ -1,16 +1,18 @@
 package rcs
 
 import (
-	"fmt"
-	"sync"
-	"time"
 	"context"
-	s "strings"
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	s "strings"
+	"sync"
+	"time"
 
-	"webagent/src/config"
+	"log"
+
 	"webagent/src/baseprice"
+	"webagent/src/config"
 	"webagent/src/databasepool"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -21,10 +23,10 @@ func ResultProcessSmtnt(ctx context.Context) {
 	var wg sync.WaitGroup
 	for {
 		select {
-		case <- ctx.Done():
+		case <-ctx.Done():
 			config.Stdlog.Println("Rcs SMTNT - process가 15초 후에 종료")
-		    time.Sleep(15 * time.Second)
-		    config.Stdlog.Println("Rcs SMTNT - process 종료 완료")
+			time.Sleep(15 * time.Second)
+			config.Stdlog.Println("Rcs SMTNT - process 종료 완료")
 			return
 		default:
 			var t = time.Now()
@@ -70,7 +72,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 	if pastFlag {
 		t = time.Now().Add(time.Hour * -96)
 	}
-	
+
 	var monthStr = fmt.Sprintf("%d%02d", t.Year(), t.Month())
 
 	var SMSTable = "Msg_Log_" + monthStr
@@ -80,10 +82,10 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 	// sms 성공 처리
 	err1 := db.QueryRow("SELECT count(1) as cnt from Msg_Tran WHERE Status='2' and Msg_Type in (9, 10, 11, 12) and date_add(Send_Time, interval 6 HOUR) < now() and Etc3 is not null and Etc2 not like 'khug%'").Scan(&msgcnt)
 	if err1 != nil {
-	   errlog.Println("Rcs SMTNT - 조회 중 오류 발생", err1)
-	   panic(err1)
-	} else {		
-		if !s.EqualFold(msgcnt.String, "0") {	
+		errlog.Println("Rcs SMTNT - 조회 중 오류 발생", err1)
+		panic(err1)
+	} else {
+		if !s.EqualFold(msgcnt.String, "0") {
 			db.Exec("UPDATE Msg_Tran SET Status=3, Result=0, Telecom='000', Delivery_Time=now(), Result_Time=now() WHERE Status='2' and Msg_Type in (9, 10, 11, 12) and date_add(Send_Time, interval 6 HOUR) < now() and Etc3 is not null and Etc2 not like 'khug%'")
 		}
 	}
@@ -105,10 +107,10 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 	cnterr := databasepool.DB.QueryRow(tickSql).Scan(&tickCnt)
 
 	if cnterr != nil && cnterr != sql.ErrNoRows {
-		errlog.Println("Rcs SMTNT -", SMSTable, "Table - select error : " + cnterr.Error())
+		errlog.Println("Rcs SMTNT -", SMSTable, "Table - select error : "+cnterr.Error())
 		if s.Index(cnterr.Error(), "1146") > 0 {
 			db.Exec("Create Table IF NOT EXISTS " + SMSTable + " like Msg_Tran")
-			errlog.Println("Rcs SMTNT -", SMSTable + " 생성 !!")
+			errlog.Println("Rcs SMTNT -", SMSTable+" 생성 !!")
 		}
 		time.Sleep(10 * time.Second)
 		return
@@ -143,7 +145,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 
 		if s.Index(errcode, "1146") > 0 {
 			db.Exec("Create Table IF NOT EXISTS " + SMSTable + " like Msg_Tran")
-			stdlog.Println("Rcs SMTNT -", SMSTable + " 생성 !!")
+			stdlog.Println("Rcs SMTNT -", SMSTable+" 생성 !!")
 
 		}
 
@@ -178,6 +180,12 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 		tntmmsStrs := []string{}
 		tntmmsValues := []interface{}{}
 
+		jjsmsStrs := []string{}
+		jjsmsValues := []interface{}{}
+
+		jjmmsStrs := []string{}
+		jjmmsValues := []interface{}{}
+
 		for groupRows.Next() {
 			var mst_id sql.NullString
 			var mem_id sql.NullString
@@ -209,6 +217,12 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 
 			tntmmsStrs = nil //SMTNT LMS/MMS Table Insert 용
 			tntmmsValues = nil
+
+			jjsmsStrs = nil //JJ SMS Table Insert 용
+			jjsmsValues = nil
+
+			jjmmsStrs = nil //JJ LMS/MMS Table Insert 용
+			jjmmsValues = nil
 
 			var scnt int = 0
 			var ecnt int = 0
@@ -260,6 +274,8 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 				amtsStrs = nil
 				amtsValues = nil
 
+				var bulkItems []bulkUpdateItem // bulk 업데이트를 위한 items
+
 				upmsgids := []interface{}{}
 
 				for resrows.Next() {
@@ -286,6 +302,14 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 					case "0":
 						db.Exec("update cb_msg_"+userid.String+" set CODE = 'RCS', MESSAGE_TYPE='rc', MESSAGE = ?, RESULT = ? where remark4=? and msgid = ?", "RCS 성공", "Y", remark4.String, msgid.String)
 						scnt++
+
+						// bulk 추가
+						bulkItems = append(bulkItems, bulkUpdateItem{
+							MsgId:       msgid.String,
+							UserContact: phnstr.String,
+							Status:      "success",
+							ErrorMsg:    sql.NullString{},
+						})
 						break
 					default:
 						amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
@@ -409,7 +433,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 								amtsValues = append(amtsValues, payback)
 								amtsValues = append(amtsValues, admin_amt)
 
-							} else if s.EqualFold(mst_type3.String, "wc") {
+							} else if s.EqualFold(mst_type3.String, "wc") || s.EqualFold(mst_type3.String, "wcm") {
 								osmmsStrs = append(osmmsStrs, "(?,?,?,?,?,?,null,?,?,?,?,?,?)")
 								osmmsValues = append(osmmsValues, remark4.String)
 								osmmsValues = append(osmmsValues, sms_sender.String)
@@ -515,7 +539,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 								amtsValues = append(amtsValues, payback)
 								amtsValues = append(amtsValues, admin_amt)
 
-							} else if s.EqualFold(mst_type3.String, "wa") {
+							} else if s.EqualFold(mst_type3.String, "wa") || s.EqualFold(mst_type3.String, "wam") {
 
 								filecnt := 0
 
@@ -629,7 +653,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 								amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
 								amtsValues = append(amtsValues, payback)
 								amtsValues = append(amtsValues, admin_amt)
-							} else if s.EqualFold(mst_type3.String, "wb") {
+							} else if s.EqualFold(mst_type3.String, "wb") || s.EqualFold(mst_type3.String, "wbm") {
 								file_cnt := 0
 								if mms_file1.String != "" {
 									file_cnt++
@@ -705,16 +729,16 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 							smtntTime := time.Now().Format("2006-01-02 15:04:05")
 							if s.EqualFold(mst_type3.String, "wds") {
 								tntsmsStrs = append(tntsmsStrs, "(?,?,?,?,?,?,?,?,?,?)")
-								tntsmsValues = append(tntsmsValues, phnstr) // Phone_No 1
-								tntsmsValues = append(tntsmsValues, sms_sender) // Callback_No 2
-								tntsmsValues = append(tntsmsValues, "4") // Msg_Type 3
-								tntsmsValues = append(tntsmsValues, smtntTime) // Send_Time 4
-								tntsmsValues = append(tntsmsValues, smtntTime) // Save_Time 5
+								tntsmsValues = append(tntsmsValues, phnstr)                 // Phone_No 1
+								tntsmsValues = append(tntsmsValues, sms_sender)             // Callback_No 2
+								tntsmsValues = append(tntsmsValues, "4")                    // Msg_Type 3
+								tntsmsValues = append(tntsmsValues, smtntTime)              // Send_Time 4
+								tntsmsValues = append(tntsmsValues, smtntTime)              // Save_Time 5
 								tntsmsValues = append(tntsmsValues, mst_lms_content.String) // Message 6
-								tntsmsValues = append(tntsmsValues, config.Conf.KISACODE) // Reseller_Code 7
+								tntsmsValues = append(tntsmsValues, config.Conf.KISACODE)   // Reseller_Code 7
 
-								tntsmsValues = append(tntsmsValues, msgid.String) // Etc1 8
-								tntsmsValues = append(tntsmsValues, userid.String) // Etc2 9
+								tntsmsValues = append(tntsmsValues, msgid.String)   // Etc1 8
+								tntsmsValues = append(tntsmsValues, userid.String)  // Etc2 9
 								tntsmsValues = append(tntsmsValues, remark4.String) // Etc3 10
 
 								admin_amt = cprice.B_price_smt_sms.Float64
@@ -739,8 +763,8 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 								amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
 								amtsValues = append(amtsValues, payback)
 								amtsValues = append(amtsValues, admin_amt)
-							} else if s.EqualFold(mst_type3.String, "wd") {
-								fileCnt  := 0
+							} else if s.EqualFold(mst_type3.String, "wd") || s.EqualFold(mst_type3.String, "wdm") {
+								fileCnt := 0
 								fileType1 := ""
 								fileType2 := ""
 								fileType3 := ""
@@ -757,24 +781,24 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 									fileType3 = "IMG"
 								}
 								tntmmsStrs = append(tntmmsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
-								tntmmsValues = append(tntmmsValues, phnstr) // Phone_No 1
-								tntmmsValues = append(tntmmsValues, sms_sender) // Callback_No 2
-								tntmmsValues = append(tntmmsValues, "6") // Msg_Type 3
-								tntmmsValues = append(tntmmsValues, smtntTime) // Send_Time 4
-								tntmmsValues = append(tntmmsValues, smtntTime) // Save_Time 5
-								tntmmsValues = append(tntmmsValues, rcsBody.Title) // Subject 6
+								tntmmsValues = append(tntmmsValues, phnstr)                 // Phone_No 1
+								tntmmsValues = append(tntmmsValues, sms_sender)             // Callback_No 2
+								tntmmsValues = append(tntmmsValues, "6")                    // Msg_Type 3
+								tntmmsValues = append(tntmmsValues, smtntTime)              // Send_Time 4
+								tntmmsValues = append(tntmmsValues, smtntTime)              // Save_Time 5
+								tntmmsValues = append(tntmmsValues, rcsBody.Title)          // Subject 6
 								tntmmsValues = append(tntmmsValues, mst_lms_content.String) // Message 7
-								tntmmsValues = append(tntmmsValues, fileCnt) // File_Count 8
-								tntmmsValues = append(tntmmsValues, fileType1) // File_Type1 9 
-								tntmmsValues = append(tntmmsValues, fileType2) // File_Type2 10
-								tntmmsValues = append(tntmmsValues, fileType3) // File_Type3 11
-								tntmmsValues = append(tntmmsValues, mms_file1) // File_Name1 12
-								tntmmsValues = append(tntmmsValues, mms_file2) // File_Name2 13
-								tntmmsValues = append(tntmmsValues, mms_file3) // File_Name3 14
-								tntmmsValues = append(tntmmsValues, config.Conf.KISACODE) // Reseller_Code 15
+								tntmmsValues = append(tntmmsValues, fileCnt)                // File_Count 8
+								tntmmsValues = append(tntmmsValues, fileType1)              // File_Type1 9
+								tntmmsValues = append(tntmmsValues, fileType2)              // File_Type2 10
+								tntmmsValues = append(tntmmsValues, fileType3)              // File_Type3 11
+								tntmmsValues = append(tntmmsValues, mms_file1)              // File_Name1 12
+								tntmmsValues = append(tntmmsValues, mms_file2)              // File_Name2 13
+								tntmmsValues = append(tntmmsValues, mms_file3)              // File_Name3 14
+								tntmmsValues = append(tntmmsValues, config.Conf.KISACODE)   // Reseller_Code 15
 
-								tntmmsValues = append(tntmmsValues, msgid.String) // Etc1 16
-								tntmmsValues = append(tntmmsValues, userid.String) // Etc2 17
+								tntmmsValues = append(tntmmsValues, msgid.String)   // Etc1 16
+								tntmmsValues = append(tntmmsValues, userid.String)  // Etc2 17
 								tntmmsValues = append(tntmmsValues, remark4.String) // Etc3 18
 
 								if len(mms_file1.String) <= 0 {
@@ -817,10 +841,135 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 								amtsValues = append(amtsValues, payback)
 								amtsValues = append(amtsValues, admin_amt)
 							}
+						} else if s.Contains(mst_type3.String, "we") {
+
+							stdlog.Println("Rcs SMTNT - 발송 실패 -> WEB(E) 발송 처리 ", mst_type3.String, msgid.String)
+
+							db.Exec("update cb_msg_"+userid.String+" set CODE = 'JJ', MESSAGE_TYPE='jj' where remark4=? and msgid = ?", remark4.String, msgid.String)
+
+							if s.EqualFold(mst_type3.String, "wes") {
+								jjsmsStrs = append(jjsmsStrs, "(?,?,?,?,?,?,?,?,?)")
+								jjsmsValues = append(jjsmsValues, sms_sender.String)
+								jjsmsValues = append(jjsmsValues, phnstr.String)
+								jjsmsValues = append(jjsmsValues, "SMS")
+								jjsmsValues = append(jjsmsValues, rcsBody.Title)
+								jjsmsValues = append(jjsmsValues, mst_lms_content.String)
+								jjsmsValues = append(jjsmsValues, config.Conf.KISACODE)
+								jjsmsValues = append(jjsmsValues, msgid.String)
+								jjsmsValues = append(jjsmsValues, userid)
+								jjsmsValues = append(jjsmsValues, remark4.String)
+
+								if s.EqualFold(mst_sent_voucher.String, "V") {
+									amount = cprice.V_price_smt_sms.Float64
+									payback = cprice.V_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
+									admin_amt = cprice.B_price_smt_sms.Float64
+									memo = "웹(E) SMS,바우처"
+								} else {
+									amount = cprice.C_price_smt_sms.Float64
+									payback = cprice.C_price_smt_sms.Float64 - cprice.P_price_smt_sms.Float64
+									admin_amt = cprice.B_price_smt_sms.Float64
+									if s.EqualFold(mst_sent_voucher.String, "B") {
+										memo = "웹(E) SMS,보너스"
+									} else {
+										memo = "웹(E) SMS"
+									}
+								}
+
+								amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
+								amtsValues = append(amtsValues, "P")
+								amtsValues = append(amtsValues, amount)
+								amtsValues = append(amtsValues, memo)
+								amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
+								amtsValues = append(amtsValues, payback)
+								amtsValues = append(amtsValues, admin_amt)
+
+							} else if s.EqualFold(mst_type3.String, "we") || s.EqualFold(mst_type3.String, "wem") {
+								jjMsgType := "LMS"
+								if (mms_file1.Valid && mms_file1.String != "" && len(mms_file1.String) > 0) ||
+									(mms_file2.Valid && mms_file2.String != "" && len(mms_file2.String) > 0) ||
+									(mms_file3.Valid && mms_file3.String != "" && len(mms_file3.String) > 0) {
+									jjMsgType = "MMS"
+								}
+
+								jjmmsStrs = append(jjmmsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?)")
+								jjmmsValues = append(jjmmsValues, sms_sender.String)
+								jjmmsValues = append(jjmmsValues, phnstr.String)
+								jjmmsValues = append(jjmmsValues, jjMsgType)
+								jjmmsValues = append(jjmmsValues, rcsBody.Title)
+								jjmmsValues = append(jjmmsValues, mst_lms_content.String)
+								if mms_file1.Valid && mms_file1.String != "" && len(mms_file1.String) > 0 {
+									jjmmsValues = append(jjmmsValues, mms_file1.String)
+								} else {
+									jjmmsValues = append(jjmmsValues, sql.NullString{})
+								}
+								if mms_file2.Valid && mms_file2.String != "" && len(mms_file2.String) > 0 {
+									jjmmsValues = append(jjmmsValues, mms_file2.String)
+								} else {
+									jjmmsValues = append(jjmmsValues, sql.NullString{})
+								}
+								if mms_file3.Valid && mms_file3.String != "" && len(mms_file3.String) > 0 {
+									jjmmsValues = append(jjmmsValues, mms_file3.String)
+								} else {
+									jjmmsValues = append(jjmmsValues, sql.NullString{})
+								}
+								jjmmsValues = append(jjmmsValues, config.Conf.KISACODE)
+								jjmmsValues = append(jjmmsValues, msgid.String)
+								jjmmsValues = append(jjmmsValues, userid)
+								jjmmsValues = append(jjmmsValues, remark4.String)
+
+								if len(mms_file1.String) <= 0 {
+									if s.EqualFold(mst_sent_voucher.String, "V") {
+										amount = cprice.V_price_smt.Float64
+										payback = cprice.V_price_smt.Float64 - cprice.P_price_smt.Float64
+										admin_amt = cprice.B_price_smt.Float64
+										memo = "웹(E) LMS,바우처"
+									} else {
+										amount = cprice.C_price_smt.Float64
+										payback = cprice.C_price_smt.Float64 - cprice.P_price_smt.Float64
+										admin_amt = cprice.B_price_smt.Float64
+										if s.EqualFold(mst_sent_voucher.String, "B") {
+											memo = "웹(E) LMS,보너스"
+										} else {
+											memo = "웹(E) LMS"
+										}
+									}
+								} else {
+									if s.EqualFold(mst_sent_voucher.String, "V") {
+										amount = cprice.V_price_smt_mms.Float64
+										payback = cprice.V_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
+										admin_amt = cprice.B_price_smt_mms.Float64
+										memo = "웹(E) MMS,바우처"
+									} else {
+										amount = cprice.C_price_smt_mms.Float64
+										payback = cprice.C_price_smt_mms.Float64 - cprice.P_price_smt_mms.Float64
+										admin_amt = cprice.B_price_smt_mms.Float64
+										if s.EqualFold(mst_sent_voucher.String, "B") {
+											memo = "웹(E) MMS,보너스"
+										} else {
+											memo = "웹(E) MMS"
+										}
+									}
+								}
+
+								amtsStrs = append(amtsStrs, "(now(),?,?,?,?,?,?)")
+								amtsValues = append(amtsValues, "P")
+								amtsValues = append(amtsValues, amount)
+								amtsValues = append(amtsValues, memo)
+								amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
+								amtsValues = append(amtsValues, payback)
+								amtsValues = append(amtsValues, admin_amt)
+							}
 						} else {
 							ecnt++
 							db.Exec("update cb_msg_"+userid.String+" set CODE = 'RCS', MESSAGE_TYPE='rc', MESSAGE = ?, RESULT = ? where remark4=? and msgid = ?", resCode.String, "N", remark4.String, msgid.String)
 						}
+
+						bulkItems = append(bulkItems, bulkUpdateItem{
+							MsgId:       msgid.String,
+							UserContact: phnstr.String,
+							Status:      "fail",
+							ErrorMsg:    sql.NullString{String: GetRcsErrorMsg(resCode.String), Valid: true},
+						})
 					}
 
 					upmsgids = append(upmsgids, smtntMsgId.String)
@@ -922,6 +1071,30 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 					tntmmsValues = nil
 				}
 
+				if len(jjsmsStrs) > 0 {
+					stmt := fmt.Sprintf("insert into MTMSG_DATA(CALL_TO,CALL_FROM,MSG_TYPE,SUBJECT,MESSAGE,IDENTIFIER,DHN_ETC1,DHN_ETC2,DHN_ETC3) values %s", s.Join(jjsmsStrs, ","))
+					_, err := db.Exec(stmt, jjsmsValues...)
+
+					if err != nil {
+						stdlog.Println("Rcs SMTNT - JJ SMS Table Insert 처리 중 오류 발생 " + err.Error())
+					}
+
+					jjsmsStrs = nil
+					jjsmsValues = nil
+				}
+
+				if len(jjmmsStrs) > 0 {
+					stmt := fmt.Sprintf("insert into MTMSG_DATA(CALL_TO,CALL_FROM,MSG_TYPE,SUBJECT,MESSAGE,FILE_NAME1,FILE_NAME2,FILE_NAME3,IDENTIFIER,DHN_ETC1,DHN_ETC2,DHN_ETC3) values %s", s.Join(jjmmsStrs, ","))
+					_, err := db.Exec(stmt, jjmmsValues...)
+
+					if err != nil {
+						stdlog.Println("Rcs SMTNT - JJ LMS Table Insert 처리 중 오류 발생 " + err.Error())
+					}
+
+					jjmmsStrs = nil
+					jjmmsValues = nil
+				}
+
 				if len(amtsStrs) > 0 {
 					stmt := fmt.Sprintf(amtinsstr, s.Join(amtsStrs, ","))
 					_, err := db.Exec(stmt, amtsValues...)
@@ -946,7 +1119,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 					_, err1 := db.Exec(commastr, upmsgids...)
 
 					if err1 != nil {
-						errlog.Println("Rcs SMTNT -", SMSTable + "Table Update 처리 중 오류 발생 ")
+						errlog.Println("Rcs SMTNT -", SMSTable+"Table Update 처리 중 오류 발생 ")
 					}
 				}
 
@@ -955,5 +1128,54 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 				stdlog.Println("Rcs SMTNT - 처리 끝 : (", mst_id.String, " ) 성공 : ", scnt, " / 실패 : ", ecnt)
 			}
 		}
+	}
+}
+
+func execBulkUpdate(db *sql.DB, items []bulkUpdateItem, stdlog *log.Logger, platform string) {
+	if len(items) == 0 {
+		return
+	}
+
+	statusCases := []string{}
+	errorCases := []string{}
+	inClause := []string{}
+
+	statusArgs := []interface{}{}
+	errorArgs := []interface{}{}
+	inArgs := []interface{}{}
+
+	for _, item := range items {
+		statusCases = append(statusCases, "WHEN msg_id = ? AND user_contact = ? THEN ?")
+		statusArgs = append(statusArgs, item.MsgId, item.UserContact, item.Status)
+
+		errorCases = append(errorCases, "WHEN msg_id = ? AND user_contact = ? THEN ?")
+		errorArgs = append(errorArgs, item.MsgId, item.UserContact, item.ErrorMsg)
+
+		inClause = append(inClause, "(?,?)")
+		inArgs = append(inArgs, item.MsgId, item.UserContact)
+	}
+
+	query := fmt.Sprintf(`
+        UPDATE RCS_MESSAGE_RESULT
+        SET
+            result_status = CASE %s END,
+            result_error  = CASE %s END
+        WHERE proc = 'N'
+          AND platform = ?
+          AND (msg_id, user_contact) IN (%s)`,
+		s.Join(statusCases, " "),
+		s.Join(errorCases, " "),
+		s.Join(inClause, ","),
+	)
+
+	var finalArgs []interface{}
+	finalArgs = append(finalArgs, statusArgs...)
+	finalArgs = append(finalArgs, errorArgs...)
+	finalArgs = append(finalArgs, platform)
+	finalArgs = append(finalArgs, inArgs...)
+
+	_, err := db.Exec(query, finalArgs...)
+	if err != nil {
+		stdlog.Println("Rcs", platform, "- RCS_MESSAGE_RESULT Bulk Update 오류 : ", err)
 	}
 }
