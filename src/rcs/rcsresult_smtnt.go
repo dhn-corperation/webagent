@@ -975,6 +975,11 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 					upmsgids = append(upmsgids, smtntMsgId.String)
 				}
 
+				if len(bulkItems) > 0 {
+					execBulkUpdate(db, bulkItems, stdlog, "SMTNT")
+					bulkItems = nil
+				}
+
 				if len(ossmsStrs) > 0 {
 					stmt := fmt.Sprintf("insert into OShotSMS(Sender,Receiver,Msg,URL,ReserveDT,TimeoutDT,SendResult,mst_id,cb_msg_id ) values %s", s.Join(ossmsStrs, ","))
 					_, err := db.Exec(stmt, ossmsValues...)
