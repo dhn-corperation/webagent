@@ -1,16 +1,16 @@
 package rcs
 
 import (
-	"fmt"
-	"sync"
-	"time"
 	"context"
-	s "strings"
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	s "strings"
+	"sync"
+	"time"
 
-	"webagent/src/config"
 	"webagent/src/baseprice"
+	"webagent/src/config"
 	"webagent/src/databasepool"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -21,10 +21,10 @@ func ResultProcessSmtnt(ctx context.Context) {
 	var wg sync.WaitGroup
 	for {
 		select {
-		case <- ctx.Done():
+		case <-ctx.Done():
 			config.Stdlog.Println("Rcs SMTNT - process가 15초 후에 종료")
-		    time.Sleep(15 * time.Second)
-		    config.Stdlog.Println("Rcs SMTNT - process 종료 완료")
+			time.Sleep(15 * time.Second)
+			config.Stdlog.Println("Rcs SMTNT - process 종료 완료")
 			return
 		default:
 			var t = time.Now()
@@ -70,7 +70,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 	if pastFlag {
 		t = time.Now().Add(time.Hour * -96)
 	}
-	
+
 	var monthStr = fmt.Sprintf("%d%02d", t.Year(), t.Month())
 
 	var SMSTable = "Msg_Log_" + monthStr
@@ -80,10 +80,10 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 	// sms 성공 처리
 	err1 := db.QueryRow("SELECT count(1) as cnt from Msg_Tran WHERE Status='2' and Msg_Type in (9, 10, 11, 12) and date_add(Send_Time, interval 6 HOUR) < now() and Etc3 is not null and Etc2 not like 'khug%'").Scan(&msgcnt)
 	if err1 != nil {
-	   errlog.Println("Rcs SMTNT - 조회 중 오류 발생", err1)
-	   panic(err1)
-	} else {		
-		if !s.EqualFold(msgcnt.String, "0") {	
+		errlog.Println("Rcs SMTNT - 조회 중 오류 발생", err1)
+		panic(err1)
+	} else {
+		if !s.EqualFold(msgcnt.String, "0") {
 			db.Exec("UPDATE Msg_Tran SET Status=3, Result=0, Telecom='000', Delivery_Time=now(), Result_Time=now() WHERE Status='2' and Msg_Type in (9, 10, 11, 12) and date_add(Send_Time, interval 6 HOUR) < now() and Etc3 is not null and Etc2 not like 'khug%'")
 		}
 	}
@@ -105,10 +105,10 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 	cnterr := databasepool.DB.QueryRow(tickSql).Scan(&tickCnt)
 
 	if cnterr != nil && cnterr != sql.ErrNoRows {
-		errlog.Println("Rcs SMTNT -", SMSTable, "Table - select error : " + cnterr.Error())
+		errlog.Println("Rcs SMTNT -", SMSTable, "Table - select error : "+cnterr.Error())
 		if s.Index(cnterr.Error(), "1146") > 0 {
 			db.Exec("Create Table IF NOT EXISTS " + SMSTable + " like Msg_Tran")
-			errlog.Println("Rcs SMTNT -", SMSTable + " 생성 !!")
+			errlog.Println("Rcs SMTNT -", SMSTable+" 생성 !!")
 		}
 		time.Sleep(10 * time.Second)
 		return
@@ -143,7 +143,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 
 		if s.Index(errcode, "1146") > 0 {
 			db.Exec("Create Table IF NOT EXISTS " + SMSTable + " like Msg_Tran")
-			stdlog.Println("Rcs SMTNT -", SMSTable + " 생성 !!")
+			stdlog.Println("Rcs SMTNT -", SMSTable+" 생성 !!")
 
 		}
 
@@ -421,7 +421,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 								amtsValues = append(amtsValues, payback)
 								amtsValues = append(amtsValues, admin_amt)
 
-							} else if s.EqualFold(mst_type3.String, "wc") {
+							} else if s.EqualFold(mst_type3.String, "wc") || s.EqualFold(mst_type3.String, "wcm") {
 								osmmsStrs = append(osmmsStrs, "(?,?,?,?,?,?,null,?,?,?,?,?,?)")
 								osmmsValues = append(osmmsValues, remark4.String)
 								osmmsValues = append(osmmsValues, sms_sender.String)
@@ -527,7 +527,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 								amtsValues = append(amtsValues, payback)
 								amtsValues = append(amtsValues, admin_amt)
 
-							} else if s.EqualFold(mst_type3.String, "wa") {
+							} else if s.EqualFold(mst_type3.String, "wa") || s.EqualFold(mst_type3.String, "wam") {
 
 								filecnt := 0
 
@@ -641,7 +641,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 								amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
 								amtsValues = append(amtsValues, payback)
 								amtsValues = append(amtsValues, admin_amt)
-							} else if s.EqualFold(mst_type3.String, "wb") {
+							} else if s.EqualFold(mst_type3.String, "wb") || s.EqualFold(mst_type3.String, "wbm") {
 								file_cnt := 0
 								if mms_file1.String != "" {
 									file_cnt++
@@ -717,16 +717,16 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 							smtntTime := time.Now().Format("2006-01-02 15:04:05")
 							if s.EqualFold(mst_type3.String, "wds") {
 								tntsmsStrs = append(tntsmsStrs, "(?,?,?,?,?,?,?,?,?,?)")
-								tntsmsValues = append(tntsmsValues, phnstr) // Phone_No 1
-								tntsmsValues = append(tntsmsValues, sms_sender) // Callback_No 2
-								tntsmsValues = append(tntsmsValues, "4") // Msg_Type 3
-								tntsmsValues = append(tntsmsValues, smtntTime) // Send_Time 4
-								tntsmsValues = append(tntsmsValues, smtntTime) // Save_Time 5
+								tntsmsValues = append(tntsmsValues, phnstr)                 // Phone_No 1
+								tntsmsValues = append(tntsmsValues, sms_sender)             // Callback_No 2
+								tntsmsValues = append(tntsmsValues, "4")                    // Msg_Type 3
+								tntsmsValues = append(tntsmsValues, smtntTime)              // Send_Time 4
+								tntsmsValues = append(tntsmsValues, smtntTime)              // Save_Time 5
 								tntsmsValues = append(tntsmsValues, mst_lms_content.String) // Message 6
-								tntsmsValues = append(tntsmsValues, config.Conf.KISACODE) // Reseller_Code 7
+								tntsmsValues = append(tntsmsValues, config.Conf.KISACODE)   // Reseller_Code 7
 
-								tntsmsValues = append(tntsmsValues, msgid.String) // Etc1 8
-								tntsmsValues = append(tntsmsValues, userid.String) // Etc2 9
+								tntsmsValues = append(tntsmsValues, msgid.String)   // Etc1 8
+								tntsmsValues = append(tntsmsValues, userid.String)  // Etc2 9
 								tntsmsValues = append(tntsmsValues, remark4.String) // Etc3 10
 
 								admin_amt = cprice.B_price_tnt_sms.Float64
@@ -751,8 +751,8 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 								amtsValues = append(amtsValues, msgid.String+"/"+phnstr.String)
 								amtsValues = append(amtsValues, payback)
 								amtsValues = append(amtsValues, admin_amt)
-							} else if s.EqualFold(mst_type3.String, "wd") {
-								fileCnt  := 0
+							} else if s.EqualFold(mst_type3.String, "wd") || s.EqualFold(mst_type3.String, "wdm") {
+								fileCnt := 0
 								fileType1 := ""
 								fileType2 := ""
 								fileType3 := ""
@@ -769,24 +769,24 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 									fileType3 = "IMG"
 								}
 								tntmmsStrs = append(tntmmsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
-								tntmmsValues = append(tntmmsValues, phnstr) // Phone_No 1
-								tntmmsValues = append(tntmmsValues, sms_sender) // Callback_No 2
-								tntmmsValues = append(tntmmsValues, "6") // Msg_Type 3
-								tntmmsValues = append(tntmmsValues, smtntTime) // Send_Time 4
-								tntmmsValues = append(tntmmsValues, smtntTime) // Save_Time 5
-								tntmmsValues = append(tntmmsValues, rcsBody.Title) // Subject 6
+								tntmmsValues = append(tntmmsValues, phnstr)                 // Phone_No 1
+								tntmmsValues = append(tntmmsValues, sms_sender)             // Callback_No 2
+								tntmmsValues = append(tntmmsValues, "6")                    // Msg_Type 3
+								tntmmsValues = append(tntmmsValues, smtntTime)              // Send_Time 4
+								tntmmsValues = append(tntmmsValues, smtntTime)              // Save_Time 5
+								tntmmsValues = append(tntmmsValues, rcsBody.Title)          // Subject 6
 								tntmmsValues = append(tntmmsValues, mst_lms_content.String) // Message 7
-								tntmmsValues = append(tntmmsValues, fileCnt) // File_Count 8
-								tntmmsValues = append(tntmmsValues, fileType1) // File_Type1 9 
-								tntmmsValues = append(tntmmsValues, fileType2) // File_Type2 10
-								tntmmsValues = append(tntmmsValues, fileType3) // File_Type3 11
-								tntmmsValues = append(tntmmsValues, mms_file1) // File_Name1 12
-								tntmmsValues = append(tntmmsValues, mms_file2) // File_Name2 13
-								tntmmsValues = append(tntmmsValues, mms_file3) // File_Name3 14
-								tntmmsValues = append(tntmmsValues, config.Conf.KISACODE) // Reseller_Code 15
+								tntmmsValues = append(tntmmsValues, fileCnt)                // File_Count 8
+								tntmmsValues = append(tntmmsValues, fileType1)              // File_Type1 9
+								tntmmsValues = append(tntmmsValues, fileType2)              // File_Type2 10
+								tntmmsValues = append(tntmmsValues, fileType3)              // File_Type3 11
+								tntmmsValues = append(tntmmsValues, mms_file1)              // File_Name1 12
+								tntmmsValues = append(tntmmsValues, mms_file2)              // File_Name2 13
+								tntmmsValues = append(tntmmsValues, mms_file3)              // File_Name3 14
+								tntmmsValues = append(tntmmsValues, config.Conf.KISACODE)   // Reseller_Code 15
 
-								tntmmsValues = append(tntmmsValues, msgid.String) // Etc1 16
-								tntmmsValues = append(tntmmsValues, userid.String) // Etc2 17
+								tntmmsValues = append(tntmmsValues, msgid.String)   // Etc1 16
+								tntmmsValues = append(tntmmsValues, userid.String)  // Etc2 17
 								tntmmsValues = append(tntmmsValues, remark4.String) // Etc3 18
 
 								if len(mms_file1.String) <= 0 {
@@ -870,11 +870,11 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 									amtsValues = append(amtsValues, payback)
 									amtsValues = append(amtsValues, admin_amt)
 
-								} else if s.EqualFold(mst_type3.String, "we") {
+								} else if s.EqualFold(mst_type3.String, "we") || s.EqualFold(mst_type3.String, "wem") {
 									jjMsgType := "LMS"
 									if (mms_file1.Valid && mms_file1.String != "" && len(mms_file1.String) > 0) ||
-									   (mms_file2.Valid && mms_file2.String != "" && len(mms_file2.String) > 0) ||
-									   (mms_file3.Valid && mms_file3.String != "" && len(mms_file3.String) > 0) {
+										(mms_file2.Valid && mms_file2.String != "" && len(mms_file2.String) > 0) ||
+										(mms_file3.Valid && mms_file3.String != "" && len(mms_file3.String) > 0) {
 										jjMsgType = "MMS"
 									}
 
@@ -1100,7 +1100,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 					_, err1 := db.Exec(commastr, upmsgids...)
 
 					if err1 != nil {
-						errlog.Println("Rcs SMTNT -", SMSTable + "Table Update 처리 중 오류 발생 ")
+						errlog.Println("Rcs SMTNT -", SMSTable+"Table Update 처리 중 오류 발생 ")
 					}
 				}
 

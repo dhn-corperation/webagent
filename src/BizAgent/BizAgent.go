@@ -1,16 +1,20 @@
 package main
 
 import (
-	"os"
-	"fmt"
-	"time"
-	"syscall"
 	"context"
-	"reflect"
+	"fmt"
+	"os"
 	"os/signal"
+	"reflect"
+	"syscall"
+	"time"
 
-	"webagent/src/rcs"
 	"webagent/src/config"
+	"webagent/src/databasepool"
+	"webagent/src/handler"
+	"webagent/src/rcs"
+	"webagent/src/req2ndprocess"
+	"webagent/src/tblreqprocess"
 	"webagent/src/webamms"
 	"webagent/src/webasms"
 	"webagent/src/webbmms"
@@ -19,21 +23,17 @@ import (
 	"webagent/src/webcsms"
 	"webagent/src/webdmsg"
 	"webagent/src/webemsg"
-	"webagent/src/handler"
-	"webagent/src/databasepool"
-	"webagent/src/tblreqprocess"
-	"webagent/src/req2ndprocess"
-	
-	"github.com/takama/daemon"
+
 	"github.com/gin-gonic/gin"
-	"github.com/jmoiron/sqlx"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
+	"github.com/takama/daemon"
 )
 
 const (
-	name        = "BizAgent_m"
-	description = "마트톡 메세지 후속 처리 프로그램"
-	port  		= ":3010"
+	//name        = "BizAgent_m"
+	//description = "마트톡 메세지 후속 처리 프로그램"
+	//port  		= ":3010"
 
 	// name        = "BizAgent_g"
 	// description = "올지니 메세지 후속 처리 프로그램"
@@ -42,9 +42,13 @@ const (
 	// name        = "BizAgent_o"
 	// description = "오투오 메세지 후속 처리 프로그램"
 	// port  		= ":3030"
+
+	name        = "BizAgent_d"
+	description = "당선 메세지 후속 처리 프로그램"
+	port        = ":3060"
 )
 
-var dependencies = []string{name+".service"}
+var dependencies = []string{name + ".service"}
 
 var resultTable string
 
@@ -57,7 +61,7 @@ type Service struct {
 
 func (service *Service) Manage() (string, error) {
 
-	usage := "Usage: "+name+" install | remove | start | stop | status"
+	usage := "Usage: " + name + " install | remove | start | stop | status"
 
 	if len(os.Args) > 1 {
 		command := os.Args[1]
@@ -96,7 +100,7 @@ func (service *Service) Manage() (string, error) {
 }
 
 func main() {
-	config.InitConfig()	
+	config.InitConfig()
 	databasepool.InitDatabase()
 
 	var rLimit syscall.Rlimit
@@ -201,7 +205,7 @@ func resultProc() {
 	r.Use(gin.Recovery())
 
 	r.GET("/", func(c *gin.Context) {
-	c.String(200, `----------------------------------------------------------------
+		c.String(200, `----------------------------------------------------------------
 `+name+` API 리스트
 /resendrun?target=XXX&sd=XXXXXXXXXXXXXX     description : 임시 재발송
 /resendstop?uid=XXXX                        description : 임시 재발송 종료
@@ -237,7 +241,7 @@ func resultProc() {
 			c.JSON(400, gin.H{
 				"code":    "error",
 				"message": "잘못된 시간형식 입니다",
-				"sd":  sd,
+				"sd":      sd,
 			})
 			return
 		}
@@ -251,24 +255,24 @@ func resultProc() {
 			c.JSON(400, gin.H{
 				"code":    "error",
 				"message": "잘못된 타겟 입니다",
-				"target": target,
+				"target":  target,
 			})
 			return
 		}
 		c.JSON(200, gin.H{
 			"code":    "ok",
-			"message":  "'시작' 신호가 정상적으로 되었습니다 / 타겟 : " + target,
-			"sd": sd,
+			"message": "'시작' 신호가 정상적으로 되었습니다 / 타겟 : " + target,
+			"sd":      sd,
 		})
 	})
 
-	r.GET("/resendstop", func(c *gin.Context){
+	r.GET("/resendstop", func(c *gin.Context) {
 		uid := c.Query("uid")
 		if uid == "dhn" {
 			if rcc == nil {
 				c.JSON(400, gin.H{
 					"code":    "error",
-					"message":  "가동중인 재발송이 없습니다",
+					"message": "가동중인 재발송이 없습니다",
 				})
 				return
 			}
@@ -287,7 +291,7 @@ func resultProc() {
 		})
 	})
 
-	r.GET("/resendlist", func(c *gin.Context){
+	r.GET("/resendlist", func(c *gin.Context) {
 		if rcc != nil {
 			c.String(200, "1")
 		} else {
@@ -295,7 +299,7 @@ func resultProc() {
 		}
 	})
 
-	r.GET("/allstop", func(c *gin.Context){
+	r.GET("/allstop", func(c *gin.Context) {
 		uid := c.Query("uid")
 		if uid == "dhn" {
 			config.Stdlog.Println("전체 종료 시작")
