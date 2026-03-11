@@ -43,7 +43,7 @@ const (
 	description = "오투오 메세지 후속 처리 프로그램"
 	port  		= ":3030"
 
-	// name        = "BizAgent_e"
+	// name        = "BizAgent_d"
 	// description = "당선 메세지 후속 처리 프로그램"
 	// port  		= ":3060"
 )
