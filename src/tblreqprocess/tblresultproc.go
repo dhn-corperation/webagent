@@ -2528,7 +2528,7 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 
 			if len(jjsmsStrs) >= 1000 {
-				stmt := fmt.Sprintf("insert into MTMSG_DATA(CALL_TO,CALL_FROM,MSG_TYPE,SUBJECT,MESSAGE,IDENTIFIER,DHN_ETC1,DHN_ETC2,DHN_ETC3) values %s", s.Join(jjsmsStrs, ","))
+				stmt := fmt.Sprintf("insert into MTMSG_DATA(CALL_FROM,CALL_TO,MSG_TYPE,SUBJECT,MESSAGE,IDENTIFIER,DHN_ETC1,DHN_ETC2,DHN_ETC3) values %s", s.Join(jjsmsStrs, ","))
 				_, err := db.Exec(stmt, jjsmsValues...)
 
 				if err != nil {
@@ -2540,7 +2540,7 @@ func resProcess(wg *sync.WaitGroup) {
 			}
 
 			if len(jjmmsStrs) >= 1000 {
-				stmt := fmt.Sprintf("insert into MTMSG_DATA(CALL_TO,CALL_FROM,MSG_TYPE,SUBJECT,MESSAGE,FILE_NAME1,FILE_NAME2,FILE_NAME3,IDENTIFIER,DHN_ETC1,DHN_ETC2,DHN_ETC3) values %s", s.Join(jjmmsStrs, ","))
+				stmt := fmt.Sprintf("insert into MTMSG_DATA(CALL_FROM,CALL_TO,MSG_TYPE,SUBJECT,MESSAGE,FILE_NAME1,FILE_NAME2,FILE_NAME3,IDENTIFIER,DHN_ETC1,DHN_ETC2,DHN_ETC3) values %s", s.Join(jjmmsStrs, ","))
 				_, err := db.Exec(stmt, jjmmsValues...)
 
 				if err != nil {
@@ -2720,7 +2720,7 @@ func resProcess(wg *sync.WaitGroup) {
 		}
 
 		if len(jjsmsStrs) > 0 {
-			stmt := fmt.Sprintf("insert into MTMSG_DATA(CALL_TO,CALL_FROM,MSG_TYPE,SUBJECT,MESSAGE,IDENTIFIER,DHN_ETC1,DHN_ETC2,DHN_ETC3) values %s", s.Join(jjsmsStrs, ","))
+			stmt := fmt.Sprintf("insert into MTMSG_DATA(CALL_FROM,CALL_TO,MSG_TYPE,SUBJECT,MESSAGE,IDENTIFIER,DHN_ETC1,DHN_ETC2,DHN_ETC3) values %s", s.Join(jjsmsStrs, ","))
 			_, err := db.Exec(stmt, jjsmsValues...)
 
 			if err != nil {
@@ -2729,7 +2729,7 @@ func resProcess(wg *sync.WaitGroup) {
 		}
 
 		if len(jjmmsStrs) > 0 {
-			stmt := fmt.Sprintf("insert into MTMSG_DATA(CALL_TO,CALL_FROM,MSG_TYPE,SUBJECT,MESSAGE,FILE_NAME1,FILE_NAME2,FILE_NAME3,IDENTIFIER,DHN_ETC1,DHN_ETC2,DHN_ETC3) values %s", s.Join(jjmmsStrs, ","))
+			stmt := fmt.Sprintf("insert into MTMSG_DATA(CALL_FROM,CALL_TO,MSG_TYPE,SUBJECT,MESSAGE,FILE_NAME1,FILE_NAME2,FILE_NAME3,IDENTIFIER,DHN_ETC1,DHN_ETC2,DHN_ETC3) values %s", s.Join(jjmmsStrs, ","))
 			_, err := db.Exec(stmt, jjmmsValues...)
 
 			if err != nil {
