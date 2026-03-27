@@ -179,7 +179,8 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 					b.mst_id AS REMARK4,
 					(select mem_userid from cb_member cm where cm.mem_id = b.mst_mem_id) AS mem_userid,
 					b.mst_mem_id AS mem_id,
-					a.Etc1 as cb_msg_id
+					a.Etc1 as cb_msg_id,
+					a.Telecom
 				from 
 					` + SMSTable + ` a
 				inner join
@@ -220,7 +221,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 
 			upmsgids := []interface{}{}
 
-			var smtntMsgId, msgResult, phoneNo, msgType, sent_key, userid, cb_msg_id sql.NullString
+			var smtntMsgId, msgResult, phoneNo, msgType, sent_key, userid, cb_msg_id, telecom sql.NullString
 			var fileCount sql.NullInt16
 			var startNow = time.Now()
 			var startTime = fmt.Sprintf("%02d:%02d:%02d", startNow.Hour(), startNow.Minute(), startNow.Second())
@@ -229,7 +230,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 				var result = ""
 				msgcnt++
 
-				rows.Scan(&smtntMsgId, &msgResult, &phoneNo, &msgType, &fileCount, &sent_key, &userid, &mem_id, &cb_msg_id)
+				rows.Scan(&smtntMsgId, &msgResult, &phoneNo, &msgType, &fileCount, &sent_key, &userid, &mem_id, &cb_msg_id, &telecom)
 
 				if msgResult.String != "0" && conf.REFUND {
 
@@ -303,7 +304,7 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 					result = "Y"
 				}
 
-				tx.Exec("update cb_msg_"+userid.String+" set MESSAGE_TYPE='tn', MESSAGE = ?, RESULT = ? where remark4=? and msgid = ?", message, result, sent_key.String, cb_msg_id.String)
+				tx.Exec("update cb_msg_"+userid.String+" set MESSAGE_TYPE='tn', MESSAGE = ?, RESULT = ?, REMARK1 = ? where remark4=? and msgid = ?", message, result, telecom, sent_key.String, cb_msg_id.String)
 
 				upmsgids = append(upmsgids, smtntMsgId.String)
 
@@ -337,7 +338,6 @@ func msgProcess(wg *sync.WaitGroup, pastFlag bool) {
 					amtsStrs = nil
 					amtsValues = nil
 				}
-
 			}
 
 			if len(upmsgids) > 0 {
