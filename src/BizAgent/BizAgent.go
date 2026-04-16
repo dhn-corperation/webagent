@@ -31,9 +31,9 @@ import (
 )
 
 const (
-	name        = "BizAgent_daigyeo"
-	description = "다이겨 메세지 후속 처리 프로그램"
-	port        = ":4020"
+	name        = "BizAgent_yale"
+	description = "예일 메세지 후속 처리 프로그램"
+	port        = ":4030"
 )
 
 var dependencies = []string{name + ".service"}
@@ -150,9 +150,9 @@ func resultProc() {
 
 	if conf.RCS {
 		// Rcs KT
-		go rcs.ResultProcess(ctx)
-		go rcs.RetryProcess(ctx)
-		go rcs.Process(ctx)
+		// go rcs.ResultProcess(ctx)
+		// go rcs.RetryProcess(ctx)
+		// go rcs.Process(ctx)
 
 		go rcs.ProcessSmtnt(ctx)
 		go rcs.ResultProcessSmtnt(ctx)
