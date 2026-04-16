@@ -2162,8 +2162,8 @@ func resProcess(wg *sync.WaitGroup) {
 
 									if s.EqualFold(msgtype, "SMS") {
 										jjsmsStrs = append(jjsmsStrs, "(?,?,?,?,?,?,?,?,?)")
-										jjsmsValues = append(jjsmsValues, sms_sender)
 										jjsmsValues = append(jjsmsValues, phnstr)
+										jjsmsValues = append(jjsmsValues, sms_sender)
 										jjsmsValues = append(jjsmsValues, "SMS")
 										jjsmsValues = append(jjsmsValues, sms_lms_tit)
 										jjsmsValues = append(jjsmsValues, msg_sms)
@@ -2198,8 +2198,8 @@ func resProcess(wg *sync.WaitGroup) {
 										}
 
 										jjmmsStrs = append(jjmmsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?)")
-										jjmmsValues = append(jjmmsValues, sms_sender)
 										jjmmsValues = append(jjmmsValues, phnstr)
+										jjmmsValues = append(jjmmsValues, sms_sender)
 										jjmmsValues = append(jjmmsValues, jjMsgType)
 										jjmmsValues = append(jjmmsValues, sms_lms_tit)
 										jjmmsValues = append(jjmmsValues, msg_sms)
