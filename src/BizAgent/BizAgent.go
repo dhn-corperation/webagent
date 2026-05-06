@@ -201,6 +201,10 @@ func resultProc() {
 	go webemsg.Process(ctx)
 	//JJ 결과값 조회 및 문자 실패 환불 처리 고루틴
 
+	//JJ 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
+	go webemsg.Process_low(ctx)
+	//JJ 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
+
 	r := gin.New()
 	r.Use(gin.Recovery())
 
