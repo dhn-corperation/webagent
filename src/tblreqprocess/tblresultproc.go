@@ -577,9 +577,9 @@ func resProcess(wg *sync.WaitGroup) {
 						mem_resend = "SMTNT"
 					}
 
-					if s.Contains(mst_type3.String, "we") && mem_lp_flag.String == "0"  {
+					if (s.Contains(mst_type3.String, "we") && mem_lp_flag.String == "0") || (s.Contains(mst_type3.String, "wes") && mem_lp_flag.String == "1") || (s.Contains(mst_type3.String, "wem") && mem_lp_flag.String == "1") {
 						mem_resend = "JJ"
-					} else if s.Contains(mst_type3.String, "we") && mem_lp_flag.String == "1" {
+					} else if mst_type3.String == "we" && mem_lp_flag.String == "1" {
 						mem_resend = "JJ_LOW"
 					}
 
@@ -615,9 +615,9 @@ func resProcess(wg *sync.WaitGroup) {
 						mem_resend = "SMTNT"
 					}
 
-					if s.Contains(mst_type2.String, "we") && mem_lp_flag.String == "0" {
+					if (s.Contains(mst_type2.String, "we") && mem_lp_flag.String == "0") || (s.Contains(mst_type2.String, "wes") && mem_lp_flag.String == "1") || (s.Contains(mst_type2.String, "wem") && mem_lp_flag.String == "1")  {
 						mem_resend = "JJ"
-					} else if s.Contains(mst_type2.String, "we") && mem_lp_flag.String == "1" {
+					} else if mst_type2.String == "we" && mem_lp_flag.String == "1" {
 						mem_resend = "JJ_LOW"
 					}
 
