@@ -848,8 +848,8 @@ timestamp ) values %s`
 
 								if s.EqualFold(mst_type3.String, "wes") {
 									jjsmsStrs = append(jjsmsStrs, "(?,?,?,?,?,?,?,?,?)")
-									jjsmsValues = append(jjsmsValues, sms_sender.String)
 									jjsmsValues = append(jjsmsValues, phnstr.String)
+									jjsmsValues = append(jjsmsValues, sms_sender.String)
 									jjsmsValues = append(jjsmsValues, "SMS")
 									jjsmsValues = append(jjsmsValues, rcsBody.Title)
 									jjsmsValues = append(jjsmsValues, mst_lms_content.String)
@@ -891,8 +891,8 @@ timestamp ) values %s`
 									}
 
 									jjmmsStrs = append(jjmmsStrs, "(?,?,?,?,?,?,?,?,?,?,?,?)")
-									jjmmsValues = append(jjmmsValues, sms_sender.String)
 									jjmmsValues = append(jjmmsValues, phnstr.String)
+									jjmmsValues = append(jjmmsValues, sms_sender.String)
 									jjmmsValues = append(jjmmsValues, jjMsgType)
 									jjmmsValues = append(jjmmsValues, rcsBody.Title)
 									jjmmsValues = append(jjmmsValues, mst_lms_content.String)
