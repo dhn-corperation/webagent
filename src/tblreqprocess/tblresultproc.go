@@ -256,7 +256,7 @@ func resProcess(wg *sync.WaitGroup) {
 			  , s_code
 			  , sms_kind
 			  , sms_lms_tit
-			  , sms_sender
+			  , case when b.mem_input_sender_flag = 'Y' then replace(b.mem_input_sender, '-', '') else a.sms_sender end as sms_sender
 			  , sync
 			  , tmpl_id
 			  , wide
