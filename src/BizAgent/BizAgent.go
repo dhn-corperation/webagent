@@ -23,6 +23,7 @@ import (
 	"webagent/src/webcsms"
 	"webagent/src/webdmsg"
 	"webagent/src/webemsg"
+	"webagent/src/webfmsg"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -31,17 +32,21 @@ import (
 )
 
 const (
-	name        = "BizAgent_m"
-	description = "마트톡 메세지 후속 처리 프로그램"
-	port  		= ":3010"
+	// name        = "BizAgent_m"
+	// description = "마트톡 메세지 후속 처리 프로그램"
+	// port  		= ":3010"
 
 	// name        = "BizAgent_g"
 	// description = "올지니 메세지 후속 처리 프로그램"
 	// port  		= ":3020"
 
-	// name        = "BizAgent_o"
-	// description = "오투오 메세지 후속 처리 프로그램"
-	// port  		= ":3030"
+	name        = "BizAgent_o"
+	description = "오투오 메세지 후속 처리 프로그램"
+	port  		= ":3030"
+
+	// name        = "BizAgent_s"
+	// description = "싸다고 메세지 후속 처리 프로그램"
+	// port        = ":3050"
 
 	// name        = "BizAgent_d"
 	// description = "당선 메세지 후속 처리 프로그램"
@@ -204,6 +209,11 @@ func resultProc() {
 	//JJ 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
 	go webemsg.Process_low(ctx)
 	//JJ 저가망 결과값 조회 및 문자 실패 환불 처리 고루틴
+
+	//HM 결과값 조회 및 문자 실패 환불 처리 고루틴
+	go webfmsg.Process(ctx)
+	//HM 결과값 조회 및 문자 실패 환불 처리 고루틴
+
 
 	r := gin.New()
 	r.Use(gin.Recovery())
