@@ -44,6 +44,10 @@ const (
 	description = "오투오 메세지 후속 처리 프로그램"
 	port  		= ":3030"
 
+	// name        = "BizAgent_p"
+	// description = "스피드톡 메세지 후속 처리 프로그램"
+	// port  		= ":3040"
+
 	// name        = "BizAgent_s"
 	// description = "싸다고 메세지 후속 처리 프로그램"
 	// port        = ":3050"
@@ -171,9 +175,13 @@ func resultProc() {
 		go rcs.RetryProcess(ctx)
 		go rcs.Process(ctx)
 
+		// Rcs SMTNT
 		go rcs.ProcessSmtnt(ctx)
 		go rcs.ResultProcessSmtnt(ctx)
 
+		// Rcs MegaZone
+		go rcs.ProcessMZ(ctx)
+		go rcs.ResultProcessMZ(ctx)
 	}
 
 	//결과 처리이기 때문에 항상 실행되어 있어야 함.

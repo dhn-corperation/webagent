@@ -16,8 +16,9 @@ import (
 
 // 나노 -> grs
 // LGU -> nas
-// 오샷 -> smt
+// 오샷, JJ -> smt
 // RCS -> rcs, nrc
+// SMTNT -> tnt
 
 var BMMESSAGETYPE = map[string]string{
 	"B1": "TEXT",
@@ -1058,6 +1059,19 @@ func resProcess(wg *sync.WaitGroup) {
 										memo = memo + ",보너스"
 									}
 								}
+							} else if s.EqualFold(message_type.String, "B9") {
+								admin_amt = cprice.B_price_bm_b9.Float64 + bmTargetingPriceB + bmIsFriendPriceB
+								if s.EqualFold(mst_sent_voucher.String, "V") {
+									amount = cprice.V_price_bm_b9.Float64 + bmTargetingPriceV + bmIsFriendPriceV
+									payback = (cprice.V_price_bm_b9.Float64 - cprice.P_price_bm_b9.Float64) + (bmTargetingPriceV - bmTargetingPriceP) + (bmIsFriendPriceV - bmIsFriendPriceP)
+									memo = memo + ",바우처"
+								} else {
+									amount = cprice.C_price_bm_b9.Float64 + bmTargetingPriceC + bmIsFriendPriceC
+									payback = (cprice.C_price_bm_b9.Float64 - cprice.P_price_bm_b9.Float64) + (bmTargetingPriceC - bmTargetingPriceP) + (bmIsFriendPriceC - bmIsFriendPriceP)
+									if s.EqualFold(mst_sent_voucher.String, "B") {
+										memo = memo + ",보너스"
+									}
+								}
 							}
 						} else if s.HasPrefix(s.ToUpper(message_type.String), "C") { // BrandMsg 기본형 성공 차감
 							ftcnt++
@@ -1224,6 +1238,19 @@ func resProcess(wg *sync.WaitGroup) {
 								} else {
 									amount = cprice.C_price_bm_c8.Float64 + bmTargetingPriceC + bmIsFriendPriceC
 									payback = (cprice.C_price_bm_c8.Float64 - cprice.P_price_bm_c8.Float64) + (bmTargetingPriceC - bmTargetingPriceP) + (bmIsFriendPriceC - bmIsFriendPriceP)
+									if s.EqualFold(mst_sent_voucher.String, "B") {
+										memo = memo + ",보너스"
+									}
+								}
+							} else if s.EqualFold(message_type.String, "C9") {
+								admin_amt = cprice.B_price_bm_c9.Float64 + bmTargetingPriceB + bmIsFriendPriceB
+								if s.EqualFold(mst_sent_voucher.String, "V") {
+									amount = cprice.V_price_bm_c9.Float64 + bmTargetingPriceV + bmIsFriendPriceV
+									payback = (cprice.V_price_bm_c9.Float64 - cprice.P_price_bm_c9.Float64) + (bmTargetingPriceV - bmTargetingPriceP) + (bmIsFriendPriceV - bmIsFriendPriceP)
+									memo = memo + ",바우처"
+								} else {
+									amount = cprice.C_price_bm_c9.Float64 + bmTargetingPriceC + bmIsFriendPriceC
+									payback = (cprice.C_price_bm_c9.Float64 - cprice.P_price_bm_c9.Float64) + (bmTargetingPriceC - bmTargetingPriceP) + (bmIsFriendPriceC - bmIsFriendPriceP)
 									if s.EqualFold(mst_sent_voucher.String, "B") {
 										memo = memo + ",보너스"
 									}
@@ -1420,6 +1447,19 @@ func resProcess(wg *sync.WaitGroup) {
 									} else {
 										amount = (cprice.C_price_bm_d8.Float64 + bmTargetingPriceC + bmIsFriendPriceC) * subCnt
 										payback = ((cprice.C_price_bm_d8.Float64 - cprice.P_price_bm_d8.Float64) + (bmTargetingPriceC - bmTargetingPriceP) + (bmIsFriendPriceC - bmIsFriendPriceP)) * subCnt
+										if s.EqualFold(mst_sent_voucher.String, "B") {
+											memo = memo + ",보너스"
+										}
+									}
+								} else if s.EqualFold(message_type.String, "D9") {
+									admin_amt = (cprice.B_price_bm_d9.Float64 + bmTargetingPriceB + bmIsFriendPriceB) * subCnt
+									if s.EqualFold(mst_sent_voucher.String, "V") {
+										amount = (cprice.V_price_bm_d9.Float64 + bmTargetingPriceV + bmIsFriendPriceV) * subCnt
+										payback = ((cprice.V_price_bm_d9.Float64 - cprice.P_price_bm_d9.Float64) + (bmTargetingPriceV - bmTargetingPriceP) + (bmIsFriendPriceV - bmIsFriendPriceP)) * subCnt
+										memo = memo + ",바우처"
+									} else {
+										amount = (cprice.C_price_bm_d9.Float64 + bmTargetingPriceC + bmIsFriendPriceC) * subCnt
+										payback = ((cprice.C_price_bm_d9.Float64 - cprice.P_price_bm_d9.Float64) + (bmTargetingPriceC - bmTargetingPriceP) + (bmIsFriendPriceC - bmIsFriendPriceP)) * subCnt
 										if s.EqualFold(mst_sent_voucher.String, "B") {
 											memo = memo + ",보너스"
 										}

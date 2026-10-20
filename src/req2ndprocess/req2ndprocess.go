@@ -93,6 +93,7 @@ func resProcess(wg *sync.WaitGroup) {
 	var db = databasepool.DB
 	var conf = config.Conf
 	var stdlog = config.Stdlog
+	var maxRetries int = 5
 	
 	var cnt sql.NullString
 	
@@ -110,28 +111,67 @@ func resProcess(wg *sync.WaitGroup) {
 	if cnt.String != "0" { 
 		stdlog.Println("req2ndprocess - 2ND 테이블에서 Req 로 복사 시작 - ", cnt)
 		
-		resp, _ := db.Exec("update " + conf.REQTABLE2 + " as t2 set t2.remark3 = 'P' where t2.remark3 = 'Y' and not exists (select 1 from " + conf.REQTABLE1 + " as t1 where t1.msgid = replace(t2.msgid,'AT', '') )")
-		
-		upp, _ := resp.RowsAffected()
+		 // 최대 재처리 횟수
 
-		insSql := `
-			insert into ` + conf.REQTABLE1 + `(` + insColumn + `)
-			select
-				` + insColumn + `
-			from
-				` + conf.REQTABLE2 + ` where remark3 = 'P'`
-		
-		resins, err2 := db.Exec(insSql)
-		
-		if err2 != nil {
-			stdlog.Println("req2ndprocess - 2ND 테이블에서 Req 로 복사 중 오류 발생 - Update P : ", upp)
-		} else {
-		
-			insp, _ := resins.RowsAffected()
+		for attempt := 1; attempt <= maxRetries; attempt++ {
+			// 1. 트랜잭션 시작
+			tx, err := db.Begin()
+			if err != nil {
+				stdlog.Println("req2ndprocess - 트랜잭션 시작 오류 :", err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+
+			// 2. Y -> P 업데이트
+			updatePSql := "update " + conf.REQTABLE2 + " as t2 set t2.remark3 = 'P' where t2.remark3 = 'Y' and not exists (select 1 from " + conf.REQTABLE1 + " as t1 where t1.msgid = replace(t2.msgid,'AT', '') )"
+			resp, err := tx.Exec(updatePSql)
+			if err != nil {
+				tx.Rollback() // 에러 시 즉시 롤백
+				stdlog.Printf("req2ndprocess - Update P 오류 (시도 %d/%d): %v\n", attempt, maxRetries, err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			upp, _ := resp.RowsAffected()
+
+			// 3. 2ND -> REQ 복사 (Insert)
+			insSql := `
+				insert into ` + conf.REQTABLE1 + `(` + insColumn + `)
+				select
+					` + insColumn + `
+				from
+					` + conf.REQTABLE2 + ` where remark3 = 'P'`
 			
-			resn, _ :=db.Exec("update " + conf.REQTABLE2 + " set remark3 = 'N' where remark3 = 'P'")
+			resins, err := tx.Exec(insSql)
+			if err != nil {
+				tx.Rollback() // 에러 시 즉시 롤백
+				stdlog.Printf("req2ndprocess - 2ND 테이블에서 Req 로 복사 중 오류 발생 (시도 %d/%d): %v\n", attempt, maxRetries, err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			insp, _ := resins.RowsAffected()
+
+			// 4. P -> N 업데이트
+			updateNSql := "update " + conf.REQTABLE2 + " set remark3 = 'N' where remark3 = 'P'"
+			resn, err := tx.Exec(updateNSql)
+			if err != nil {
+				tx.Rollback() // 에러 시 즉시 롤백
+				stdlog.Printf("req2ndprocess - Update N 오류 (시도 %d/%d): %v\n", attempt, maxRetries, err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
 			upn, _ := resn.RowsAffected()
+
+			// 5. 트랜잭션 최종 커밋
+			err = tx.Commit()
+			if err != nil {
+				stdlog.Printf("req2ndprocess - Commit 오류 (시도 %d/%d): %v\n", attempt, maxRetries, err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+
+			// 정상 처리 완료 시 루프 탈출
 			stdlog.Println("req2ndprocess - 2ND 테이블에서 Req 로 복사 끝 - Update P / Insert / Update N : ", upp, insp, upn)
+			break 
 		}
 	} else {
 		time.Sleep(100 * time.Millisecond)

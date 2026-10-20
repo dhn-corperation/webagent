@@ -32,6 +32,8 @@ type Config struct {
 	RCSTABLE     string
 
 	KISACODE     string
+
+	MZRCSKEY     string
 }
 
 var Conf Config

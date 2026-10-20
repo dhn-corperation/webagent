@@ -50,6 +50,7 @@ type BasePrice struct {
 	B_price_bm_b6    sql.NullFloat64
 	B_price_bm_b7    sql.NullFloat64
 	B_price_bm_b8    sql.NullFloat64
+	B_price_bm_b9    sql.NullFloat64
 	B_price_bm_c1    sql.NullFloat64
 	B_price_bm_c2    sql.NullFloat64
 	B_price_bm_c3    sql.NullFloat64
@@ -58,6 +59,7 @@ type BasePrice struct {
 	B_price_bm_c6    sql.NullFloat64
 	B_price_bm_c7    sql.NullFloat64
 	B_price_bm_c8    sql.NullFloat64
+	B_price_bm_c9    sql.NullFloat64
 	B_price_bm_d1    sql.NullFloat64
 	B_price_bm_d2    sql.NullFloat64
 	B_price_bm_d3    sql.NullFloat64
@@ -66,6 +68,7 @@ type BasePrice struct {
 	B_price_bm_d6    sql.NullFloat64
 	B_price_bm_d7    sql.NullFloat64
 	B_price_bm_d8    sql.NullFloat64
+	B_price_bm_d9    sql.NullFloat64
 	B_price_bm_f     sql.NullFloat64
 	B_price_bm_nf    sql.NullFloat64
 	//////////////////////////////////////////////////// BM AREA ////////////////////////////////////////////////////
@@ -115,6 +118,7 @@ type BasePrice struct {
 	C_price_bm_b6    sql.NullFloat64
 	C_price_bm_b7    sql.NullFloat64
 	C_price_bm_b8    sql.NullFloat64
+	C_price_bm_b9    sql.NullFloat64
 	C_price_bm_c1    sql.NullFloat64
 	C_price_bm_c2    sql.NullFloat64
 	C_price_bm_c3    sql.NullFloat64
@@ -123,6 +127,7 @@ type BasePrice struct {
 	C_price_bm_c6    sql.NullFloat64
 	C_price_bm_c7    sql.NullFloat64
 	C_price_bm_c8    sql.NullFloat64
+	C_price_bm_c9    sql.NullFloat64
 	C_price_bm_d1    sql.NullFloat64
 	C_price_bm_d2    sql.NullFloat64
 	C_price_bm_d3    sql.NullFloat64
@@ -131,6 +136,7 @@ type BasePrice struct {
 	C_price_bm_d6    sql.NullFloat64
 	C_price_bm_d7    sql.NullFloat64
 	C_price_bm_d8    sql.NullFloat64
+	C_price_bm_d9    sql.NullFloat64
 	C_price_bm_f     sql.NullFloat64
 	C_price_bm_nf    sql.NullFloat64
 	//////////////////////////////////////////////////// BM AREA //////////////////////////////////////////////////// 
@@ -179,6 +185,7 @@ type BasePrice struct {
 	P_price_bm_b6    sql.NullFloat64
 	P_price_bm_b7    sql.NullFloat64
 	P_price_bm_b8    sql.NullFloat64
+	P_price_bm_b9    sql.NullFloat64
 	P_price_bm_c1    sql.NullFloat64
 	P_price_bm_c2    sql.NullFloat64
 	P_price_bm_c3    sql.NullFloat64
@@ -187,6 +194,7 @@ type BasePrice struct {
 	P_price_bm_c6    sql.NullFloat64
 	P_price_bm_c7    sql.NullFloat64
 	P_price_bm_c8    sql.NullFloat64
+	P_price_bm_c9    sql.NullFloat64
 	P_price_bm_d1    sql.NullFloat64
 	P_price_bm_d2    sql.NullFloat64
 	P_price_bm_d3    sql.NullFloat64
@@ -195,6 +203,7 @@ type BasePrice struct {
 	P_price_bm_d6    sql.NullFloat64
 	P_price_bm_d7    sql.NullFloat64
 	P_price_bm_d8    sql.NullFloat64
+	P_price_bm_d9    sql.NullFloat64
 	P_price_bm_f     sql.NullFloat64
 	P_price_bm_nf    sql.NullFloat64
 	//////////////////////////////////////////////////// BM AREA //////////////////////////////////////////////////// 
@@ -237,6 +246,7 @@ type BasePrice struct {
 	V_price_bm_b6    sql.NullFloat64
 	V_price_bm_b7    sql.NullFloat64
 	V_price_bm_b8    sql.NullFloat64
+	V_price_bm_b9    sql.NullFloat64
 	V_price_bm_c1    sql.NullFloat64
 	V_price_bm_c2    sql.NullFloat64
 	V_price_bm_c3    sql.NullFloat64
@@ -245,6 +255,7 @@ type BasePrice struct {
 	V_price_bm_c6    sql.NullFloat64
 	V_price_bm_c7    sql.NullFloat64
 	V_price_bm_c8    sql.NullFloat64
+	V_price_bm_c9    sql.NullFloat64
 	V_price_bm_d1    sql.NullFloat64
 	V_price_bm_d2    sql.NullFloat64
 	V_price_bm_d3    sql.NullFloat64
@@ -253,6 +264,7 @@ type BasePrice struct {
 	V_price_bm_d6    sql.NullFloat64
 	V_price_bm_d7    sql.NullFloat64
 	V_price_bm_d8    sql.NullFloat64
+	V_price_bm_d9    sql.NullFloat64
 	V_price_bm_f     sql.NullFloat64
 	V_price_bm_nf    sql.NullFloat64
 	//////////////////////////////////////////////////// BM AREA //////////////////////////////////////////////////// 
@@ -306,6 +318,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 		"				,i.mad_price_bm_b6    as c_mad_price_bm_b6   " +
 		"				,i.mad_price_bm_b7    as c_mad_price_bm_b7   " +
 		"				,i.mad_price_bm_b8    as c_mad_price_bm_b8   " +
+		"				,i.mad_price_bm_b9    as c_mad_price_bm_b9   " +
 		"				,i.mad_price_bm_c1    as c_mad_price_bm_c1   " +
 		"				,i.mad_price_bm_c2    as c_mad_price_bm_c2   " +
 		"				,i.mad_price_bm_c3    as c_mad_price_bm_c3   " +
@@ -314,6 +327,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 		"				,i.mad_price_bm_c6    as c_mad_price_bm_c6   " +
 		"				,i.mad_price_bm_c7    as c_mad_price_bm_c7   " +
 		"				,i.mad_price_bm_c8    as c_mad_price_bm_c8   " +
+		"				,i.mad_price_bm_c9    as c_mad_price_bm_c9   " +
 		"				,i.mad_price_bm_d1    as c_mad_price_bm_d1   " +
 		"				,i.mad_price_bm_d2    as c_mad_price_bm_d2   " +
 		"				,i.mad_price_bm_d3    as c_mad_price_bm_d3   " +
@@ -322,6 +336,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 		"				,i.mad_price_bm_d6    as c_mad_price_bm_d6   " +
 		"				,i.mad_price_bm_d7    as c_mad_price_bm_d7   " +
 		"				,i.mad_price_bm_d8    as c_mad_price_bm_d8   " +
+		"				,i.mad_price_bm_d9    as c_mad_price_bm_d9   " +
 		"				,i.mad_price_bm_f     as c_mad_price_bm_f    " +
 		"				,i.mad_price_bm_nf    as c_mad_price_bm_nf   " +
 //////////////////////////////////////////////////// BM AREA //////////////////////////////////////////////////// 
@@ -368,6 +383,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 		"				,a.mad_price_bm_b6    as p_mad_price_bm_b6   " +
 		"				,a.mad_price_bm_b7    as p_mad_price_bm_b7   " +
 		"				,a.mad_price_bm_b8    as p_mad_price_bm_b8   " +
+		"				,a.mad_price_bm_b9    as p_mad_price_bm_b9   " +
 		"				,a.mad_price_bm_c1    as p_mad_price_bm_c1   " +
 		"				,a.mad_price_bm_c2    as p_mad_price_bm_c2   " +
 		"				,a.mad_price_bm_c3    as p_mad_price_bm_c3   " +
@@ -376,6 +392,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 		"				,a.mad_price_bm_c6    as p_mad_price_bm_c6   " +
 		"				,a.mad_price_bm_c7    as p_mad_price_bm_c7   " +
 		"				,a.mad_price_bm_c8    as p_mad_price_bm_c8   " +
+		"				,a.mad_price_bm_c9    as p_mad_price_bm_c9   " +
 		"				,a.mad_price_bm_d1    as p_mad_price_bm_d1   " +
 		"				,a.mad_price_bm_d2    as p_mad_price_bm_d2   " +
 		"				,a.mad_price_bm_d3    as p_mad_price_bm_d3   " +
@@ -384,6 +401,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 		"				,a.mad_price_bm_d6    as p_mad_price_bm_d6   " +
 		"				,a.mad_price_bm_d7    as p_mad_price_bm_d7   " +
 		"				,a.mad_price_bm_d8    as p_mad_price_bm_d8   " +
+		"				,a.mad_price_bm_d9    as p_mad_price_bm_d9   " +
 		"				,a.mad_price_bm_f     as p_mad_price_bm_f    " +
 		"				,a.mad_price_bm_nf    as p_mad_price_bm_nf   " +
 //////////////////////////////////////////////////// BM AREA //////////////////////////////////////////////////// 
@@ -453,6 +471,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.C_price_bm_b6,
 			&price.C_price_bm_b7,
 			&price.C_price_bm_b8,
+			&price.C_price_bm_b9,
 			&price.C_price_bm_c1,
 			&price.C_price_bm_c2,
 			&price.C_price_bm_c3,
@@ -461,6 +480,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.C_price_bm_c6,
 			&price.C_price_bm_c7,
 			&price.C_price_bm_c8,
+			&price.C_price_bm_c9,
 			&price.C_price_bm_d1,
 			&price.C_price_bm_d2,
 			&price.C_price_bm_d3,
@@ -469,6 +489,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.C_price_bm_d6,
 			&price.C_price_bm_d7,
 			&price.C_price_bm_d8,
+			&price.C_price_bm_d9,
 			&price.C_price_bm_f,
 			&price.C_price_bm_nf,
 //////////////////////////////////////////////////// BM AREA ////////////////////////////////////////////////////
@@ -515,6 +536,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.P_price_bm_b6,
 			&price.P_price_bm_b7,
 			&price.P_price_bm_b8,
+			&price.P_price_bm_b9,
 			&price.P_price_bm_c1,
 			&price.P_price_bm_c2,
 			&price.P_price_bm_c3,
@@ -523,6 +545,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.P_price_bm_c6,
 			&price.P_price_bm_c7,
 			&price.P_price_bm_c8,
+			&price.P_price_bm_c9,
 			&price.P_price_bm_d1,
 			&price.P_price_bm_d2,
 			&price.P_price_bm_d3,
@@ -531,6 +554,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.P_price_bm_d6,
 			&price.P_price_bm_d7,
 			&price.P_price_bm_d8,
+			&price.P_price_bm_d9,
 			&price.P_price_bm_f,
 			&price.P_price_bm_nf,
 //////////////////////////////////////////////////// BM AREA ////////////////////////////////////////////////////
@@ -583,6 +607,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 	, wst_price_bm_b6
 	, wst_price_bm_b7
 	, wst_price_bm_b8
+	, wst_price_bm_b9
 	, wst_price_bm_c1
 	, wst_price_bm_c2
 	, wst_price_bm_c3
@@ -591,6 +616,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 	, wst_price_bm_c6
 	, wst_price_bm_c7
 	, wst_price_bm_c8
+	, wst_price_bm_c9
 	, wst_price_bm_d1
 	, wst_price_bm_d2
 	, wst_price_bm_d3
@@ -599,6 +625,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 	, wst_price_bm_d6
 	, wst_price_bm_d7
 	, wst_price_bm_d8
+	, wst_price_bm_d9
 	, wst_price_bm_f
 	, wst_price_bm_nf
 	from cb_wt_setting c limit 1`
@@ -657,6 +684,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.B_price_bm_b6,
 			&price.B_price_bm_b7,
 			&price.B_price_bm_b8,
+			&price.B_price_bm_b9,
 			&price.B_price_bm_c1,
 			&price.B_price_bm_c2,
 			&price.B_price_bm_c3,
@@ -665,6 +693,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.B_price_bm_c6,
 			&price.B_price_bm_c7,
 			&price.B_price_bm_c8,
+			&price.B_price_bm_c9,
 			&price.B_price_bm_d1,
 			&price.B_price_bm_d2,
 			&price.B_price_bm_d3,
@@ -673,6 +702,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.B_price_bm_d6,
 			&price.B_price_bm_d7,
 			&price.B_price_bm_d8,
+			&price.B_price_bm_d9,
 			&price.B_price_bm_f,
 			&price.B_price_bm_nf,
 //////////////////////////////////////////////////// BM AREA ////////////////////////////////////////////////////
@@ -717,6 +747,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 	, vad_price_bm_b6
 	, vad_price_bm_b7
 	, vad_price_bm_b8
+	, vad_price_bm_b9
 	, vad_price_bm_c1
 	, vad_price_bm_c2
 	, vad_price_bm_c3
@@ -725,6 +756,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 	, vad_price_bm_c6
 	, vad_price_bm_c7
 	, vad_price_bm_c8
+	, vad_price_bm_c9
 	, vad_price_bm_d1
 	, vad_price_bm_d2
 	, vad_price_bm_d3
@@ -733,6 +765,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 	, vad_price_bm_d6
 	, vad_price_bm_d7
 	, vad_price_bm_d8
+	, vad_price_bm_d9
 	, vad_price_bm_f
 	, vad_price_bm_nf
 	from cb_wt_voucher_addon where vad_mem_id = '` + mem_id + "'"
@@ -784,6 +817,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.V_price_bm_b6,
 			&price.V_price_bm_b7,
 			&price.V_price_bm_b8,
+			&price.V_price_bm_b9,
 			&price.V_price_bm_c1,
 			&price.V_price_bm_c2,
 			&price.V_price_bm_c3,
@@ -792,6 +826,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.V_price_bm_c6,
 			&price.V_price_bm_c7,
 			&price.V_price_bm_c8,
+			&price.V_price_bm_c9,
 			&price.V_price_bm_d1,
 			&price.V_price_bm_d2,
 			&price.V_price_bm_d3,
@@ -800,6 +835,7 @@ func GetPrice(db *sql.DB, mem_id string, errlog *log.Logger) BasePrice {
 			&price.V_price_bm_d6,
 			&price.V_price_bm_d7,
 			&price.V_price_bm_d8,
+			&price.V_price_bm_d9,
 			&price.V_price_bm_f,
 			&price.V_price_bm_nf,
 //////////////////////////////////////////////////// BM AREA ////////////////////////////////////////////////////
